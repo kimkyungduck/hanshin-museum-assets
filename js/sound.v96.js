@@ -146,18 +146,18 @@ function sndStep(room, vol = 1, x, z) {
 }
 
 /** 관람객 말소리 — 알아들을 수 없게 뭉개진 두런거림(목소리 높이 · 모음 울림을 음절마다 바꾼다) */
-function sndMurmur(n, dur) {
+function sndMurmur(n, dur, whisper) {
   const c = SND.ctx; if (!c || !SND.on) return;
   const x = n.x / CM, z = n.z / CM, d = Math.hypot(x - M.pos.x, z - M.pos.z);
   if (d > 11) return;
-  const t0 = c.currentTime, fem = (n.v && n.v.hM < 1.68);
+  const t0 = c.currentTime, fem = (n.v && n.v.hM < 1.68), kid = (n.v && n.v.hM < 1.5);
   const o = c.createOscillator(); o.type = 'sawtooth';
   const f1 = c.createBiquadFilter(), f2 = c.createBiquadFilter(), lp = c.createBiquadFilter();
-  f1.type = f2.type = 'bandpass'; f1.Q.value = 5; f2.Q.value = 7; lp.type = 'lowpass'; lp.frequency.value = 1500;
-  const g = c.createGain(), mix = c.createGain(); g.gain.value = 0; mix.gain.value = 0.05 * clamp(1 - d / 11, 0, 1) ** 1.5;
+  f1.type = f2.type = 'bandpass'; f1.Q.value = 5; f2.Q.value = 7; lp.type = 'lowpass'; lp.frequency.value = whisper ? 1000 : kid ? 2300 : 1500;
+  const g = c.createGain(), mix = c.createGain(); g.gain.value = 0; mix.gain.value = (whisper ? 0.028 : 0.05) * clamp(1 - d / 11, 0, 1) ** 1.5;
   o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(lp); lp.connect(mix);
   if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = sndPan(x, z) * 0.7; mix.connect(p); p.connect(SND.bus); } else mix.connect(SND.bus);
-  const base = fem ? 205 : 118;
+  const base = (kid ? 300 : fem ? 205 : 118) * (whisper ? 0.88 : 1);      // v96 — 아이는 높게, 혼잣말은 낮게 가라앉힌다
   const V = [[700, 1200], [400, 2000], [300, 900], [600, 1700], [450, 1000]];      // 아 · 이 · 우 · 에 · 오 비슷한 울림
   let t = t0 + 0.05;
   while (t < t0 + dur - 0.15) {

@@ -19,6 +19,8 @@ const PEOPLE_AV = 'a95';
    people/build_char.py 가 Blender 에서 뽑았다(뼈는 Remy 와 같은 Mixamo 이름 → 걷기/서 있기도 같은 방식으로 사람마다 구웠다).
    번갈아 앉도록 순서를 섞는다(여 · 남 · 여 · 남 …) */
 const PEOPLE_ORDER = ['p1', 'p2', 'p5', 'remy', 'p6', 'p3', 'p4'];
+/* v96 — 아이 둘(단발 여자아이 · 짧은 머리 남자아이, 키 1.34 · 1.42m). 바깥 정원에만 선다 → 이름으로 부른다 */
+const PEOPLE_EXTRA = ['p7', 'p8'];
 /** Remy(v1) 아틀라스 — 부위 번호: 0 몸 1 상의 2 하의 3 머리카락 4 신발 */
 const PEOPLE_ATLAS = {
   rects: [[0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0, 0, 0.5, 0.5], [0.75, 0.25, 0.25, 0.25], [0.5, 0.25, 0.25, 0.25]],
@@ -126,8 +128,14 @@ function peopleV2(name) {
   });
 }
 function loadPeople() {
-  return Promise.all(PEOPLE_ORDER.map((n) => (n === 'remy' ? peopleRemy() : peopleV2(n)).catch((e) => { console.warn('people', n, e); return null; })))
-    .then((list) => { PEOPLE.chars = list.filter(Boolean); PEOPLE.ok = PEOPLE.chars.length > 0; });
+  const all = PEOPLE_ORDER.concat(PEOPLE_EXTRA);
+  return Promise.all(all.map((n) => (n === 'remy' ? peopleRemy() : peopleV2(n)).catch((e) => { console.warn('people', n, e); return null; })))
+    .then((list) => {
+      PEOPLE.byName = {};
+      list.forEach((c, k) => { if (c) PEOPLE.byName[all[k]] = c; });
+      PEOPLE.chars = list.slice(0, PEOPLE_ORDER.length).filter(Boolean);
+      PEOPLE.ok = PEOPLE.chars.length > 0;
+    });
 }
 const peopleReady = () => PEOPLE.ok;
 
@@ -182,7 +190,8 @@ function peopleMaterial(ch, K) {
 
 /** 관람객 한 명 — npc.js buildVisitor 와 같은 모양으로 돌려준다(+ mixer · walk · idle). i = 몇 번째 관람객 */
 function buildRealVisitor(K, i = 0) {
-  const ch = PEOPLE.chars[i % PEOPLE.chars.length], J = ch.J;
+  // i = 몇 번째 관람객(방마다 서는 사람) 또는 이름('p7' · 'remy' …)
+  const ch = (typeof i === 'string' && PEOPLE.byName && PEOPLE.byName[i]) || PEOPLE.chars[(typeof i === 'number' ? i : 0) % PEOPLE.chars.length], J = ch.J;
   const bones = J.bones.map((b) => {
     const o = new THREE.Bone(); o.name = b.n;
     o.position.fromArray(b.t); o.quaternion.fromArray(b.q);

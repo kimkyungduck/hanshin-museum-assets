@@ -218,6 +218,7 @@ async function buildNpcs(M) {
       x: start.vx, z: start.vz, tx: start.vx, tz: start.vz, lx: start.x, lz: start.z,
       yaw: Math.atan2(start.x - start.vx, start.z - start.vz),
       wait: 1 + i * 0.7, speed: 0.62 + (i % 3) * 0.07, phase: i * 1.3, walkK: 0,
+      mutter: i === 1 || i === 4,          // v96 — 혼잣말하는 사람(구석을 보고 중얼거린다)
     };
     // v92 — 실사 관람객은 **제 걸음 폭 · 박자 그대로의 속도**로 걷는다. 예전엔 정해 둔 속도(0.62~0.76m/s)에
     //       걸음 클립을 느리게 틀어 맞춰서 슬로 모션처럼 보였다(사람은 천천히 걸을 때 박자보다 보폭을 줄인다)
@@ -241,7 +242,7 @@ async function buildNpcs(M) {
       title: kind.label, subtitle: '관람객 · ' + r.name,
       x: npc.x, z: npc.z, y: 120,
       room: r.id,
-      body: npcSay(kind, r),
+      body: npcSay(kind, r, npc.mutter),
     };
     M.pickables.push(hit);
     M.artByMesh.set(hit, npc.info);
@@ -251,10 +252,12 @@ async function buildNpcs(M) {
     M.npcs.push(npc);
     i++;
   }
+  // v96 — 바깥에도 드문드문(아이 둘 · 서성이는 사람 · 지켜보는 사람) — crowd.js
+  if (typeof buildOutdoorNpcs === 'function') buildOutdoorNpcs(M);
 }
 
 /** 관람객 해설 — 이름이 없으므로 차림새로 부른다 */
-function npcSay(K, r) {
+function npcSay(K, r, mutter) {
   const L = [];
   const look = {
     short: '짧은 머리에', bun: '머리를 묶고', long: '긴 머리에',
@@ -262,19 +265,21 @@ function npcSay(K, r) {
   }[K.hair] || '';
   const wear = K.real ? K.wear + '를 입은' : K.scarf ? '목도리를 두른' : (K.bag ? '가방을 멘' : '코트를 입은');
   L.push(`${look} ${wear} 사람이 서 있다.`.trim());
+  // v96 — 조금씩 어긋나게
   const byRoom = {
-    portraits: '초상들을 차례로 올려다보고 있다. 아는 얼굴을 찾는 눈이다.',
-    photos: '사진을 하나하나 넘겨보고 있다. 한 장 앞에서 유난히 오래 멈춘다.',
-    clips: '화면 앞에 서 있다. 헛스윙이 나올 때만 어깨가 들썩인다.',
-    trophies: '명패를 읽고 있다. 받고 싶지 않은 상도 끝까지 읽는다.',
-    champion: '초상을 올려다보고 있다. 한참 동안 자리를 뜨지 않는다.',
-    lobby: '안내판을 읽는 척하면서 방명록 쪽을 보고 있다.',
-    scorecards: '스코어카드를 들여다보고 있다. 고쳐 쓴 자리를 유심히 본다.',
+    portraits: '초상들을 차례로 올려다보고 있다. 아는 얼굴을 찾는 눈이다. 제 얼굴을 찾는 것 같기도 하다.',
+    photos: '사진을 하나하나 들여다보고 있다. 한 장 앞에서 유난히 오래 멈춘다. 뒷줄 끝, 흐릿한 사람 앞에서.',
+    clips: '화면 앞에 서 있다. 영상이 끝나도 자리를 뜨지 않는다. 검은 화면에 비친 제 얼굴을 보고 있다.',
+    trophies: '명패를 읽고 있다. 받고 싶지 않은 상도 끝까지 읽는다. 입술이 이름을 따라 움직인다.',
+    champion: '초상을 올려다보고 있다. 초상도 이 사람을 내려다보고 있다.',
+    lobby: '안내판을 읽는 척하면서 방명록 쪽을 보고 있다. 방명록의 마지막 줄은 아직 비어 있다.',
+    scorecards: '스코어카드를 들여다보고 있다. 고쳐 쓴 자리를 유심히 본다. 제 글씨라고 한다.',
   };
   L.push(byRoom[r.content] || '전시를 보고 있다.');
+  if (mutter) L.push('가끔 벽 쪽으로 돌아서서 무언가를 중얼거린다. 대답하는 목소리는 없다.');
   L.push('');
-  L.push('이름을 묻지 않았다. 본관은 관람객의 이름을 기록하지 않는다.');
-  L.push('※ 관람객은 소장품이 아닙니다. 말을 걸어도 대답하지 않습니다.');
+  L.push('이름을 묻지 않았다. 본관은 관람객의 이름을 기록하지 않는다. 기억할 뿐이다.');
+  L.push('※ 관람객은 소장품이 아닙니다. 아직은.');
   return L.join(String.fromCharCode(10));
 }
 

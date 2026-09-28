@@ -1906,12 +1906,25 @@ function shrinkTex(t) {
   return t;
 }
 
+/* v96 — 벽에 거는 사진은 **서버에서 줄인 것**(api/thumb.php)을 먼저 받는다.
+   예전엔 원본(한 장 2.7MB PNG 같은 것)을 받아 입장이 8초 넘게 늦었다. 액자는 어차피 TEX_MAX 로 줄여 쓴다.
+   같은 서버의 /projects/ 아래 그림만 · thumb.php 가 없거나 실패하면(로컬 · PHP 오류) 원본으로 다시 받는다. */
+function thumbURL(url) {
+  try {
+    const u = new URL(url, location.href);
+    if (u.origin !== location.origin || !/^\/projects\/(?!museum\/).+\.(jpe?g|png|webp|gif)$/i.test(u.pathname)) return null;
+    return 'api/thumb.php?w=' + (TEX_MAX > 800 ? 1024 : 768) + '&src=' + encodeURIComponent(decodeURIComponent(u.pathname));
+  } catch (e) { return null; }
+}
 function loadTex(url) {
   if (!url) return Promise.resolve(null);
   if (TEX_JOBS.has(url)) return TEX_JOBS.get(url);
+  const small = thumbURL(url);
   const job = texSlot().then(() => new Promise((res) => {
-    loader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; res(shrinkTex(t)); },
-      undefined, () => res(null));
+    const ok = (t) => { t.colorSpace = THREE.SRGBColorSpace; res(shrinkTex(t)); };
+    const orig = () => loader.load(url, ok, undefined, () => res(null));
+    if (small) loader.load(small, ok, undefined, orig);
+    else orig();
   })).finally(texFree);
   TEX_JOBS.set(url, job);
   return job;
