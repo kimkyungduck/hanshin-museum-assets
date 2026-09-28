@@ -336,11 +336,20 @@ function buildEnvMaps(renderer) {
 
   // 바깥 — 하늘 돔 + 풀밭 바닥 + 해
   const so = new THREE.Scene();
-  so.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), skyMaterial()));
-  const g = new THREE.Mesh(new THREE.CircleGeometry(48, 32), new THREE.MeshBasicMaterial({ color: 0x3E5A2C }));
+  const night = (typeof NIGHT !== 'undefined' && NIGHT.on);
+  so.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), night ? nightSkyMaterial(true) : skyMaterial()));
+  const g = new THREE.Mesh(new THREE.CircleGeometry(48, 32), new THREE.MeshBasicMaterial({ color: night ? 0x0B120A : 0x3E5A2C }));
   g.rotation.x = -Math.PI / 2; g.position.y = -0.5; so.add(g);
+  if (night) {
+    // 밤 — 멀리 선 조명탑들이 광택면에 비치도록 지평선 둘레에 밝은 점을 둔다
+    const lamp = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.95, 0.85).multiplyScalar(3) });
+    for (let i = 0; i < 9; i++) {
+      const a = -1.2 + i * 0.3, q = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), lamp);   // 북쪽(필드) 반원
+      q.position.set(Math.sin(a) * 40, 9 + (i % 3) * 1.5, -Math.cos(a) * 40); so.add(q);
+    }
+  }
   M.envOut = pm.fromScene(so, 0.02).texture;
-  const hOut = typeof pbrEnvMap === 'function' && pbrEnvMap(pm, 'out', 0.6);
+  const hOut = !night && typeof pbrEnvMap === 'function' && pbrEnvMap(pm, 'out', 0.6);
   if (hOut) M.envOut = hOut;
   pm.dispose();
 }
@@ -351,9 +360,12 @@ function applyEnv(root) {
     if (!o.isMesh) return;
     const ms = Array.isArray(o.material) ? o.material : [o.material];
     for (const m of ms) {
+      // v97 — 밤: 바깥 재질에 조명탑 · 가로등 빛을 얹는다(night.js)
+      if (m && m.userData.out && typeof floodPatch === 'function') floodPatch(m);
       if (!m || !(m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) || m.envMap) continue;
       m.envMap = m.userData.out ? M.envOut : M.envIn;
       m.envMapIntensity = m.userData.envK != null ? m.userData.envK : (m.userData.out ? 1.0 : 0.85);
+      if (!m.userData.out && (typeof NIGHT !== 'undefined' && NIGHT.on)) m.envMapIntensity *= NIGHT.envIn;      // 밤 — 실내도 한 톤 어둡게
       m.needsUpdate = true;
     }
   });

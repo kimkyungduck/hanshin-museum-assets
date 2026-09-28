@@ -109,8 +109,11 @@ function loadPBR(timeoutMs = 15000) {
     jobs.push(Promise.all(['d', 'n', 'r'].map((k) => pbrImage(PBR_DIR + name + '_' + k + '.jpg')))
       .then(([d, n, r]) => { if (d && n && r) PBR.img[name] = { d: pbrShrink(d, max), n: pbrShrink(n, max), r: pbrShrink(r, max) }; }));
   }
-  jobs.push(pbrImage(PBR_DIR + PBR_SKY.file).then((im) => { PBR.sky = im; }));
+  // v97 — 밤에는 낮 하늘 사진 · 바깥 HDRI 가 필요 없다(받지 않는다 → 입장이 그만큼 빠르다)
+  const night = (typeof NIGHT !== 'undefined' && NIGHT.on);
+  if (!night) jobs.push(pbrImage(PBR_DIR + PBR_SKY.file).then((im) => { PBR.sky = im; }));
   for (const [key, e] of Object.entries(PBR_ENV)) {
+    if (night && key === 'out') continue;
     jobs.push(fetch(PBR_DIR + e.file).then((r) => (r.ok ? r.arrayBuffer() : null))
       .then((buf) => { const h = buf && parseHdr(buf); if (h) PBR.env[key] = h; })
       .catch(() => {}));

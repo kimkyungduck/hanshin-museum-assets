@@ -1062,11 +1062,12 @@ function buildScene() {
   S.add(M.hemi); S.add(M.amb);
   buildEnvMaps(M.renderer);
   // 하늘 — 구름 사진이 있으면 그것, 없으면 예전 계산 하늘
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 48, 24), (typeof pbrSkyMaterial === 'function' && pbrSkyMaterial()) || skyMaterial());
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 48, 24), ((typeof NIGHT !== 'undefined' && NIGHT.on) && nightSkyMaterial()) || (typeof pbrSkyMaterial === 'function' && pbrSkyMaterial()) || skyMaterial());
   sky.renderOrder = -1;
   sky.frustumCulled = false;
   S.add(sky);
   buildSun();
+  if (typeof nightScene === 'function') nightScene();          // v97 — 밤(night.js): 달빛 · 안개 · 하늘
 
   for (const r of M.rooms) {
     const g = new THREE.Group();
@@ -1087,6 +1088,7 @@ function buildScene() {
   buildBoundaries();
   buildFacadeSign();
   buildDoorDressing();
+  if (typeof buildNight === 'function') buildNight();          // v97 — 조명탑 · 가로등(벽이 선 뒤에 — 자리 검사)
   buildExhibitMeshes();
 }
 
@@ -1746,7 +1748,7 @@ function virtualizeLights() {
     while (p) { if (p.name && p.name.indexOf('room-') === 0) { room = p.name.slice(5); break; } p = p.parent; }
     const v = {
       spot: !!o.isSpotLight, room, pos: o.getWorldPosition(new THREE.Vector3()),
-      color: o.color.clone(), intensity: o.intensity, distance: o.distance, decay: o.decay,
+      color: o.color.clone(), intensity: o.intensity * ((typeof NIGHT !== 'undefined' && NIGHT.on) ? NIGHT.lightIn : 1), distance: o.distance, decay: o.decay,
     };
     if (o.isSpotLight) {
       o.target.updateMatrixWorld(true);
@@ -2771,6 +2773,7 @@ function loop(now) {
   guardStep('npc', () => { if (typeof stepNpcs === 'function') stepNpcs(M, dt); });
   guardStep('world', () => stepWorld(M.t));
   guardStep('sound', () => { if (typeof stepSound === 'function') stepSound(dt); });
+  guardStep('night', () => { if (typeof stepNight === 'function') stepNight(dt); });
   animateFocus(dt);
   M.post.render(M.t);
   if (M.diag) paintDiag();

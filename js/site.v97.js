@@ -608,13 +608,15 @@ function smallTree(x, y, z, s) {
 }
 
 function lampPosts(g, pts) {
-  const O = objMat(), glow = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFEBCB).multiplyScalar(1.3) });
+  const night = (typeof NIGHT !== 'undefined' && NIGHT.on);
+  const O = objMat(), glow = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFEBCB).multiplyScalar(night ? 7 : 1.3) });
   const posts = [], heads = [];
   for (const [x, z] of pts) {
     const p = new THREE.CylinderGeometry(0.05, 0.07, 4.2, 10); p.translate(x, 2.1, z); posts.push(p);
     posts.push(boxAt(0.5, 0.08, 0.2, x + 0.2, 4.2, z));
     heads.push(boxAt(0.36, 0.03, 0.14, x + 0.25, 4.15, z));
     block(x * CM - 12, x * CM + 12, z * CM - 12, z * CM + 12);
+    if (night && typeof nightLamp === 'function') nightLamp(g, x + 0.25, 4.15, z);      // v97 — 밤에는 진짜로 비춘다
   }
   const pm = new THREE.Mesh(mergeGeos(posts), O.steelD); pm.castShadow = true; g.add(pm);
   g.add(new THREE.Mesh(mergeGeos(heads), glow));

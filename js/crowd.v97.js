@@ -517,6 +517,7 @@ function buildOutdoorNpcs(M) {
       body: C.say + String.fromCharCode(10) + String.fromCharCode(10) + '※ 관람객은 소장품이 아닙니다. 아직은.' };
     M.pickables.push(hit);
     M.artByMesh.set(hit, n.info);
+    if (typeof floodPatch === 'function') floodPatch(v.mesh.material);      // v97 — 밤: 조명탑 · 가로등 빛을 받는다
     g.add(v.root, sh, hit);
     M.npcs.push(n);
     made[C.id] = n;

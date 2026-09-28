@@ -291,6 +291,7 @@ function createPost(renderer, scene, camera, opt = {}) {
     aoOn = on !== false;
     aoSkip = [];
     scene.traverse((o) => {
+      if (o.isSprite) { aoSkip.push(o); return; }          // v97 — 번짐(스프라이트)은 깊이를 남기지 않는다
       if (!o.isMesh) return;
       const m = Array.isArray(o.material) ? o.material[0] : o.material;
       if (!m || m.transparent || m.alphaTest > 0 || m.isShaderMaterial || m.isMeshBasicMaterial && m.depthWrite === false) aoSkip.push(o);
