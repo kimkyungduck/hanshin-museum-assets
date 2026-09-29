@@ -2777,6 +2777,7 @@ function loop(now) {
   guardStep('night', () => { if (typeof stepNight === 'function') stepNight(dt); });
   animateFocus(dt);
   guardStep('flicker', () => { if (typeof stepFlicker === 'function') stepFlicker(dt); });   // v100 — 실내 조명 깜빡임 · 정전
+  guardStep('haunt', () => { if (typeof stepHaunt === 'function') stepHaunt(dt); });        // v101 — 이상 현상
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }
@@ -2877,13 +2878,17 @@ function step(dt) {
   // 걸음에 따른 미세한 상하 흔들림 — 몰입의 절반은 여기서 온다
   const speed = Math.hypot(M.vel.x, M.vel.z);
   // 달리면 걸음이 넓어져 흔들림 주기는 덜 빨라지고, 폭은 커진다
-  M.bob = (M.bob || 0) + dt * speed * (speed > 4 ? 4.3 : 6.4);
+  /* v101 — 걸음 박자를 속도와 떼어 놓는다. 예전엔 흔들림(=발소리)이 속도에 비례해 걷기(3.1m/s)에서 초당 6걸음 —
+     한 걸음에 발소리가 두세 번 나는 것처럼 경박했다. 사람은 걸을 때 초당 1.8걸음 안팎, 뛰어도 2.6걸음쯤 */
+  const cadence = (speed > 4 ? 2.6 : 1.85) * clamp(speed / 1.6, 0.45, 1);      // 초당 걸음
+  M.bob = (M.bob || 0) + dt * Math.PI * cadence;
   const bobY = (M.jumpY ? 0 : 1) * Math.sin(M.bob) * Math.min(speed > 4 ? 0.045 : 0.022, speed * 0.008);
   // 발소리 — 흔들림 반 주기마다 한 걸음(물을 헤칠 땐 lake.js 가 물소리를 낸다)
   const stepN = Math.floor(M.bob / Math.PI);
   if (stepN !== M.stepN) {
     M.stepN = stepN;
     if (speed > 0.6 && !M.jumpY && typeof sndStep === 'function' && !(typeof lakeDepthHere === 'function' && lakeDepthHere() > 3)) sndStep(M.room, speed > 4 ? 1 : 0.7);
+    if (speed > 0.6 && !M.jumpY && typeof hauntStep === 'function') hauntStep(speed > 4 ? 1 : 0.7);     // v101 — 따라오는 발소리
   }
   // 달릴 때 화각이 살짝 넓어진다(속도감)
   if (M.baseFov == null) M.baseFov = M.cam.fov;

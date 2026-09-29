@@ -1746,3 +1746,18 @@ body::after { opacity: .018; }
 body.is-touch .snd-chip { top: 148px; }
 @media (max-width: 620px) { .snd-chip { top: 148px; } }
 .snd-chip.off { opacity: .7; }
+
+/* 이상 현상(v101) — 화면이 한순간 튄다 · 등 뒤의 속삭임(자막) */
+.haunt-glitch { position: absolute; inset: 0; z-index: 7; pointer-events: none; opacity: 0; }
+.haunt-glitch.on { animation: hauntG .34s steps(1) both; }
+@keyframes hauntG {
+  0% { opacity: 1; backdrop-filter: invert(1) hue-rotate(180deg) contrast(1.4); -webkit-backdrop-filter: invert(1) hue-rotate(180deg) contrast(1.4); background: rgba(90, 0, 0, .12); }
+  18% { opacity: 1; backdrop-filter: saturate(0) contrast(2) brightness(.55); -webkit-backdrop-filter: saturate(0) contrast(2) brightness(.55); background: none; transform: translateX(7px); }
+  34% { opacity: 0; }
+  56% { opacity: 1; backdrop-filter: saturate(2.6) hue-rotate(-35deg) brightness(.75); -webkit-backdrop-filter: saturate(2.6) hue-rotate(-35deg) brightness(.75); background: rgba(120, 0, 0, .18); transform: translateX(-5px); }
+  70%, 100% { opacity: 0; }
+}
+.haunt-say { position: absolute; left: 50%; bottom: 17%; transform: translateX(-50%); z-index: 8; pointer-events: none; opacity: 0;
+  font-size: 15px; font-style: italic; letter-spacing: .12em; color: rgba(214, 208, 198, .8); text-shadow: 0 0 10px rgba(0, 0, 0, .9); white-space: nowrap; }
+.haunt-say.on { animation: hauntSay 2.8s ease both; }
+@keyframes hauntSay { 0% { opacity: 0; filter: blur(3px); } 25% { opacity: .85; filter: blur(0); } 70% { opacity: .6; } 100% { opacity: 0; filter: blur(2px); } }

@@ -458,7 +458,7 @@ function stepCrowd(M, dt) {
       want = Math.atan2(PX - n.x, PZ - n.z);
       n.noticeT -= dt;
       if (n.quirk === 'freeze' && n.pd < 380) n.noticeT = Math.max(n.noticeT, 0.4);    // 내가 곁에 있는 동안은 꼼짝 않고 본다
-      if (n.noticeT <= 0 || n.pd > 700) { n.state = 'look'; n.wait = 1 + Math.random() * 2; }
+      if (n.noticeT <= 0 || (n.pd > 700 && !n.noticeFar)) { n.state = 'look'; n.wait = 1 + Math.random() * 2; n.noticeFar = false; }
     } else if (n.state === 'look') {
       want = Math.atan2(n.goal.lx - n.x, n.goal.lz - n.z);
       n.wait -= dt;
@@ -790,12 +790,14 @@ function npcHead(n, dt) {
   const PX = M.pos.x * CM, PZ = M.pos.z * CM, pd = n.pd == null ? 1e9 : n.pd;
   let ty = 0, tp = n.quirk === 'heavy' ? 0.3 : 0;
   const talking = n.state === 'talk' && !(n.talk && n.talk.intT > 0);
+  /* v101 — 모두가 고개로 나를 따라오니 오히려 무섭지 않았다(사용자 피드백). 고개로 따라오는 건 **얼어붙는 사람 하나**뿐,
+     그것도 천천히 · 40° 까지. 나머지는 두리번거림(작게)과 고개 숙임만 */
   if (n.state === 'mono') tp = 0.22;                                        // 구석을 보며 고개를 떨군다
-  else if (pd < 520 && !talking) {
+  else if (n.quirk === 'freeze' && pd < 520 && !talking) {
     const rel = npcAng(Math.atan2(PX - n.x, PZ - n.z) - n.yaw);
-    if (Math.abs(rel) < 2.1) { ty = clamp(rel, -1.2, 1.2); tp = n.quirk === 'heavy' ? 0.12 : 0; }
-  } else if (n.quirk === 'glance' && n.walkK > 0.4) ty = 0.6 * Math.sin(CROWD.t * 0.7 + n.phase) * Math.sin(CROWD.t * 0.23 + n.phase * 2);
-  n.hy = (n.hy || 0) + (ty - (n.hy || 0)) * Math.min(1, dt * 2.2);
+    if (Math.abs(rel) < 1.6) ty = clamp(rel, -0.7, 0.7);
+  } else if (n.quirk === 'glance' && n.walkK > 0.4) ty = 0.3 * Math.sin(CROWD.t * 0.7 + n.phase) * Math.sin(CROWD.t * 0.23 + n.phase * 2);
+  n.hy = (n.hy || 0) + (ty - (n.hy || 0)) * Math.min(1, dt * 1.2);
   n.hp = (n.hp || 0) + (tp - (n.hp || 0)) * Math.min(1, dt * 1.5);
   if (Math.abs(n.hy) < 0.004 && Math.abs(n.hp) < 0.004) return;
   v.root.updateMatrixWorld(true);

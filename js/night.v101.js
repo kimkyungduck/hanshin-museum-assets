@@ -364,7 +364,7 @@ function stepFlicker(dt) {
   if (here && !M.openId && !(typeof GOLF !== 'undefined' && GOLF.mode)) NIGHT.blackT -= dt;
   if (!NIGHT.black && NIGHT.blackT <= 0 && here) {
     NIGHT.black = { room: here.id, t: 0, dur: 0.6 + Math.random() * 0.9, k: 1, on: false };
-    NIGHT.blackT = 70 + Math.random() * 80;
+    NIGHT.blackT = (70 + Math.random() * 80) * (1 - 0.45 * (typeof HAUNT !== 'undefined' ? HAUNT.dread : 0));   // v101 — 밤이 깊을수록 잦게
     if (typeof sndBlack === 'function') sndBlack(false);
   }
   const B = NIGHT.black;
@@ -374,7 +374,7 @@ function stepFlicker(dt) {
     // 탁·탁 떨다가 꺼진다 → 어둠 → 지지직 두어 번 떨다 켜진다
     B.k = t < 0.05 ? 0.1 : t < 0.1 ? 1 : t < 0.16 ? 0.04 : t < D ? 0.02
       : t < D + 0.07 ? 0.5 : t < D + 0.16 ? 0.03 : t < D + 0.24 ? 0.8 : t < D + 0.3 ? 0.15 : 1;
-    if (!B.on && t >= D) { B.on = true; if (typeof sndBlack === 'function') sndBlack(true); blackTurn(B.room); }
+    if (!B.on && t >= D) { B.on = true; if (B.quick) { if (typeof sndCrackle === 'function') sndCrackle(0.12); } else { if (typeof sndBlack === 'function') sndBlack(true); blackTurn(B.room); } }
     if (t > D + 0.3) NIGHT.black = null;
   }
   // 방 조명 풀
