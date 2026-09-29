@@ -218,7 +218,7 @@ async function buildNpcs(M) {
       x: start.vx, z: start.vz, tx: start.vx, tz: start.vz, lx: start.x, lz: start.z,
       yaw: Math.atan2(start.x - start.vx, start.z - start.vz),
       wait: 1 + i * 0.7, speed: 0.62 + (i % 3) * 0.07, phase: i * 1.3, walkK: 0,
-      mutter: i === 1 || i === 4,          // v96 — 혼잣말하는 사람(구석을 보고 중얼거린다)
+      mutter: i % 2 === 1,                 // v96 — 혼잣말하는 사람(구석을 보고 중얼거린다) · v99 둘 → 셋
     };
     // v92 — 실사 관람객은 **제 걸음 폭 · 박자 그대로의 속도**로 걷는다. 예전엔 정해 둔 속도(0.62~0.76m/s)에
     //       걸음 클립을 느리게 틀어 맞춰서 슬로 모션처럼 보였다(사람은 천천히 걸을 때 박자보다 보폭을 줄인다)
@@ -244,6 +244,7 @@ async function buildNpcs(M) {
       room: r.id,
       body: npcSay(kind, r, npc.mutter),
     };
+    Object.defineProperty(npc.info, 'npcRef', { value: npc });      // v99 — 조사하면 먼저 대답한다(crowd.js npcAsk)
     M.pickables.push(hit);
     M.artByMesh.set(hit, npc.info);
 

@@ -26,6 +26,18 @@ const TALKS = [
   ['밖에 애들 봤어?', '정원에서 노는 애들?', '… 여기 애들 데려온 사람 없어.'],
   ['이 트로피, 뒷면에 이름이 하나 더 있어.', '긁어서 지운 거야.', '지운 사람도 벽에 걸려 있대.'],
   ['쉿. 들려?', '분수 소리잖아.', '분수는 아까 멈췄어.'],
+  ['저 액자 속 사람, 방금 웃지 않았어?', '웃는 사진이잖아.', '아까는 안 웃고 있었어.'],
+  ['카트길 따라 걸어 봤어?', '끝까지 가면 다시 여기야.', '몇 번을 가도 여기야.'],
+  ['너 그림자 어디 갔어?', '조명 때문이겠지.', '… 조명은 위에 있잖아.'],
+  ['방명록에 이름 쓸래?', '쓰면 어떻게 되는데?', '안 나가도 돼.'],
+  ['조명탑 하나가 자꾸 깜빡여.', '누가 신호 보내는 거래.', '누구한테?'],
+  ['아까 그 사람, 너랑 똑같이 생겼더라.', '내가 여기 있는데?', '그러니까 이상하다는 거야.'],
+  ['이 방 원래 이렇게 길었나?', '걸을수록 길어져.', '돌아가지 마. 더 길어져.'],
+  ['밤인데 왜 이렇게 사람이 많지.', '다 관람객이야.', '… 입장권 산 사람은 없대.'],
+  ['너 몇 타 쳤어?', '기억 안 나.', '다들 그래. 여기 오면.'],
+  ['여기 사진 찍어도 돼?', '찍어도 돼. 나중에 보지만 마.', '… 왜 다들 한 명씩 더 찍혀 있어?'],
+  ['분수 소리 들려?', '아니, 안 들려.', '그럼 저건 무슨 소리야.'],
+  ['네가 먼저 들어왔어, 내가 먼저 들어왔어?', '… 우리 같이 왔잖아.', '난 혼자 왔는데.'],
 ];
 /* 혼잣말(v96) — 방 구석을 보고 서서 중얼거린다. 말풍선이 아니라 흐린 글씨로 */
 const MONO = [
@@ -39,14 +51,57 @@ const MONO = [
   ['웃으면 안 돼.', '웃으면 액자에 들어가.'],
   ['멀리건 한 번만.', '한 번만 더 치면 돼.', '한 번만…'],
   ['불 끄지 마세요.', '아직 안에 있어요.'],
+  ['이 방 불은 누가 꺼요?', '… 아무도 안 끄면.'],
+  ['내 차례가 언제였더라.', '티샷… 티샷을 해야 되는데.'],
+  ['사진 속 내가 먼저 웃었어.', '나는 안 웃었는데.'],
+  ['괜찮아.', '괜찮아.', '아무도 안 봐.'],
+  ['아까 그 애들, 이름이 뭐였지.', '물어보면 안 됐는데.'],
+  ['공이 안 보여.', '공이… 호수 밑에.', '거기 다들 있어.'],
+  ['여기 있으면 따뜻해.', '벽 안은 따뜻해.'],
+  ['스코어를 줄여 줄게.', '대신 한 홀만 더 치자.'],
 ];
 /* 바깥 사람들 — 광장 · 연습 그린 · 아이들 */
 const MONO_OUT = {
-  plaza: [['분수에 동전 던지지 마세요.', '누가 주우러 들어가요.'], ['버스가 안 와.', '몇 년째 안 와.'], ['정문은 들어오는 문이에요.', '나가는 문은 따로 있어요.', '아무도 못 찾았지만.']],
-  practice: [['들어가라…', '들어가라…', '… 왜 안 들어가.'], ['컵이 하나 늘었어.', '어제는 넷이었는데.'], ['이 공, 내 거 아니야.', '누가 자꾸 놓고 가.']],
-  kid: [['술래는 저 아저씨야.'], ['엄마가 여기서 기다리랬어.'], ['쉿. 뒤에 있어.'], ['공 주워 줄까? 호수 밑에 많아.'], ['숨바꼭질 하자. 못 찾으면 계속 숨는 거야.'], ['(키득키득)']],
-  near: [['아저씨도 여기 살아?'], ['같이 놀래?'], ['찾았다.'], ['아저씨 이름 뭐야? … 곧 까먹을 텐데.']],
-  stranger: [['… 안녕하세요.', '처음 오셨죠.', '다들 처음엔 그래요.'], ['여기 오래 계시면 안 돼요.', '저처럼 돼요.']],
+  plaza: [['분수에 동전 던지지 마세요.', '누가 주우러 들어가요.'], ['버스가 안 와.', '몇 년째 안 와.'], ['정문은 들어오는 문이에요.', '나가는 문은 따로 있어요.', '아무도 못 찾았지만.'],
+    ['분수 바닥에 뭐가 반짝여.', '동전 아니야. 눈이야.'], ['깃발이 바람 반대로 날려.']],
+  practice: [['들어가라…', '들어가라…', '… 왜 안 들어가.'], ['컵이 하나 늘었어.', '어제는 넷이었는데.'], ['이 공, 내 거 아니야.', '누가 자꾸 놓고 가.'],
+    ['컵 안에서 소리가 나.', '누가 부르는 것 같아.'], ['한 뼘이면 들어가.', '한 뼘만 더 가까이.']],
+  kid: [['술래는 저 아저씨야.'], ['엄마가 여기서 기다리랬어.'], ['쉿. 뒤에 있어.'], ['공 주워 줄까? 호수 밑에 많아.'], ['숨바꼭질 하자. 못 찾으면 계속 숨는 거야.'], ['(키득키득)'],
+    ['아저씨 발소리 되게 커.'], ['우리 엄마도 여기 걸려 있어.'], ['밤엔 호수에서 소리 나.'], ['(흥얼흥얼)'], ['하나, 둘, 셋… 다 숨었니?']],
+  near: [['아저씨도 여기 살아?'], ['같이 놀래?'], ['찾았다.'], ['아저씨 이름 뭐야? … 곧 까먹을 텐데.'], ['잡았다—'], ['아저씨 뒤에 누구야?']],
+  stranger: [['… 안녕하세요.', '처음 오셨죠.', '다들 처음엔 그래요.'], ['여기 오래 계시면 안 돼요.', '저처럼 돼요.'],
+    ['정문으로 나가시려고요?', '… 행운을 빌어요.'], ['저 조명탑, 하나씩 꺼지면 끝나요.', '뭐가 끝나냐고요? 글쎄요.']],
+};
+/* v99 — 나와 마주쳤을 때 · 말을 걸었을 때 · 대화를 엿들었을 때 */
+const NEAR_IN = [
+  ['아… 죄송해요. 사람인 줄 몰랐어요.'], ['여기, 처음 오셨죠?'], ['그쪽도 길을 잃으셨어요?'], ['쉿. 지금은 보면 안 돼요.'],
+  ['너무 가까이 오지 마세요.'], ['… 저 아세요?', '이상하다. 전 그쪽 아는데.'], ['출구 찾으세요? 저도요.', '벌써 몇 바퀴째인지.'],
+  ['걸음 소리가 두 개였어요. 방금.'], ['그 사진 보셨어요? 그쪽 닮았던데.'], ['여기서 눈 마주치면 안 된대요.'],
+  ['아까도 지나가셨잖아요. 똑같은 걸음으로.'], ['몇 시예요? … 아, 여긴 시계가 없죠.'], ['괜찮아요. 저도 처음엔 무서웠어요.'], ['…', '(아무 말 없이 한참을 본다)'],
+];
+const MONO_CAUGHT = [['… 뒤에 계신 거 알아요.'], ['돌아보면 안 되는데.'], ['방금 제 말, 들으셨어요?'], ['아니에요. 혼잣말이에요. 혼잣말.']];
+const INTERRUPT = ['… 들었어요?', '아, 그쪽 얘기 한 거 아니에요.', '쉿. 저 사람이야.', '이따 얘기하자. 누가 들어.',
+  '같이 들으실래요? 끝까지 들으면 못 나가요.', '… 방금 그 얘기, 잊어 주세요.'];
+const ASK = [
+  ['네?'], ['저요? 그냥 보고 있었어요.', '이 그림이 자꾸 저를 봐서요.'], ['말 걸지 마세요.', '세고 있었는데 잊어버렸잖아요.'],
+  ['이름이요? … 기억이 안 나요.', '여기 오래 있으면 그래요.'], ['관람객이에요. 아직은.'], ['출구요? 저쪽… 아니, 이쪽이었나.'],
+  ['그쪽은 언제 왔어요?', '아니, 대답하지 마세요.'], ['지금 몇 명 보여요?', '… 저는 한 명 더 보이는데.'], ['조용히 해요. 여기 소리가 울려요.'],
+  ['18번 홀에 가 봤어요?', '밤에는 가지 마요.'], ['우리 전에 만난 적 있죠.', '그때도 이렇게 물었어요.'],
+];
+const ASK_MUTTER = [['…', '(대답 대신 계속 중얼거린다)'], ['하나, 둘… 아, 또 틀렸잖아요.'], ['방해하지 마세요.', '거의 다 셌어요.']];
+const ASK_KID = [['아저씨 술래야?'], ['엄마 못 봤어요?'], ['같이 놀자. 아무도 안 놀아 줘.'], ['쉿— 숨는 중이야.'], ['아저씨 그림자 이상해.']];
+/* 한 줄 중얼거림 — 누구나 가끔, 걷다 멈췄을 때 */
+const MONO_SHORT = ['… 추워.', '여기 아까 왔던 데 아니야?', '(한숨)', '또 이 방이네.', '누가 부른 것 같은데.', '시계가 멈췄어.',
+  '발소리… 내 거 맞나.', '저 액자, 아까는 없었는데.', '조금만 더 있다 가자.', '(작게 흥얼거린다)', '안 돌아볼 거야.', '불 좀 켜 주세요.'];
+/* 방마다 나오는 괴담 */
+const ROOM_TALKS = {
+  portraits: [['초상이 하나 늘었어.', '누군데?', '아직 얼굴이 안 그려졌어.'], ['저 초상 눈 좀 봐.', '눈이 왜?', '방금 깜빡였어.']],
+  photos: [['이 사진 뒷줄 끝에 누구야?', '흐려서 안 보여.', '어제보다 조금 선명해졌어.'], ['사진마다 같은 사람이 있어.', '회원이겠지.', '회원 명부에 없는 얼굴이야.']],
+  trophies: [['트로피에 비친 거 봐.', '우리잖아.', '… 셋이 비치는데.'], ['이 트로피 무거워 보인다.', '들어 본 사람이 없대.', '들면 대신 남아야 한대.']],
+  scorecards: [['이 카드, 19번 홀 칸이 있어.', '인쇄 실수겠지.', '점수가 적혀 있어.'], ['여기 사인, 네 글씨 아니야?', '… 나 이날 안 나왔어.', '그러니까.']],
+  clips: [['영상 끝나고 화면 꺼지면 봐.', '뭐가 보이는데?', '우리 뒤에 서 있는 사람.'], ['이 영상 소리 좀 줄여 봐.', '소리 안 켰는데.', '그럼 이 웃음소리는 뭐야.']],
+  champion: [['우승자 초상 앞에서는 오래 있지 마.', '왜?', '자리 바꾸재.']],
+  lobby: [['방명록 마지막 이름 봤어?', '아직 안 쓴 이름이던데.', '… 그게 네 이름이야.']],
 };
 
 
@@ -97,7 +152,7 @@ function crowdTopics() {
 /** 이 방에서 나눌 이야기 — 방 주제 쪽으로 기운다. 가끔은 흔한 잡담 */
 function crowdLines(room) {
   const T = crowdTopics(), r = M.roomById[room], k = r && r.content;
-  const pool = [].concat(T[k] || [], T[k] || [], T.any);
+  const pool = [].concat(T[k] || [], T[k] || [], ROOM_TALKS[k] || [], ROOM_TALKS[k] || [], T.any);
   if (pool.length && Math.random() < 0.75) return pool[Math.floor(Math.random() * pool.length)];
   return TALKS[Math.floor(Math.random() * TALKS.length)];
 }
@@ -211,11 +266,19 @@ function crowdTalkStep(T, dt) {
     if (a.state === 'talkWait' && b.state === 'talkWait') { T.started = true; a.state = b.state = 'talk'; T.k = -1; T.t = 0; }
     else return;
   }
+  // v99 — 내가 2.2m 안으로 들어오면 하던 이야기를 끊고 둘 다 나를 본다. 가까운 사람이 한 마디
+  if (!T.interrupted && Math.min(a.pd || 1e9, b.pd || 1e9) < 220) {
+    T.interrupted = true; T.intT = 6;
+    T.lines = T.lines.slice(0, Math.max(0, T.k + 1)).concat([pickOf(INTERRUPT)]);
+    T.forced = (a.pd || 1e9) < (b.pd || 1e9) ? a : b; T.forcedK = T.lines.length - 1;
+    T.t = Math.min(T.t, 0.5);
+  }
+  if (T.intT > 0) T.intT -= dt;
   T.t -= dt;
   if (T.t <= 0) {
     T.k++;
     if (T.k >= T.lines.length) { crowdTalkEnd(T); return; }
-    T.speaker = T.k % 2 === 0 ? a : b;
+    T.speaker = T.forced && T.k === T.forcedK ? T.forced : T.k % 2 === 0 ? a : b;
     T.t = 2.6 + T.lines[T.k].length * 0.09;
     crowdBubble(T, true);
     if (typeof sndMurmur === 'function') sndMurmur(T.speaker, Math.min(T.t - 0.6, 0.9 + T.lines[T.k].length * 0.07));   // 두런두런
@@ -262,7 +325,7 @@ function monoStep(n, dt) {
       if (T.el) T.el.remove();
       n.mono = null; n.monoOn = false;
       if (n.state === 'mono') { n.state = 'look'; n.wait = 2 + Math.random() * 3; }
-      n.monoCool = 14 + Math.random() * 20;
+      n.monoCool = n.mutter ? 5 + Math.random() * 8 : 18 + Math.random() * 22;      // v99 — 더 자주
       return;
     }
     const line = T.lines[T.k];
@@ -301,7 +364,7 @@ function boneRotWorld(bone, axis, ang) {
 }
 function crowdGesture(n, t) {
   const v = n.v, sk = v.mesh.skeleton;
-  if (!v.bones) v.bones = { head: sk.getBoneByName('Head'), neck: sk.getBoneByName('Neck'), ra: sk.getBoneByName('RightArm'), rf: sk.getBoneByName('RightForeArm'), la: sk.getBoneByName('LeftArm'), lf: sk.getBoneByName('LeftForeArm') };
+  npcBones(v);
   const B = v.bones, T = n.talk;
   const right = new THREE.Vector3(-Math.cos(n.yaw), 0, Math.sin(n.yaw)), up = new THREE.Vector3(0, 1, 0);
   // 부호 — 팔꿈치를 굽혀 손이 앞으로 오는 쪽(사람마다 뼈 방향이 다를 수 있어 한 번 재 둔다)
@@ -356,7 +419,11 @@ function crowdInit(M) {
   for (const n of M.npcs) {
     if (n.out) { outInit(n); continue; }
     n.state = 'look'; n.path = []; n.cool = 6 + Math.random() * 10; n.goal = { lx: n.lx, lz: n.lz };
-    n.monoCool = 8 + Math.random() * 12;
+    n.monoCool = (n.mutter ? 3 : 8) + Math.random() * 10;
+    // v99 — 걸음 버릇: 두리번(glance) · 문득 멈춰 돌아봄(halt) · 고개 숙이고 느릿느릿(heavy) · 뒤돌아봄(back) · 얼어붙기(freeze)
+    n.quirk = CROWD_QUIRK[(n.idx = (n.idx != null ? n.idx : CROWD.nq = (CROWD.nq || 0) + 1)) % CROWD_QUIRK.length];
+    if (n.quirk === 'heavy') n.speed *= 0.8;
+    n.noticeCool = 4 + Math.random() * 10;
   }
 }
 function stepCrowd(M, dt) {
@@ -366,12 +433,33 @@ function stepCrowd(M, dt) {
   CROWD.pairT -= dt;
   if (CROWD.pairT <= 0) { CROWD.pairT = 1.2; crowdPair(M); }
   const talks = new Set();
+  const PX = M.pos.x * CM, PZ = M.pos.z * CM;
   for (const n of M.npcs) {
     n.cool = (n.cool || 0) - dt;
     n.monoCool = (n.monoCool || 0) - dt;
+    n.asked = (n.asked || 0) - dt;
     if (n.out) { outStep(M, n, dt); npcPose(M, n, dt); continue; }
     let want = n.yaw, walking = false;
-    if (n.state === 'look') {
+    // v99 — 나와의 거리(같은 층 · 같은 방 또는 3m 안). 마주치면 멈춰서 나를 본다
+    const rr = M.roomById[n.room], pd = Math.hypot(PX - n.x, PZ - n.z);
+    n.pd = rr && Math.abs((M.feet || 0) - rr.y0) < 150 && ((M.room && M.room.id === n.room) || pd < 300) ? pd : 1e9;
+    n.noticeCool = (n.noticeCool || 0) - dt;
+    if (n.noticeCool <= 0 && n.pd < 230 && (n.state === 'look' || (n.state === 'walk' && !n.path.some((w) => w.enter)))) {
+      n.noticeCool = 45 + Math.random() * 40;
+      n.state = 'notice'; n.noticeT = n.quirk === 'freeze' ? 6 : 4.2; n.path = []; n.pause = 0;
+      if (n.quirk !== 'freeze' || Math.random() < 0.35) monoForce(n, pickOf(NEAR_IN), 'say', 0.7);
+    } else if (n.state === 'mono' && n.noticeCool <= 0 && n.pd < 200) {
+      // 구석을 보고 중얼거리던 사람 뒤에 서면 — 멈추고 천천히 돌아본다
+      n.noticeCool = 45 + Math.random() * 30;
+      n.state = 'notice'; n.noticeT = 5;
+      monoForce(n, pickOf(MONO_CAUGHT), 'mono', 1.2);
+    }
+    if (n.state === 'notice') {
+      want = Math.atan2(PX - n.x, PZ - n.z);
+      n.noticeT -= dt;
+      if (n.quirk === 'freeze' && n.pd < 380) n.noticeT = Math.max(n.noticeT, 0.4);    // 내가 곁에 있는 동안은 꼼짝 않고 본다
+      if (n.noticeT <= 0 || n.pd > 700) { n.state = 'look'; n.wait = 1 + Math.random() * 2; }
+    } else if (n.state === 'look') {
       want = Math.atan2(n.goal.lx - n.x, n.goal.lz - n.z);
       n.wait -= dt;
       if (n.wait <= 0) {
@@ -380,10 +468,15 @@ function stepCrowd(M, dt) {
         if (n.mutter && n.monoCool <= 0 && Math.random() < 0.5 && crowdCorner(n)) { /* 구석으로 */ }
         else if (Math.random() < 0.38 && crowdWander(n)) { /* 다른 방으로 */ } else crowdGo(n, crowdSpot(n.room, n));
       }
-      if (n.mutter && !n.mono && n.monoCool <= 0 && Math.random() < dt / 10) monoStart(n, pickOf(MONO));    // 전시 앞에서도 중얼거린다
+      if (n.mutter && !n.mono && n.monoCool <= 0 && Math.random() < dt / 5) monoStart(n, pickOf(MONO));    // 전시 앞에서도 중얼거린다
+      else if (!n.mutter && !n.mono && n.monoCool <= 0 && Math.random() < dt / 40) monoStart(n, [pickOf(MONO_SHORT)]);   // v99 — 누구나 가끔 한 마디
     } else if (n.state === 'mono') {
       want = Math.atan2(n.goal.lx - n.x, n.goal.lz - n.z);
       if (!n.mono) { n.state = 'look'; n.wait = 1; }
+    } else if (n.state === 'walk' && n.pause > 0) {
+      // v99 — 걷다가 문득 멈춘다(돌아보거나, 나를 보거나)
+      n.pause -= dt;
+      want = n.pauseYaw != null ? n.pauseYaw : n.yaw;
     } else if (n.state === 'walk' || n.state === 'goTalk') {
       const wp = n.path[0];
       if (!wp) {
@@ -421,12 +514,20 @@ function stepCrowd(M, dt) {
           if (!(sx || sz) || !hitsWall(nx, nz, r ? r.y0 : 0)) { n.x = nx; n.z = nz; }
           else { n.x += ux * Math.min(step, dist); n.z += uz * Math.min(step, dist); }
           want = Math.atan2(mx, mz); walking = true;
+          const pr = n.quirk === 'halt' ? 7 : n.quirk === 'back' ? 10 : n.quirk === 'freeze' ? 18 : 45;
+          if (n.state === 'walk' && dist > 150 && !n.path.some((w) => w.enter) && Math.random() < dt / pr) {
+            n.pause = 1.4 + Math.random() * 2.4;
+            n.pauseYaw = n.quirk === 'back' ? n.yaw + Math.PI * (Math.random() < 0.5 ? 1 : -1) * 0.95
+              : n.pd < 1200 ? Math.atan2(PX - n.x, PZ - n.z) : n.yaw + (Math.random() - 0.5) * 2.4;
+            if (!n.mono && n.monoCool <= 0 && Math.random() < 0.4) monoStart(n, [pickOf(MONO_SHORT)]);
+          }
           n.phase += dt * n.speed * 7.2;
         }
       }
     } else if (n.state === 'talkWait' || n.state === 'talk') {
       const o = n.talk && (n.talk.a === n ? n.talk.b : n.talk.a);
       if (o) want = Math.atan2(o.x - n.x, o.z - n.z);
+      if (n.talk && n.talk.intT > 0) want = Math.atan2(PX - n.x, PZ - n.z);      // 엿듣는 나를 본다
       if (n.talk) talks.add(n.talk);
       // 상대가 너무 오래 안 오면(길이 막혔다) 그만둔다
       n.wait -= dt; if (n.state === 'talkWait' && n.wait < -12 && n.talk) crowdTalkEnd(n.talk);
@@ -460,6 +561,7 @@ function npcPose(M, n, dt) {
     if (hs !== n.hs) { n.hs = hs; if (k > 0.5 && typeof sndStep === 'function') sndStep(M.roomById[n.room], 0.55, n.x / CM, n.z / CM); }
     if (v.morph) npcFace(n, dt);
     if (n.state === 'talk') { v.root.updateMatrixWorld(true); crowdGesture(n, CROWD.t + n.phase); }
+    npcHead(n, dt);
   } else {
     const k = n.walkK, sw = Math.sin(n.phase);
     v.legL.rotation.x = sw * 0.46 * k; v.legR.rotation.x = -sw * 0.46 * k;
@@ -515,6 +617,7 @@ function buildOutdoorNpcs(M) {
     n.info = { id: 'npc-out-' + C.id, type: 'placard', icon: n.kid ? '🧒' : '🧑', label: C.label, title: C.label,
       subtitle: '관람객 · ' + r.name, x: n.x, z: n.z, y: 120, room: r.id,
       body: C.say + String.fromCharCode(10) + String.fromCharCode(10) + '※ 관람객은 소장품이 아닙니다. 아직은.' };
+    Object.defineProperty(n.info, 'npcRef', { value: n });      // v99 — 조사하면 먼저 대답한다(npcAsk)
     M.pickables.push(hit);
     M.artByMesh.set(hit, n.info);
     if (typeof floodPatch === 'function') floodPatch(v.mesh.material);      // v97 — 밤: 조명탑 · 가로등 빛을 받는다
@@ -585,6 +688,7 @@ function outStep(M, n, dt) {
   const r = M.roomById[n.room], P = { x: M.pos.x * CM, z: M.pos.z * CM };
   const pd = Math.hypot(P.x - n.x, P.z - n.z);
   const near = Math.abs((M.feet || 0) - (r.y0 + (n.fy || 0))) < 250;      // 나와 같은 높이에 있을 때만(데크 위에서는 모른 척)
+  n.pd = near ? pd : 1e9;
   let want = n.yaw, walking = false;
   const go = (spot, k) => { if (spot) { n.tgt = spot; n.vmax = n.speed * k; n.state = 'walk'; } };
 
@@ -667,4 +771,59 @@ function outStep(M, n, dt) {
   n.walkK = clamp(n.curV / n.speed, 0, 1);
   const f = floorAt(r, n.x, n.z);
   n.fy = (f === f ? f : r.y0) - r.y0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   v99 — 고개 · 말 걸기
+   ══════════════════════════════════════════════════════════ */
+const CROWD_QUIRK = ['glance', 'halt', 'heavy', 'back', 'freeze', 'halt', 'glance', 'back'];
+function npcBones(v) {
+  const sk = v.mesh.skeleton;
+  if (!v.bones) v.bones = { head: sk.getBoneByName('Head'), neck: sk.getBoneByName('Neck'), ra: sk.getBoneByName('RightArm'), rf: sk.getBoneByName('RightForeArm'), la: sk.getBoneByName('LeftArm'), lf: sk.getBoneByName('LeftForeArm') };
+  return v.bones;
+}
+const _hUp = new THREE.Vector3(0, 1, 0), _hR = new THREE.Vector3();
+/** 고개 — 가까이(5m) 있는 나를 눈으로 따라온다(몸은 그대로). 두리번거리는 사람 · 고개 숙인 사람 */
+function npcHead(n, dt) {
+  const v = n.v, B = npcBones(v);
+  if (!B.head) return;
+  const PX = M.pos.x * CM, PZ = M.pos.z * CM, pd = n.pd == null ? 1e9 : n.pd;
+  let ty = 0, tp = n.quirk === 'heavy' ? 0.3 : 0;
+  const talking = n.state === 'talk' && !(n.talk && n.talk.intT > 0);
+  if (n.state === 'mono') tp = 0.22;                                        // 구석을 보며 고개를 떨군다
+  else if (pd < 520 && !talking) {
+    const rel = npcAng(Math.atan2(PX - n.x, PZ - n.z) - n.yaw);
+    if (Math.abs(rel) < 2.1) { ty = clamp(rel, -1.2, 1.2); tp = n.quirk === 'heavy' ? 0.12 : 0; }
+  } else if (n.quirk === 'glance' && n.walkK > 0.4) ty = 0.6 * Math.sin(CROWD.t * 0.7 + n.phase) * Math.sin(CROWD.t * 0.23 + n.phase * 2);
+  n.hy = (n.hy || 0) + (ty - (n.hy || 0)) * Math.min(1, dt * 2.2);
+  n.hp = (n.hp || 0) + (tp - (n.hp || 0)) * Math.min(1, dt * 1.5);
+  if (Math.abs(n.hy) < 0.004 && Math.abs(n.hp) < 0.004) return;
+  v.root.updateMatrixWorld(true);
+  _hR.set(-Math.cos(n.yaw), 0, Math.sin(n.yaw));
+  if (B.neck) boneRotWorld(B.neck, _hUp, n.hy * 0.4);
+  boneRotWorld(B.head, _hUp, n.hy * 0.6);
+  boneRotWorld(B.head, _hR, -n.hp);
+}
+/** 하던 말을 끊고 새로 */
+function monoForce(n, lines, kind, delay) {
+  if (n.mono && n.mono.el) n.mono.el.remove();
+  n.mono = { lines, k: -1, t: delay || 0.2, kind: kind || 'mono' };
+}
+/** 조사(E) — 처음엔 그 사람이 돌아서서 대답한다. 대답하는 동안 한 번 더 조사하면 설명을 연다 */
+function npcAsk(n) {
+  if (n.asked > 0) return false;
+  n.asked = 5;
+  const PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  if (n.talk) crowdTalkEnd(n.talk);
+  if (n.out) {
+    if (n.role === 'watch') { monoForce(n, ['…'], 'mono', 0.3); n.cool = 0; return true; }
+    if (n.role === 'kid') { n.state = 'stare'; n.tgt = null; n.wait = 3.6; monoForce(n, pickOf(ASK_KID), 'kid', 0.3); return true; }
+    n.state = 'look'; n.tgt = null; n.face = { x: PX, z: PZ }; n.wait = 7;
+    monoForce(n, pickOf(MONO_OUT.stranger), 'say', 0.3);
+  } else {
+    n.state = 'notice'; n.noticeT = 5.5; n.path = []; n.pause = 0;
+    monoForce(n, pickOf(n.mutter && Math.random() < 0.5 ? ASK_MUTTER : ASK), 'say', 0.35);
+  }
+  if (!CROWD.askTold && typeof toast === 'function') { CROWD.askTold = true; toast('대답하는 동안 한 번 더 조사하면 그 사람을 자세히 본다', 3200); }
+  return true;
 }

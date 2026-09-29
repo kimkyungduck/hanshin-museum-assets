@@ -3225,6 +3225,7 @@ function setScrim(url) {
 }
 
 function openExhibit(e) {
+  if (e.npcRef && typeof npcAsk === 'function' && npcAsk(e.npcRef)) return;      // v99 — 관람객은 먼저 대답한다
   M.openId = e.id;
   setScrim(e.img);
   if (counted(e) && !M.seen.has(e.id)) { M.seen.add(e.id); saveSeen(); }
