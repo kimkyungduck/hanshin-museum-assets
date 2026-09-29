@@ -1807,6 +1807,7 @@ function assignRoomLights() {
     list.sort((a, b) => d2(a) - d2(b));
     pool.forEach((l, i) => {
       const v = list[i];
+      l.userData.v = v || null;                  // v100 — 밤 깜빡임이 방 · 원래 세기를 읽는다
       if (!v) { parkLight(l); return; }
       l.position.copy(v.pos);
       l.color.copy(v.color);
@@ -2775,6 +2776,7 @@ function loop(now) {
   guardStep('sound', () => { if (typeof stepSound === 'function') stepSound(dt); });
   guardStep('night', () => { if (typeof stepNight === 'function') stepNight(dt); });
   animateFocus(dt);
+  guardStep('flicker', () => { if (typeof stepFlicker === 'function') stepFlicker(dt); });   // v100 — 실내 조명 깜빡임 · 정전
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

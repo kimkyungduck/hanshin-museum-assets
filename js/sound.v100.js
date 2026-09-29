@@ -87,6 +87,7 @@ function sndAmbience() {
   const room = sndNoise(5), rf = c.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 260;
   const rg = c.createGain(); rg.gain.value = 0; room.connect(rf); rf.connect(rg); rg.connect(SND.bus); room.start();
   SND.loops.room = { g: rg };
+  sndNightInit();
 }
 const sndSet = (L, v, pan) => {
   if (!L) return; const t = SND.ctx.currentTime;
@@ -117,6 +118,7 @@ function stepSound(dt) {
   }
   // 물속 — 먹먹하게
   SND.lp.frequency.setTargetAtTime(under ? 480 : 20000, SND.ctx.currentTime, 0.08);
+  if (night) stepNightSound(dt, r, out, under);
 }
 
 /** 발소리 — 바닥 재질에 맞춰. x·z 가 있으면 그 자리에서(관람객) */
@@ -214,4 +216,124 @@ function sndMurmur(n, dur, whisper) {
     t += syl + (Math.random() < 0.18 ? 0.18 : 0.02);
   }
   o.start(t0); o.stop(t0 + dur + 0.1);
+}
+
+/* ══════════════════════════════════════════════════════════
+   밤 소리(v100) — 모두 합성(받을 파일 없음)
+   ══════════════════════════════════════════════════════════
+   바깥: 풀벌레(세 마리가 제 박자로) · 호숫가 개구리 · 가끔 멀리서 부엉이 · 바닥에 깔린 낮은 웅웅거림
+   실내: 형광등 웅 소리(불안한 방) · 떨릴 때 지직 · 정전 '탁' 과 다시 켜지는 지지직 · 가끔 건물이 삐걱 */
+function sndNightInit() {
+  const c = SND.ctx; if (!c || SND.night) return;
+  const N = SND.night = { cr: [0, 0, 0].map((_, i) => ({ t: Math.random() * 2, pan: [-0.7, 0.2, 0.8][i], f: 4300 + i * 380 })), frogT: 1, owlT: 25, creakT: 18 };
+  // 웅웅거림 — 55Hz · 82.4Hz 사인이 아주 천천히 부풀었다 가라앉는다
+  const dg = c.createGain(); dg.gain.value = 0; dg.connect(SND.bus);
+  for (const [f, d] of [[55, 0.4], [82.4, -0.3], [110.3, 0.2]]) {
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.detune.value = d * 10;
+    const g = c.createGain(); g.gain.value = f < 60 ? 1 : 0.45; o.connect(g); g.connect(dg); o.start();
+  }
+  N.drone = dg;
+  // 형광등 웅 — 120Hz 톱니를 낮게 거른다
+  const h = c.createOscillator(); h.type = 'sawtooth'; h.frequency.value = 120;
+  const hf = c.createBiquadFilter(); hf.type = 'lowpass'; hf.frequency.value = 420;
+  const hg = c.createGain(); hg.gain.value = 0; h.connect(hf); hf.connect(hg); hg.connect(SND.bus); h.start();
+  N.hum = hg;
+}
+function sndEnv(g, t0, a, peak, d) { g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d); }
+function sndPanned(node, pan, verb) {
+  const c = SND.ctx; let out = node;
+  if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); node.connect(p); out = p; }
+  out.connect(SND.bus);
+  if (verb) { const s = c.createGain(); s.gain.value = verb; out.connect(s); s.connect(sndVerb()); }
+}
+/** 풀벌레 한 번 — 4~5kHz 짧은 떨림 3~4번 */
+function sndChirp(C, vol) {
+  const c = SND.ctx, t0 = c.currentTime + 0.02, n = 3 + (Math.random() < 0.4 ? 1 : 0);
+  const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = C.f * (0.98 + Math.random() * 0.04);
+  g.gain.value = 0; o.connect(g); sndPanned(g, C.pan, 0.05);
+  for (let i = 0; i < n; i++) { const t = t0 + i * 0.045; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.006); g.gain.linearRampToValueAtTime(0, t + 0.028); }
+  o.start(t0); o.stop(t0 + n * 0.045 + 0.05);
+}
+/** 개구리 — 낮은 톱니를 30Hz 로 떨게 */
+function sndFrog(vol, pan) {
+  const c = SND.ctx, t0 = c.currentTime + 0.02, dur = 0.18 + Math.random() * 0.14;
+  const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(150 + Math.random() * 40, t0); o.frequency.linearRampToValueAtTime(120, t0 + dur);
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 650; bp.Q.value = 3;
+  const tr = c.createOscillator(), tg = c.createGain(); tr.frequency.value = 28; tg.gain.value = 0.5;
+  const g = c.createGain(); sndEnv(g, t0, 0.02, vol, dur);
+  const am = c.createGain(); am.gain.value = 0.5; tr.connect(tg); tg.connect(am.gain);
+  o.connect(bp); bp.connect(am); am.connect(g); sndPanned(g, pan, 0.15);
+  o.start(t0); tr.start(t0); o.stop(t0 + dur + 0.1); tr.stop(t0 + dur + 0.1);
+}
+/** 부엉이 — 멀리서 '우— 우우' */
+function sndOwl(vol, pan) {
+  const c = SND.ctx, t0 = c.currentTime + 0.05;
+  for (const [dt, len, f] of [[0, 0.42, 390], [0.62, 0.22, 360], [0.9, 0.5, 340]]) {
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(f * 1.04, t0 + dt); o.frequency.linearRampToValueAtTime(f, t0 + dt + len);
+    sndEnv(g, t0 + dt, 0.08, vol, len); o.connect(g); sndPanned(g, pan, 0.5);
+    o.start(t0 + dt); o.stop(t0 + dt + len + 0.2);
+  }
+}
+/** 삐걱 — 낮은 톱니가 띠 거르기를 지나며 천천히 미끄러진다 */
+function sndCreak(vol, pan) {
+  const c = SND.ctx, t0 = c.currentTime + 0.02, dur = 0.5 + Math.random() * 0.5;
+  const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(70 + Math.random() * 30, t0); o.frequency.linearRampToValueAtTime(110 + Math.random() * 50, t0 + dur);
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(500, t0); bp.frequency.linearRampToValueAtTime(900, t0 + dur);
+  const g = c.createGain(); sndEnv(g, t0, 0.15, vol, dur);
+  o.connect(bp); bp.connect(g); sndPanned(g, pan, 0.8);
+  o.start(t0); o.stop(t0 + dur + 0.3);
+}
+/** 지직 — 잡음 짧게 */
+function sndCrackle(vol) {
+  const c = SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime, n = Math.floor(c.sampleRate * 0.09), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.15 ? 1 : 0.15) * (1 - i / n);
+  const s = c.createBufferSource(); s.buffer = b;
+  const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+  const g = c.createGain(); g.gain.value = vol; s.connect(hp); hp.connect(g); sndPanned(g, 0, 0.3); s.start(t0);
+}
+/** 정전 — 꺼질 때 '탁'(낮게 떨어지는 쿵 + 딸깍), 켜질 때 지지직 */
+function sndBlack(on) {
+  const c = SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime;
+  if (!on) {
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(95, t0); o.frequency.exponentialRampToValueAtTime(38, t0 + 0.3);
+    sndEnv(g, t0, 0.005, 0.5, 0.35); o.connect(g); sndPanned(g, 0, 0.7); o.start(t0); o.stop(t0 + 0.45);
+    sndCrackle(0.25);
+    if (SND.night) SND.night.hum.gain.setTargetAtTime(0, t0, 0.02);
+  } else {
+    sndCrackle(0.3); setTimeout(() => sndCrackle(0.22), 110); setTimeout(() => sndCrackle(0.15), 230);
+  }
+}
+/** 지금 방 불빛이 뚝 떨어지거나 튀는 순간 — 지직 */
+function sndFlickTick(room, k, last) {
+  if (!SND.ctx || !SND.night || !room) return;
+  if (Math.abs(k - last) > 0.3 && !NIGHT.black) sndCrackle(0.08 + Math.random() * 0.06);
+}
+function stepNightSound(dt, r, out, under) {
+  const N = SND.night; if (!N) return;
+  const c = SND.ctx, t = c.currentTime;
+  // 웅웅거림 — 바깥은 조금, 실내는 더 낮게 · 천천히 부풀었다 가라앉는다
+  N.drone.gain.setTargetAtTime(under ? 0 : (out ? 0.035 : 0.05) * (0.6 + 0.4 * Math.sin(M.t * 0.07)), t, 0.8);
+  // 형광등 — 불안한 방에서만(떨릴 때 커진다)
+  const fx = r && !out && NIGHT.fx ? NIGHT.fx[r.id] : null, k = r && !out && typeof roomFlick === 'function' ? roomFlick(r.id) : 1;
+  N.hum.gain.setTargetAtTime(fx && fx.unstable && !NIGHT.black ? 0.006 + (1 - k) * 0.02 : 0, t, 0.05);
+  if (under) return;
+  // 풀벌레 — 바깥이면 크게, 실내면 벽 너머로 아주 작게
+  const cv = out ? (r.terrain || r.mat === 'lawn' ? 0.03 : 0.018) : 0.003;
+  for (const C of N.cr) { C.t -= dt; if (C.t <= 0) { C.t = 0.55 + Math.random() * 0.5 + (Math.random() < 0.1 ? 2.5 : 0); sndChirp(C, cv * (0.6 + Math.random() * 0.5)); } }
+  // 개구리 — 호숫가
+  if (typeof lakeDist === 'function') {
+    const L = lakeDist(M.pos.x * CM, M.pos.z * CM);
+    N.frogT -= dt;
+    if (L < 1.8 && N.frogT <= 0) { N.frogT = 0.6 + Math.random() * 2.2; sndFrog(0.05 * clamp(1.9 - L, 0, 1), sndPan(HOLE.lake.x / CM, HOLE.lake.z / CM) + (Math.random() - 0.5) * 0.6); }
+  }
+  // 부엉이 — 바깥에서 가끔
+  N.owlT -= dt;
+  if (N.owlT <= 0) { N.owlT = 28 + Math.random() * 40; if (out) sndOwl(0.035, Math.random() * 2 - 1); }
+  // 삐걱 — 실내에서 가끔
+  N.creakT -= dt;
+  if (N.creakT <= 0) { N.creakT = 16 + Math.random() * 30; if (!out) sndCreak(0.05, Math.random() * 2 - 1); }
 }

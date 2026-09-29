@@ -307,3 +307,117 @@ function stepNight(dt) {
     }
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   실내 조명 — 불안한 방 · 정전 (v100)
+   ══════════════════════════════════════════════════════════
+   · 불안한 방 — 방의 4할쯤은 형광등이 낡았다. 대부분은 멀쩡하다가 가끔 몇 초씩 떨고, 꺼졌다 켜진다(웅 소리 · 지직)
+   · 정전 — 실내에 있으면 1~2분에 한 번, **지금 있는 방**이 통째로 꺼진다(0.6~1.5초). 탁 — 어둠 — 지지직 켜짐.
+     다시 켜지면 가까이 있던 관람객 하나가 **이쪽을 보고 서 있다**
+   전시물 스포트 · 방 조명(풀) · 천장 발광 띠 · 손전등을 함께 곱한다(광원 수는 그대로 — 재컴파일 없음) */
+NIGHT.fx = {};
+NIGHT.blackT = 45 + Math.random() * 30;
+NIGHT.black = null;
+function flickInit() {
+  if (NIGHT.fxReady) return;
+  NIGHT.fxReady = true;
+  const hash = (s) => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973; return h; };
+  for (const r of M.rooms) {
+    if (r.outdoor) continue;
+    const h = hash(r.id);
+    NIGHT.fx[r.id] = { unstable: h % 10 < 4 || r.content === 'portraits', seed: h * 0.37 };
+  }
+  NIGHT.strips = [];
+  // 실내 재질의 환경광 · 자체 발광 — 방 조명이 풀 광원이 아닌 방(대부분)은 이것이 '방 불빛' 이다
+  NIGHT.inMats = [];
+  const seen = new Set();
+  for (const r of M.rooms) {
+    if (r.outdoor || !M.roomGroups[r.id]) continue;
+    M.roomGroups[r.id].traverse((o) => {
+      if (!o.isMesh) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        if (!m || seen.has(m) || m.userData.out || !(m.isMeshStandardMaterial || m.isMeshPhysicalMaterial)) continue;
+        seen.add(m); NIGHT.inMats.push({ m, env: m.envMapIntensity, em: m.emissiveIntensity });
+      }
+    });
+  }
+  for (const r of M.rooms) {
+    const g = M.roomGroups[r.id]; if (!g) continue;
+    g.traverse((o) => { if (o.isMesh && o.material && o.material.userData && o.material.userData.strip) NIGHT.strips.push({ room: o.material.userData.strip, m: o.material, c: o.material.color.clone() }); });
+  }
+}
+/** 방 불빛 배율(0~1) */
+function roomFlick(id) {
+  const fx = NIGHT.fx[id];
+  if (!fx) return 1;
+  let k = 1;
+  if (fx.unstable) { const f = nightFlick({ flicker: true, seed: fx.seed }, NIGHT.t * 0.9); k = f < 0.1 ? 0.2 : f < 0.5 ? 0.55 : 1; }
+  const B = NIGHT.black;
+  if (B && B.room === id) k *= B.k;
+  return k;
+}
+function stepFlicker(dt) {
+  if (!NIGHT.on || !M.rooms) return;
+  flickInit();
+  const here = M.room && !M.room.outdoor ? M.room : null;
+  // 정전 — 실내에서만 센다
+  if (here && !M.openId && !(typeof GOLF !== 'undefined' && GOLF.mode)) NIGHT.blackT -= dt;
+  if (!NIGHT.black && NIGHT.blackT <= 0 && here) {
+    NIGHT.black = { room: here.id, t: 0, dur: 0.6 + Math.random() * 0.9, k: 1, on: false };
+    NIGHT.blackT = 70 + Math.random() * 80;
+    if (typeof sndBlack === 'function') sndBlack(false);
+  }
+  const B = NIGHT.black;
+  if (B) {
+    B.t += dt;
+    const t = B.t, D = B.dur;
+    // 탁·탁 떨다가 꺼진다 → 어둠 → 지지직 두어 번 떨다 켜진다
+    B.k = t < 0.05 ? 0.1 : t < 0.1 ? 1 : t < 0.16 ? 0.04 : t < D ? 0.02
+      : t < D + 0.07 ? 0.5 : t < D + 0.16 ? 0.03 : t < D + 0.24 ? 0.8 : t < D + 0.3 ? 0.15 : 1;
+    if (!B.on && t >= D) { B.on = true; if (typeof sndBlack === 'function') sndBlack(true); blackTurn(B.room); }
+    if (t > D + 0.3) NIGHT.black = null;
+  }
+  // 방 조명 풀
+  for (const l of [...(M.vpoint || []), ...(M.vspot || [])]) {
+    const v = l.userData.v;
+    if (v) l.intensity = v.intensity * roomFlick(v.room);
+  }
+  // 전시물 스포트(animateFocus 가 방금 정한 세기에 곱한다)
+  for (const s of M.pool || []) if (s.e) s.sp.intensity *= roomFlick(s.e.room);
+  // 천장 발광 띠
+  for (const S of NIGHT.strips) { const k = roomFlick(S.room); S.m.color.copy(S.c).multiplyScalar(k); }
+  // 손전등(나를 비추는 약한 빛)도 정전 때는 거의 꺼진다
+  if (M.handLight) M.handLight.intensity = 0.63 * (B && here && B.room === here.id ? Math.max(0.15, B.k) : 1);
+  // 지금 방이 떨리는 순간 — 지직
+  const k = here ? roomFlick(here.id) : 1;
+  // 환경광 · 천장 발광 · 반구광 — 지금 있는 방의 불빛을 따라간다(완전한 암흑은 아니게)
+  if (Math.abs(k - (NIGHT.appliedK == null ? 1 : NIGHT.appliedK)) > 0.01) {
+    NIGHT.appliedK = k;
+    const e = 0.12 + 0.88 * k;
+    for (const I of NIGHT.inMats) { I.m.envMapIntensity = I.env * e; I.m.emissiveIntensity = I.em * k; }
+    if (M.hemi) M.hemi.intensity = NIGHT.hemiI * e;
+    const U = M.post && M.post.uniforms; if (U && U.uLift) U.uLift.value = 0.12 * e;      // 암부 들어올림도 함께 — 정전은 정말 깜깜하게
+  }
+  if (typeof sndFlickTick === 'function') sndFlickTick(here, k, NIGHT.lastK == null ? 1 : NIGHT.lastK);
+  NIGHT.lastK = k;
+}
+/** 불이 다시 켜지면 — 가까이 있던 관람객 하나가 이쪽을 보고 서 있다 */
+function blackTurn(room) {
+  if (!M.npcs) return;
+  const PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  let best = null, bd = 900;
+  for (const n of M.npcs) {
+    if (n.out || n.room !== room || n.talk) continue;
+    const d = Math.hypot(n.x - PX, n.z - PZ);
+    if (d < bd && d > 150) { bd = d; best = n; }
+  }
+  if (!best) return;
+  const n = best;
+  // 한 걸음 가까이 · 몸째 돌려 세운다(어둠 속에서 움직였다)
+  const ux = (PX - n.x) / bd, uz = (PZ - n.z) / bd, step = Math.min(120, bd - 150);
+  if (!hitsWall(n.x + ux * step, n.z + uz * step, M.roomById[room].y0)) { n.x += ux * step; n.z += uz * step; }
+  n.yaw = Math.atan2(PX - n.x, PZ - n.z);
+  n.state = 'notice'; n.noticeT = 4.5; n.path = []; n.pause = 0; n.curV = 0;
+  if (n.mono && n.mono.el) n.mono.el.remove();
+  n.mono = null;
+}

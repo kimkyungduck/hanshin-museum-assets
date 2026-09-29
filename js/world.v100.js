@@ -485,6 +485,7 @@ function buildRoomShell(r, g) {
     // 선형 조명 — 천장에 박힌 가는 발광 띠(블룸이 물어 실제 조명처럼 보인다)
     const dim = r.mat === 'dark' ? 0.35 : 1;
     const strip = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFF1DA).multiplyScalar(dim) });
+    strip.userData.noBatch = true; strip.userData.strip = r.id;          // v100 — 밤: 방 조명과 함께 깜빡인다(night.js)
     const n = Math.max(1, Math.round(r.d / 380));
     const len = Math.max(1, wM - 2.4);
     const bars = [];
