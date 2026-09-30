@@ -1795,3 +1795,10 @@ body.is-touch .torch-chip { top: 184px; }
 @media (max-width: 620px) { .torch-chip { top: 184px; } }
 .torch-chip.off { opacity: .75; }
 .torch-chip.low { color: #E07A6A; }
+
+/* 밤 시계(v106) — 손전등 칩 아래, 작게 */
+.night-clock { position: absolute; right: 24px; top: 256px; z-index: 20; pointer-events: none;
+  font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: .14em; color: rgba(214, 206, 188, .6); text-shadow: 0 0 6px rgba(0, 0, 0, .8); }
+.night-clock.late { color: rgba(214, 120, 104, .75); }
+body.is-touch .night-clock { top: 222px; }
+@media (max-width: 620px) { .night-clock { top: 222px; font-size: 10px; } }

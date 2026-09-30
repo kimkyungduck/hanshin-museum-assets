@@ -2781,6 +2781,7 @@ function loop(now) {
   guardStep('flicker', () => { if (typeof stepFlicker === 'function') stepFlicker(dt); });   // v100 — 실내 조명 깜빡임 · 정전
   guardStep('haunt', () => { if (typeof stepHaunt === 'function') stepHaunt(dt); });        // v101 — 이상 현상
   guardStep('torch', () => { if (typeof stepTorch === 'function') stepTorch(dt); });        // v105 — 손전등
+  guardStep('score', () => { if (typeof stepScore === 'function') stepScore(dt); });        // v106 — 밤의 음악 · 심장 · 밤 시계
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

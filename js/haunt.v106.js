@@ -65,6 +65,7 @@ function sndBreath(vol, pan) {
 /** 낮은 웅웅거림이 한 번 부푼다(그림자가 나타날 때) */
 function sndSwell() {
   const c = SND.ctx; if (!c || !SND.on || !SND.night) return;
+  if (typeof scoreHush === 'function') scoreHush(7);                       // v106 — 나타날 땐 음악이 멎는다
   const g = SND.night.drone.gain, t = c.currentTime;
   g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.16, t + 1.2); g.linearRampToValueAtTime(0.05, t + 4.5);
 }
@@ -208,6 +209,7 @@ function stepHaunt(dt) {
   if (HAUNT.ev) { HAUNT.ev.step(dt); if (HAUNT.ev.done) HAUNT.ev = null; return; }
   if (!hauntOK()) return;
   HAUNT.next -= dt;
+  if (HAUNT.next < 8 && typeof scoreHush === 'function') scoreHush(0.3);   // v106 — 무언가 오기 전, 조용해진다
   if (HAUNT.next > 0) return;
   const out = M.room.outdoor, dr = HAUNT.dread;
   const mm = HAUNT.nights >= 1 ? 1 : 0;                                    // v104 — 두 번째 밤부터 '나란히 걷는 사람'
