@@ -3237,6 +3237,7 @@ function openExhibit(e) {
   setScrim(e.img);
   if (counted(e) && !M.seen.has(e.id)) { M.seen.add(e.id); saveSeen(); }
   $('ovBody').innerHTML = renderExhibit(e);
+  if (typeof hauntNote === 'function') hauntNote(e);          // v102 — 관리자 메모 · 새 초상
   // 스코어카드 홀별 표(22칸)는 기본 폭(620px)에 들어가지 않는다
   $('ovCard').classList.toggle('wide', !!e.card);
   $('overlay').classList.remove('hidden');

@@ -792,7 +792,8 @@ function npcHead(n, dt) {
   const talking = n.state === 'talk' && !(n.talk && n.talk.intT > 0);
   /* v101 — 모두가 고개로 나를 따라오니 오히려 무섭지 않았다(사용자 피드백). 고개로 따라오는 건 **얼어붙는 사람 하나**뿐,
      그것도 천천히 · 40° 까지. 나머지는 두리번거림(작게)과 고개 숙임만 */
-  if (n.state === 'mono') tp = 0.22;                                        // 구석을 보며 고개를 떨군다
+  if (n.listenT > 0) { n.listenT -= dt; tp = -0.32; }                    // v102 — 안내 방송 — 천장을 올려다본다
+  else if (n.state === 'mono') tp = 0.22;                                   // 구석을 보며 고개를 떨군다
   else if (n.quirk === 'freeze' && pd < 520 && !talking) {
     const rel = npcAng(Math.atan2(PX - n.x, PZ - n.z) - n.yaw);
     if (Math.abs(rel) < 1.6) ty = clamp(rel, -0.7, 0.7);

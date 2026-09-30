@@ -1761,3 +1761,13 @@ body.is-touch .snd-chip { top: 148px; }
   font-size: 15px; font-style: italic; letter-spacing: .12em; color: rgba(214, 208, 198, .8); text-shadow: 0 0 10px rgba(0, 0, 0, .9); white-space: nowrap; }
 .haunt-say.on { animation: hauntSay 2.8s ease both; }
 @keyframes hauntSay { 0% { opacity: 0; filter: blur(3px); } 25% { opacity: .85; filter: blur(0); } 70% { opacity: .6; } 100% { opacity: 0; filter: blur(2px); } }
+
+/* 변하는 전시관(v102) — 안내 방송 자막 · 관리자 메모 */
+.haunt-pa { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 8; pointer-events: none; opacity: 0;
+  max-width: min(640px, calc(100vw - 32px)); padding: 10px 16px 11px; background: rgba(8, 9, 12, .72); border: 1px solid rgba(227, 197, 103, .28);
+  color: rgba(236, 230, 218, .92); font-size: 14px; line-height: 1.5; text-align: center; word-break: keep-all; transition: opacity .6s ease; }
+.haunt-pa.on { opacity: 1; }
+.haunt-pa .pa-k { display: block; font-size: 10.5px; letter-spacing: .28em; color: rgba(227, 197, 103, .8); margin-bottom: 4px; }
+.haunt-pa .pa-t { min-height: 1.5em; display: inline-block; }
+.haunt-note { margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(140, 60, 50, .35); font-size: 12.5px; font-style: italic;
+  color: #8E4A40; letter-spacing: .02em; }
