@@ -85,6 +85,7 @@ const FLOOD_U = { uFlP: { value: [] }, uFlD: { value: [] }, uFlK: { value: [] } 
 function floodInit() {
   const maxF = (M.renderer && M.renderer.capabilities.maxFragmentUniforms) || 224;
   FLOOD_N = clamp(Math.floor((maxF - 200) / 3), 6, 16);          // 폰 uniform 한도에서 넉넉히 남긴다
+  if (matchMedia('(pointer: coarse)').matches) FLOOD_N = Math.min(FLOOD_N, 8);   // v107 — 폰 GPU: 바깥 바닥 한 칸마다 16번은 무겁다
   for (let i = 0; i < FLOOD_N; i++) {
     FLOOD_U.uFlP.value.push(new THREE.Vector4(0, -1000, 0, 1));   // xyz 위치(카메라 기준) · w 사거리
     FLOOD_U.uFlD.value.push(new THREE.Vector4(0, -1, 0, 0.5));    // xyz 방향 · w 바깥 cos

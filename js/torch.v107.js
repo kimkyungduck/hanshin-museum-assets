@@ -92,6 +92,7 @@ function stepTorch(dt) {
     TORCH.hit += dt;
     if (TORCH.hit > 0.6) {
       TORCH.hit = 0; torchDie(1.6);
+      if (typeof hapt === 'function') hapt([40, 50, 40]);
       shadeHide();
       if (HAUNT.ev) { HAUNT.ev.done = true; HAUNT.ev = null; }
       if (NIGHT.black) NIGHT.black.shadeOK = false;

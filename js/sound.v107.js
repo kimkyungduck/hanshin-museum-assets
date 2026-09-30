@@ -33,6 +33,13 @@ function sndStart() {
   const c = sndCtx(); if (!c) return;
   SND.master.gain.value = SND.on ? 1 : 0;
   sndChip();
+  try {
+    if (SND.on && localStorage.getItem('museum-tip-ear') !== '1') {
+      localStorage.setItem('museum-tip-ear', '1');
+      setTimeout(() => toast(matchMedia('(pointer: coarse)').matches ? '🎧 이어폰을 끼면 더 잘 들립니다 — 발소리 · 속삭임은 왼쪽 오른쪽이 있습니다. 소리는 🔊 칩으로 끈다'
+        : '🎧 이어폰을 끼면 더 잘 들립니다 — 발소리 · 속삭임은 왼쪽 오른쪽이 있습니다. 소리는 M 키로 끈다', 5200), 2500);
+    }
+  } catch (e) { /* 기억 못 해도 된다 */ }
   if (SND.loading) return;
   SND.loading = Promise.all(SND_FILES.map((n) => fetch(SND_DIR + n + '.mp3').then((r) => (r.ok ? r.arrayBuffer() : null))
     .then((a) => a && new Promise((res) => c.decodeAudioData(a, res, () => res(null))))
@@ -296,6 +303,7 @@ function sndCrackle(vol) {
 /** 정전 — 꺼질 때 '탁'(낮게 떨어지는 쿵 + 딸깍), 켜질 때 지지직 */
 function sndBlack(on) {
   const c = SND.ctx; if (!c || !SND.on) return;
+  hapt(on ? [18, 60, 18] : 70);                                        // v107 — 진동
   const t0 = c.currentTime;
   if (!on) {
     const o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
@@ -336,4 +344,13 @@ function stepNightSound(dt, r, out, under) {
   // 삐걱 — 실내에서 가끔
   N.creakT -= dt;
   if (N.creakT <= 0) { N.creakT = 16 + Math.random() * 30; if (!out) sndCreak(0.05, Math.random() * 2 - 1); }
+}
+
+/* ── 진동(v107) — 겁주는 순간에 폰이 떨린다. 소리를 끄면 함께 꺼진다 ───────────────── */
+const HAPTIC = { ok: typeof navigator !== 'undefined' && 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches, last: 0 };
+function hapt(pattern) {
+  if (!HAPTIC.ok || !SND.on) return;
+  const now = performance.now(); if (now - HAPTIC.last < 120) return;
+  HAPTIC.last = now;
+  try { navigator.vibrate(pattern); } catch (e) { /* 막힌 기기 */ }
 }

@@ -1764,7 +1764,7 @@ body.is-touch .snd-chip { top: 148px; }
 
 /* 변하는 전시관(v102) — 안내 방송 자막 · 관리자 메모 */
 .haunt-pa { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 8; pointer-events: none; opacity: 0;
-  max-width: min(640px, calc(100vw - 32px)); padding: 10px 16px 11px; background: rgba(8, 9, 12, .72); border: 1px solid rgba(227, 197, 103, .28);
+  width: max-content; max-width: min(640px, calc(100vw - 32px)); box-sizing: border-box; padding: 10px 16px 11px; background: rgba(8, 9, 12, .72); border: 1px solid rgba(227, 197, 103, .28);
   color: rgba(236, 230, 218, .92); font-size: 14px; line-height: 1.5; text-align: center; word-break: keep-all; transition: opacity .6s ease; }
 .haunt-pa.on { opacity: 1; }
 .haunt-pa .pa-k { display: block; font-size: 10.5px; letter-spacing: .28em; color: rgba(227, 197, 103, .8); margin-bottom: 4px; }
@@ -1802,3 +1802,11 @@ body.is-touch .torch-chip { top: 184px; }
 .night-clock.late { color: rgba(214, 120, 104, .75); }
 body.is-touch .night-clock { top: 222px; }
 @media (max-width: 620px) { .night-clock { top: 222px; font-size: 10px; } }
+
+/* 폰(v107) — 안내 방송은 오른쪽 칩들 아래로(칩과 겹치지 않게), 속삭임은 조작 버튼 위로 */
+@media (max-width: 620px) {
+  .haunt-pa { top: 252px; font-size: 13px; padding: 9px 12px 10px; }
+  .haunt-say { bottom: 33%; font-size: 14px; white-space: normal; width: calc(100vw - 48px); text-align: center; }
+}
+body.is-touch .haunt-pa { top: 252px; }
+body.is-touch .haunt-say { bottom: 33%; }

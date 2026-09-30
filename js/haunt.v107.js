@@ -66,12 +66,14 @@ function sndBreath(vol, pan) {
 function sndSwell() {
   const c = SND.ctx; if (!c || !SND.on || !SND.night) return;
   if (typeof scoreHush === 'function') scoreHush(7);                       // v106 — 나타날 땐 음악이 멎는다
+  if (typeof hapt === 'function') hapt(25);
   const g = SND.night.drone.gain, t = c.currentTime;
   g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.16, t + 1.2); g.linearRampToValueAtTime(0.05, t + 4.5);
 }
 
 /* ── 화면 · 자막 ───────────────────────────────────────── */
 function hauntGlitch() {
+  if (typeof hapt === 'function') hapt([30, 40, 20]);
   let el = document.getElementById('hauntGlitch');
   if (!el) { el = document.createElement('div'); el.id = 'hauntGlitch'; el.className = 'haunt-glitch'; document.getElementById('gal').appendChild(el); }
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
@@ -579,6 +581,7 @@ function stepFinale(dt) {
     if (F.t > 2.8 && !F.said) {
       F.said = true;
       hauntSay('… 찾았다.');
+      if (typeof hapt === 'function') hapt([60, 80, 220]);
       if (typeof sndMurmur === 'function') { const f = hauntFwd(); sndMurmur({ x: PX + f.x * 120, z: PZ + f.z * 120, v: { hM: 1.9 }, room: 'hall' }, 1.1, true); }
     }
     if (F.t > 5.6 && !F.white) {

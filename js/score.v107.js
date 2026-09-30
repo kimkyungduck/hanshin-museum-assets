@@ -96,6 +96,9 @@ function stepScore(dt) {
   SCORE.bpm += (bpm - SCORE.bpm) * Math.min(1, dt * 1.5);
   if (SCORE.bpm > 55) {
     SCORE.beatT -= dt;
-    if (SCORE.beatT <= 0) { SCORE.beatT = 60 / SCORE.bpm; scoreBeat(clamp((SCORE.bpm - 55) / 70, 0.15, 1) * 0.16); }
+    if (SCORE.beatT <= 0) {
+      SCORE.beatT = 60 / SCORE.bpm; scoreBeat(clamp((SCORE.bpm - 55) / 70, 0.15, 1) * 0.16);
+      if (SCORE.bpm > 100 && typeof hapt === 'function') hapt([22, 140, 14]);          // v107 — 심장이 빨라지면 손에서도
+    }
   } else SCORE.beatT = 0;
 }
