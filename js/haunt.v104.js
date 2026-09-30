@@ -181,6 +181,7 @@ function stepHaunt(dt) {
   HAUNT.t += dt;
   HAUNT.dread = clamp(HAUNT.t / 900, 0, 1);
   if (HAUNT.calm) { stepTilts(dt); return; }                              // v103 — 결말 뒤 조용한 밤
+  secondNightInit();                                                       // v104 — 두 번째 밤
   stepFinale(dt);                                                          // v103 — 마지막 방송 · 결말
   if (HAUNT.finale && HAUNT.finale.phase !== 'call') { if (HAUNT.ev) { HAUNT.ev.step(dt); if (HAUNT.ev.done) HAUNT.ev = null; } }
   stepHaunt4(dt);                                                          // v102 — 안내 방송 · 기울어진 액자 · 새 초상
@@ -208,8 +209,9 @@ function stepHaunt(dt) {
   HAUNT.next -= dt;
   if (HAUNT.next > 0) return;
   const out = M.room.outdoor, dr = HAUNT.dread;
-  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1]]
-    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4]];
+  const mm = HAUNT.nights >= 1 ? 1 : 0;                                    // v104 — 두 번째 밤부터 '나란히 걷는 사람'
+  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm]]
+    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm]];
   let sum = W.reduce((s, w) => s + w[1], 0), r = Math.random() * sum, pick = W[0][0];
   for (const [k, w] of W) { r -= w; if (r <= 0) { pick = k; break; } }
   const ok = HAUNT_EV[pick] && HAUNT_EV[pick]();
@@ -270,7 +272,12 @@ function sndChime(sour) {
   });
 }
 function hauntPA(custom, tierSet) {
-  const dr = HAUNT.dread, tier = tierSet != null ? tierSet : dr < 0.25 ? 0 : dr < 0.55 ? 1 : 2;
+  let dr = HAUNT.dread, tier = tierSet != null ? tierSet : dr < 0.25 ? 0 : dr < 0.55 ? 1 : 2;
+  if (!custom && HAUNT.welcome) {
+    HAUNT.welcome = false; tier = 2;
+    custom = HAUNT.escaped ? '다시 오셨군요. 지난번엔 나가셨더군요. 이번엔 문을 잘 닫아 두었습니다.'
+      : HAUNT.nights > 1 ? '다시 오셨군요. ' + (HAUNT.nights + 1) + '번째 밤입니다. 자리는 늘 비워 두었습니다.' : '다시 오셨군요. 기다리고 있었습니다.';
+  }
   let line = custom || (HAUNT.portraitNew ? '명예의 전당에 새 초상이 걸렸습니다. 확인해 주십시오.' : pickOf(PA_LINES[tier]));
   HAUNT.portraitNew = false;
   const room = M.room ? M.room.name : '전시관';
@@ -474,15 +481,15 @@ function finaleStart() {
   return true;
 }
 function finaleCard() {
-  let k = 1;
-  try { k = (parseInt(localStorage.getItem(FIN_END_KEY), 10) || 0) + 1; localStorage.setItem(FIN_END_KEY, String(k)); } catch (e) { /* 기억 못 해도 된다 */ }
-  const d = new Date(), p2 = (v) => String(v).padStart(2, '0');
-  const stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':00';
+  const stamp = nightStamp();
+  nightLogPush('end', stamp);
+  const k = HAUNT.log.length;
   const gb = M.exhibits.find((e) => e.type === 'guestbook');
   if (gb) { gb.entries = (gb.entries || []).slice(); gb.entries.push({ name: '오늘의 관람객', body: '(퇴장 기록 없음)', color: '#8E4A40', created_at: stamp }); }
   const el = document.createElement('div'); el.id = 'hauntCard'; el.className = 'haunt-card';
   el.innerHTML = '<p class="hc-k">관람 종료</p><h2>관람해 주셔서 감사합니다</h2>'
-    + '<p>오늘 명예의 전당에 초상 한 점이 새로 걸렸습니다.<br>얼굴은 아직 마르지 않았습니다.</p>'
+    + (k > 1 ? '<p>초상이 한 점 더 늘었습니다.<br>명예의 전당에는 이제 ' + k + '점이 걸려 있습니다. 모두 같은 얼굴입니다.</p>'
+      : '<p>오늘 명예의 전당에 초상 한 점이 새로 걸렸습니다.<br>얼굴은 아직 마르지 않았습니다.</p>')
     + '<p class="hc-gb">방명록 마지막 줄 — ' + stamp.slice(0, 16) + ' · 오늘의 관람객 · <em>퇴장 기록 없음</em></p>'
     + (k > 1 ? '<p class="hc-n">' + k + '번째 밤이었습니다.</p>' : '')
     + '<div class="hc-b"><button type="button" data-a="again">처음부터 다시</button><button type="button" data-a="calm">조용히 둘러보기</button></div>';
@@ -534,13 +541,15 @@ function stepFinale(dt) {
     // 정문으로 나가려 하면 — 현관 안
     const pl = M.roomById.plaza;
     if (M.room && pl && M.room.id === 'plaza' && M.pos.z * CM > pl.z1 - 450) {
+      if (HAUNT.nights >= 1 && F.loops >= 2) { finaleEscape(); return; }       // v104 — 세 번째엔 열린다
       hauntGlitch();
       const S = M.startPos;
       teleport(S.room);
       M.feet = floorAt(S.room, S.x, S.z); M.eyeFeet = M.feet;
       M.pos.set(S.x / CM, (M.feet + EYE) / CM, S.z / CM); M.yaw = 0;
       F.loops++;
-      hauntPA(F.loops > 1 ? '정문은 들어오는 문입니다. 몇 번을 나가셔도 그렇습니다.' : '정문은 들어오는 문입니다. 명예의 전당으로 가 주십시오.', 2);
+      hauntPA(F.loops > 1 ? (HAUNT.nights >= 1 ? '정문은 들어오는 문입니다. … 세 번째에는 모르겠습니다.' : '정문은 들어오는 문입니다. 몇 번을 나가셔도 그렇습니다.')
+        : '정문은 들어오는 문입니다. 명예의 전당으로 가 주십시오.', 2);
     }
     // 오래 안 오면 — 다시 부른다(두 번까지)
     F.remind -= dt;
@@ -582,4 +591,129 @@ function stepFinale(dt) {
       finaleCard();
     }
   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   두 번째 밤 — 호러 6단계 (v104)
+   ══════════════════════════════════════════════════════════
+   결말을 한 번 본 기기(이 브라우저)에서 다시 들어오면, 전시관이 나를 기억한다.
+     · 들어서자마자 방송 — "다시 오셨군요. 기다리고 있었습니다."(지난번에 나갔다면 다른 말)
+     · 지난밤의 초상이 처음부터 명예의 전당에 있다(눈도 있다) · 방명록에 지난밤들의 줄이 남아 있다
+     · 밤이 더 깊은 데서 시작한다(밤마다 2.5분씩, 최대 10분) · 관람객이 알아본다("또 오셨네요.")
+     · 새 현상 '나란히 걷는 사람' — 멀리서 나와 똑같이 걷고 멈춘다(미끄러지듯). 다가가면 없다
+     · 새 결말 '퇴장' — 두 번째 밤부터, 마지막 방송 뒤 정문으로 세 번 나가 보면 …세 번째엔 열린다
+   ?haunt=reset 은 이 기기의 밤 기록을 지운다 */
+const NIGHT_LOG_KEY = 'museum-night-log';
+HAUNT.log = [];
+try {
+  if (/[?&]haunt=reset/.test(location.search)) { localStorage.removeItem(NIGHT_LOG_KEY); localStorage.removeItem(FIN_END_KEY); }
+  HAUNT.log = JSON.parse(localStorage.getItem(NIGHT_LOG_KEY) || '[]') || [];
+} catch (e) { HAUNT.log = []; }
+HAUNT.nights = HAUNT.log.length;
+HAUNT.escaped = HAUNT.log.some((x) => x.how === 'escape');
+if (HAUNT.nights > 0) {
+  HAUNT.t = Math.max(HAUNT.t, 150 * Math.min(HAUNT.nights, 4));
+  HAUNT.paT = 9; HAUNT.welcome = true;
+  NEAR_IN.push(['또 오셨네요.'], ['지난번에도 여기 서 계셨죠.', '… 같은 자리에.'], ['그 초상, 그쪽 닮았던데요.'], ['이번엔 끝까지 계실 거죠?']);
+  ASK.push(['초상 보셨어요?', '잘 걸려 있어요. 그쪽 거.'], ['또 물어보시네요.', '지난번에도 그렇게 물었어요.'], ['나가는 길이요?', '… 지난번엔 찾으셨잖아요.']);
+  MONO.push(['또 왔어.', '또 왔어.', '… 반가워.'], ['초상이 하나 늘었어.', '이번엔 누구 차례야.']);
+  MONO_OUT.kid.push(['아저씨 또 왔다!'], ['지난번에 숨바꼭질 안 끝났어.']);
+}
+function nightLogPush(how, stamp) {
+  HAUNT.log.push({ d: stamp, how });
+  try { localStorage.setItem(NIGHT_LOG_KEY, JSON.stringify(HAUNT.log.slice(-12))); } catch (e) { /* 기억 못 해도 된다 */ }
+}
+function nightStamp() {
+  const d = new Date(), p2 = (v) => String(v).padStart(2, '0');
+  return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':00';
+}
+/** 두 번째 밤의 첫 준비 — 지난밤 초상 · 방명록(입장 뒤 한 번) */
+function secondNightInit() {
+  if (HAUNT.nights < 1 || HAUNT.snInit || !hauntOK()) return;
+  HAUNT.snInit = true;
+  const gb = M.exhibits.find((e) => e.type === 'guestbook');
+  if (gb) {
+    gb.entries = (gb.entries || []).slice();
+    for (const L of HAUNT.log.slice(-6)) gb.entries.push({ name: '오늘의 관람객', body: L.how === 'escape' ? '(퇴장)' : '(퇴장 기록 없음)', color: '#8E4A40', created_at: L.d });
+  }
+  if (!HAUNT.portrait && hauntPortrait()) {
+    const P = HAUNT.portrait, last = HAUNT.log[HAUNT.log.length - 1];
+    P.eyes = true; P.tex.image = portraitCanvas(true); P.tex.needsUpdate = true;
+    P.info.subtitle = '명예의 전당 · 지난밤 걸림';
+    P.info.title = HAUNT.nights > 1 ? '이름 없는 초상 (' + HAUNT.nights + '점째)' : '이름 없는 초상';
+    P.info.body = '지난밤(' + String(last.d).slice(0, 10) + ') 걸린 초상. 누구의 얼굴인지 아무도 말하지 않는다.'
+      + String.fromCharCode(10) + String.fromCharCode(10) + '눈이 문 쪽을 보고 있다. 들어오는 사람을.';
+    HAUNT.portraitNew = false;
+    HAUNT.paT = Math.max(HAUNT.paT, 9);
+  }
+}
+/* 나란히 걷는 사람 — 12~20m 옆에서 내가 걸으면 걷고(같은 쪽으로, 미끄러지듯) 멈추면 멈춘다 */
+HAUNT_EV.mimic = function () {
+  if (HAUNT.nights < 1 || HAUNT.blackShade) return false;
+  const here = M.room;
+  if (!here || (!here.outdoor && (here.w < 1400 || here.d < 1400))) return false;      // 실내는 넓은 방에서만
+  const f = hauntFwd(), PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  for (let k = 0; k < 16; k++) {
+    // 시선에서 20~35° 옆, 13~21m — 곁눈에 들어오는 자리
+    const a = (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.25), D = 1300 + Math.random() * 800;
+    const fw = Math.cos(a) * D, sd = Math.sin(a) * D;
+    const x = PX + f.x * fw - f.z * sd, z = PZ + f.z * fw + f.x * sd;
+    const r = here.outdoor ? M.rooms.find((q) => q.outdoor && !q.part && q.lv === 0 && inRect(q, x, z)) : (inRect(here, x, z) ? here : null);
+    if (!r || (r.terrain && lakeDist(x, z) < 1.12)) continue;
+    const fy = floorAt(r, x, z);
+    if (!(fy === fy) || hitsWall(x, z, fy) || !hauntView(x / CM, fy / CM + 1.4, z / CM).on) continue;
+    if (!shadeAt(x, z, r)) return false;
+    HAUNT.shade.root.rotation.y = M.yaw + Math.PI;
+    sndSwell();
+    HAUNT.ev = mimicWatch({ x, z, room: r, lx: PX, lz: PZ });
+    return true;
+  }
+  return false;
+};
+function mimicWatch(o) {
+  return {
+    t: 0, look: 0, done: false,
+    step(dt) {
+      this.t += dt;
+      const PX = M.pos.x * CM, PZ = M.pos.z * CM, dx = PX - o.lx, dz = PZ - o.lz;
+      o.lx = PX; o.lz = PZ;
+      const nx = o.x + dx, nz = o.z + dz, fy = floorAt(o.room, nx, nz);
+      let ok = inRect(o.room, nx, nz) && fy === fy && !hitsWall(nx, nz, fy);
+      if (ok) { o.x = nx; o.z = nz; HAUNT.shade.root.position.set(nx / CM, fy / CM, nz / CM); }
+      HAUNT.shade.root.rotation.y = M.yaw + Math.PI;                         // 내가 보는 쪽을 같이 본다
+      const d = Math.hypot(o.x - PX, o.z - PZ);
+      const V = hauntView(o.x / CM, (floorAt(o.room, o.x, o.z) || o.room.y0) / CM + 1.5, o.z / CM);
+      if (V.on && Math.abs(V.x) < 0.25) this.look += dt;
+      if (!ok || d < 800 || this.look > 3 || this.t > 20 || !hauntOK()) {
+        if (V.on) hauntGlitch();
+        shadeHide(); this.done = true;
+      }
+    },
+  };
+}
+/** 퇴장 결말 — 두 번째 밤부터, 세 번째로 정문을 나가면 */
+function finaleEscape() {
+  const F = HAUNT.finale; F.phase = 'done';
+  const stamp = nightStamp();
+  nightLogPush('escape', stamp);
+  const w = document.createElement('div'); w.id = 'hauntEnd'; w.className = 'haunt-end'; document.getElementById('gal').appendChild(w);
+  requestAnimationFrame(() => w.classList.add('on'));
+  if (M.locked) document.exitPointerLock();
+  M.openId = 'haunt-end';
+  sndChime(0);
+  const gb = M.exhibits.find((e) => e.type === 'guestbook');
+  if (gb) { gb.entries = (gb.entries || []).slice(); gb.entries.push({ name: '오늘의 관람객', body: '(퇴장)', color: '#8E4A40', created_at: stamp }); }
+  setTimeout(() => {
+    const el = document.createElement('div'); el.id = 'hauntCard'; el.className = 'haunt-card';
+    el.innerHTML = '<p class="hc-k">퇴장</p><h2>관람객 한 분이 퇴장하셨습니다</h2>'
+      + '<p>본관이 문을 연 뒤 처음 있는 일입니다.<br>명예의 전당에 걸 자리가 하나 비었습니다.</p>'
+      + '<p class="hc-gb">방명록 마지막 줄 — ' + stamp.slice(0, 16) + ' · 오늘의 관람객 · <em>퇴장</em></p>'
+      + '<p class="hc-n">… 다음에 또 오실 거죠.</p>'
+      + '<div class="hc-b"><button type="button" data-a="again">처음부터 다시</button><button type="button" data-a="calm">조용히 둘러보기</button></div>';
+    document.getElementById('gal').appendChild(el);
+    el.addEventListener('click', (ev) => {
+      const a = ev.target && ev.target.getAttribute && ev.target.getAttribute('data-a');
+      if (a === 'again') location.reload(); else if (a === 'calm') finaleCalm();
+    });
+  }, 2900);
 }
