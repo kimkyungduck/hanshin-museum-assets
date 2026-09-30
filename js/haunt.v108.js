@@ -183,6 +183,7 @@ function stepHaunt(dt) {
   if (!NIGHT.on || !M.ready || M.attract) return;
   HAUNT.t += dt;
   HAUNT.dread = clamp(HAUNT.t / 900, 0, 1);
+  stepVault(dt);                                                           // v108 — 지하 수장고
   if (HAUNT.calm) { stepTilts(dt); return; }                              // v103 — 결말 뒤 조용한 밤
   secondNightInit();                                                       // v104 — 두 번째 밤
   stepFinale(dt);                                                          // v103 — 마지막 방송 · 결말
@@ -279,6 +280,7 @@ function sndChime(sour) {
 }
 function hauntPA(custom, tierSet) {
   let dr = HAUNT.dread, tier = tierSet != null ? tierSet : dr < 0.25 ? 0 : dr < 0.55 ? 1 : 2;
+  if (!custom && HAUNT.doorNew) { HAUNT.doorNew = false; tier = 2; custom = '관계자 외 출입금지 구역의 문이 열려 있습니다. 가까이 가지 마십시오.'; }
   if (!custom && HAUNT.welcome) {
     HAUNT.welcome = false; tier = 2;
     custom = HAUNT.escaped ? '다시 오셨군요. 지난번엔 나가셨더군요. 이번엔 문을 잘 닫아 두었습니다.'
@@ -414,6 +416,11 @@ function hauntPortrait() {
 /** 전시물 설명을 열 때(openExhibit) — 가끔 관리자 메모가 붙는다 · 새 초상은 눈이 생긴다 */
 function hauntNote(e) {
   if (!NIGHT.on) return;
+  if (typeof VAULT !== 'undefined' && e === VAULT.special && !HAUNT.calm && !HAUNT.vaultLocked) {
+    HAUNT.vaultLocked = true; HAUNT.vaultLock = 10;
+    setTimeout(() => { if (typeof sndBlack === 'function') sndBlack(false); hauntSay('… 거기 걸려야지.'); HAUNT.follow = 10; HAUNT.followYaw = M.yaw; }, 900);
+    return;
+  }
   const P = HAUNT.portrait;
   if (P && e === P.info) {
     if (P.eyes) return;
@@ -643,6 +650,7 @@ function secondNightInit() {
     gb.entries = (gb.entries || []).slice();
     for (const L of HAUNT.log.slice(-6)) gb.entries.push({ name: '오늘의 관람객', body: L.how === 'escape' ? '(퇴장)' : '(퇴장 기록 없음)', color: '#8E4A40', created_at: L.d });
   }
+  if (typeof vaultDoorShow === 'function') vaultDoorShow(true);            // v108 — 수장고 문도 처음부터
   if (!HAUNT.portrait && hauntPortrait()) {
     const P = HAUNT.portrait, last = HAUNT.log[HAUNT.log.length - 1];
     P.eyes = true; P.tex.image = portraitCanvas(true); P.tex.needsUpdate = true;
@@ -723,4 +731,194 @@ function finaleEscape() {
       if (a === 'again') location.reload(); else if (a === 'calm') finaleCalm();
     });
   }, 2900);
+}
+
+/* ══════════════════════════════════════════════════════════
+   지하 수장고 — 호러 10단계 (v108)
+   ══════════════════════════════════════════════════════════
+   밤이 절반을 넘기면(두 번째 밤부터는 처음부터) 명예의 전당 서쪽 벽에 없던 문이 생긴다 — "관계자 외 출입금지".
+     · 문을 조사하면 내려간다(삐걱 — 계단 발소리 — 어둠). 수장고엔 불이 없다: 천장 등은 죽었고 전구 하나만 가물거린다 → 손전등
+     · 선반에 쌓인 액자들 · 천을 덮은 이젤들 · 북쪽 벽을 채운 스물네 점의 같은 초상(모두 얼굴이 없고, 눈만 있다)
+     · 동쪽 벽의 초상 하나 — 명패에 오늘 날짜. 들여다보면 문이 잠긴다(10초). 등 뒤에서 발소리가 다가온다
+     · 나가는 문을 조사하면 올라간다(명예의 전당, 그 문 앞)
+   수장고에 있는 동안은 위층 조명이 새어 들지 않게 전시 조명 · 방 조명 · 달빛을 끈다 */
+const VAULT = { door: null, doorInfo: null, exitInfo: null, special: null, bulb: null, shown: false };
+function vaultMat(m) {
+  const c = m.clone();
+  c.userData = Object.assign({}, m.userData); c.onBeforeCompile = m.onBeforeCompile;
+  if (c.isMeshBasicMaterial) { c.color.setRGB(0.015, 0.015, 0.015); c.userData.noBatch = true; return c; }     // 천장 선형등 — 죽어 있다
+  c.envMap = M.envIn; c.envMapIntensity = 0.05;
+  if (c.color) c.color.multiplyScalar(0.75);
+  if (c.emissive) c.emissive.setRGB(0, 0, 0);
+  return c;
+}
+function dressVault(r, g) {
+  const seen = new Map();
+  g.traverse((o) => {
+    if (!o.isMesh || Array.isArray(o.material) || !o.material) return;
+    const m = o.material;
+    if (!(m.isMeshBasicMaterial || m.isMeshStandardMaterial)) return;
+    if (!seen.has(m)) seen.set(m, vaultMat(m));
+    o.material = seen.get(m);
+  });
+  const W = r.w / CM, D = r.d / CM, H = r.h / CM;
+  const std = (hex, rough, met) => { const m = new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: met || 0 }); m.envMap = M.envIn; m.envMapIntensity = 0.05; m.userData.noBatch = true; return m; };
+  const metal = std(0x3A3834, 0.6, 0.5), wood = std(0x3A2A1E, 0.8), cloth = std(0xB8B2A6, 1), canvasBack = std(0x5A4632, 0.9);
+  const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1), E = new THREE.Euler();
+  const put = (list, geo, x, y, z, ry, rz) => { E.set(0, ry || 0, rz || 0); M4.compose(V.set(x, y, z), Q.setFromEuler(E), S1); geo.applyMatrix4(M4); list.push(geo); };
+  // 선반 세 줄 — 쇠 기둥 · 선반 셋 · 기대 놓은 액자들
+  const metG = [], artG = [], R = rnd(8077);
+  for (const zr of [4.2, 7.6, 11.0]) {
+    const x0 = 2.6, x1 = 12.4;
+    for (const x of [x0, (x0 + x1) / 2, x1]) for (const dz of [-0.3, 0.3]) put(metG, new THREE.BoxGeometry(0.05, 2.4, 0.05), x, 1.2, zr + dz);
+    for (const y of [0.35, 1.2, 2.05]) {
+      put(metG, new THREE.BoxGeometry(x1 - x0 + 0.1, 0.03, 0.64), (x0 + x1) / 2, y, zr);
+      for (let x = x0 + 0.3; x < x1 - 0.3; x += 0.25 + R() * 0.5) {
+        const w = 0.4 + R() * 0.5, h = 0.4 + R() * 0.35;
+        put(artG, new THREE.BoxGeometry(w, h, 0.04), x, y + h / 2 + 0.02, zr + (R() - 0.5) * 0.3, (R() - 0.5) * 0.3, (R() - 0.5) * 0.25);
+      }
+    }
+    M.walls.push({ x0: x0 * CM - 30, x1: x1 * CM + 30, z0: (zr - 0.35) * CM, z1: (zr + 0.35) * CM, y0: r.y0, y1: r.y0 + 260 });
+  }
+  const mm = new THREE.Mesh(mergeGeos(metG), metal); mm.castShadow = false; g.add(mm);
+  g.add(new THREE.Mesh(mergeGeos(artG), canvasBack));
+  // 천을 덮은 이젤 — 사람 키만 한 것들
+  const clG = [];
+  for (const [x, z] of [[1.2, 2.2], [14.6, 3.0], [1.3, 9.2], [14.4, 12.4], [3.6, 13.4]]) {
+    const c = new THREE.ConeGeometry(0.42, 1.85, 9, 1, true); c.scale(1, 1, 0.8); put(clG, c, x, 0.93, z, R() * 3);
+    put(clG, new THREE.SphereGeometry(0.16, 10, 8), x, 1.86, z);
+    M.walls.push({ x0: x * CM - 40, x1: x * CM + 40, z0: z * CM - 40, z1: z * CM + 40, y0: r.y0, y1: r.y0 + 200 });
+  }
+  const clm = new THREE.Mesh(mergeGeos(clG), cloth); clm.material.side = THREE.DoubleSide; g.add(clm);
+  // 북쪽 벽 — 같은 초상 스물네 점(얼굴 없이 눈만)
+  const tex = new THREE.CanvasTexture(portraitCanvas(true)); tex.colorSpace = THREE.SRGBColorSpace;
+  const pm = std(0xFFFFFF, 0.6); pm.map = tex;
+  const frames = new THREE.InstancedMesh(new THREE.BoxGeometry(0.66, 0.8, 0.05), wood, 24);
+  const pics = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.56, 0.7), pm, 24);
+  let n = 0;
+  for (let row = 0; row < 3; row++) for (let col = 0; col < 8; col++) {
+    const x = 1.6 + col * 1.8, y = 0.85 + row * 0.95, rz = (R() - 0.5) * (R() < 0.3 ? 0.22 : 0.04);
+    E.set(0, 0, rz); Q.setFromEuler(E);
+    M4.compose(V.set(x, y, 0.08), Q, S1); frames.setMatrixAt(n, M4);
+    M4.compose(V.set(x, y, 0.108), Q, S1); pics.setMatrixAt(n, M4);
+    n++;
+  }
+  g.add(frames, pics);
+  // 동쪽 벽 — 오늘 날짜의 초상
+  const sc = portraitCanvas(true), sctx = sc.getContext('2d');
+  sctx.fillStyle = '#8C7A52'; sctx.fillRect(sc.width / 2 - 90, sc.height - 70, 180, 40);
+  sctx.fillStyle = '#1A140E'; sctx.font = 'bold 22px sans-serif'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+  const d = new Date(); sctx.fillText(d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.', sc.width / 2, sc.height - 50);
+  const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Group(); sp.position.set(W - 0.06, 1.55, 7.5); sp.rotation.y = -Math.PI / 2;
+  sp.add(new THREE.Mesh(new THREE.BoxGeometry(0.98, 1.2, 0.06), wood));
+  const spPic = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 1.08), std(0xFFFFFF, 0.55)); spPic.material.map = st; spPic.position.z = 0.032; sp.add(spPic);
+  const spHit = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 0.4), new THREE.MeshBasicMaterial({ visible: false })); sp.add(spHit);
+  g.add(sp);
+  VAULT.special = { id: 'vault-portrait', type: 'portrait', icon: '🖼', label: '보관 중인 초상', title: '보관 중 — 오늘의 관람객', subtitle: '수장고 · 아직 걸리지 않음',
+    img: sc.toDataURL('image/jpeg', 0.85), x: r.x1 - 6, z: 750, y: 155, room: 'vault',
+    body: '명패에 오늘 날짜가 적혀 있다. 물감이 아직 마르지 않았다.' + String.fromCharCode(10) + String.fromCharCode(10) + '이 초상은 아직 걸리지 않았다. 걸 자리를 찾고 있다.' };
+  M.pickables.push(spHit); M.artByMesh.set(spHit, VAULT.special);
+  // 전구 하나 — 천장 가운데, 가물거린다(빛은 거의 없다)
+  const bulbM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.8, 0.55).multiplyScalar(2.2) });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), bulbM); bulb.position.set(W / 2, H - 0.55, D / 2); g.add(bulb);
+  const cord = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.5, 0.01), metal); cord.position.set(W / 2, H - 0.27, D / 2); g.add(cord);
+  VAULT.bulb = bulbM;
+  // 나가는 문 — 남쪽 벽 가운데
+  const ex = vaultDoorMesh(wood, metal); ex.position.set(W / 2, 0, D - 0.04); ex.rotation.y = Math.PI; g.add(ex);
+  const exHit = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.5), new THREE.MeshBasicMaterial({ visible: false })); exHit.position.set(W / 2, 1.1, D - 0.2); g.add(exHit);
+  VAULT.exitInfo = { id: 'vault-exit', type: 'placard', icon: '🚪', label: '계단 — 위로', title: '계단 — 위로', room: 'vault', x: r.cx, z: r.z1 - 20, y: 110, onUse: () => vaultGo(false) };
+  M.pickables.push(exHit); M.artByMesh.set(exHit, VAULT.exitInfo);
+  g.traverse((o) => { if (o.isMesh) o.userData.keep = true; });
+}
+/** 철문 — 문틀 · 문짝 · 손잡이 · 명판 */
+function vaultDoorMesh(wood, metal) {
+  const G = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: 0x4A4C4E, roughness: 0.45, metalness: 0.7 }); steel.userData.noBatch = true;
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.96, 2.08, 0.05), steel); leaf.position.set(0, 1.04, 0.03); G.add(leaf);
+  for (const [w, h, x, y] of [[0.08, 2.2, -0.52, 1.1], [0.08, 2.2, 0.52, 1.1], [1.12, 0.08, 0, 2.18]]) { const f = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.09), metal); f.position.set(x, y, 0.04); G.add(f); }
+  const knob = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.03, 0.05), metal); knob.position.set(0.34, 1.02, 0.08); G.add(knob);
+  const cv = makeCanvas(256, 96), c = cv.getContext('2d');
+  c.fillStyle = '#E6DFD0'; c.fillRect(0, 0, 256, 96); c.fillStyle = '#8E2A22'; c.fillRect(0, 0, 256, 14);
+  c.fillStyle = '#231C16'; c.font = 'bold 30px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('관계자 외', 128, 42); c.fillText('출입금지', 128, 76);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.16), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); plate.material.userData.noBatch = true;
+  plate.position.set(0, 1.55, 0.058); G.add(plate);
+  return G;
+}
+/** 명예의 전당 서쪽 벽에 문이 생긴다(안 보는 사이) */
+function vaultDoorShow(quiet) {
+  if (VAULT.shown) return true;
+  const r = M.roomById.hall, g = M.roomGroups.hall; if (!r || !g) return false;
+  if (!quiet && M.room && M.room.id === 'hall') return false;
+  // 자리 — 서쪽 벽(x0)에서 전시물과 1.7m 넘게 떨어진 곳
+  const onWall = M.exhibits.filter((e) => e.room === 'hall' && Math.abs(e.x - r.x0) < 80).map((e) => e.z);
+  let z = null;
+  for (let t = r.z0 + 220; t <= r.z1 - 220; t += 40) if (onWall.every((q) => Math.abs(q - t) > 170)) { z = t; break; }
+  if (z == null) z = r.z1 - 220;
+  const wood = new THREE.MeshStandardMaterial({ color: 0x2A1D14, roughness: 0.7 }), metal = new THREE.MeshStandardMaterial({ color: 0x2E2C2A, roughness: 0.5, metalness: 0.6 });
+  [wood, metal].forEach((m) => { m.userData.noBatch = true; m.envMap = M.envIn; m.envMapIntensity = 0.4; });
+  const D = vaultDoorMesh(wood, metal); D.position.set(r.x0 / CM + 0.03, 0, z / CM); D.rotation.y = Math.PI / 2; g.add(D);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.2, 1.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(r.x0 / CM + 0.25, 1.1, z / CM); g.add(hit);
+  VAULT.doorInfo = { id: 'vault-door', type: 'placard', icon: '🚪', label: '관계자 외 출입금지', title: '관계자 외 출입금지', room: 'hall', x: r.x0 + 30, z, y: 110, onUse: () => vaultGo(true) };
+  M.pickables.push(hit); M.artByMesh.set(hit, VAULT.doorInfo);
+  VAULT.door = { D, z }; VAULT.shown = true;
+  if (!quiet) { HAUNT.doorNew = true; HAUNT.paT = Math.min(HAUNT.paT, 10); }
+  return true;
+}
+/** 내려가고 올라가기 — 어둠 · 삐걱 · 계단 발소리 */
+function vaultGo(down) {
+  if (HAUNT.vaultBusy) return;
+  if (!down && HAUNT.vaultLock > 0) {
+    if (typeof sndCreak === 'function') sndCreak(0.08, 0);
+    toast('문이 열리지 않는다.', 1800);
+    HAUNT.follow = Math.max(HAUNT.follow, 6); HAUNT.followYaw = M.yaw;
+    return;
+  }
+  HAUNT.vaultBusy = true;
+  M.openId = 'vault-move';
+  let el = document.getElementById('vaultFade');
+  if (!el) { el = document.createElement('div'); el.id = 'vaultFade'; el.className = 'vault-fade'; document.getElementById('gal').appendChild(el); }
+  requestAnimationFrame(() => el.classList.add('on'));
+  if (typeof sndCreak === 'function') sndCreak(0.07, 0);
+  const stone = { mat: 'marble' };
+  for (let i = 0; i < 7; i++) setTimeout(() => { if (typeof sndStep === 'function') sndStep(down ? M.roomById.vault : stone, 0.75 - i * (down ? 0.04 : -0.02)); }, 700 + i * 340);
+  setTimeout(() => {
+    if (down) {
+      const r = M.roomById.vault;
+      teleport(r);
+      M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set(r.cx / CM, (M.feet + EYE) / CM, (r.z1 - 180) / CM); M.yaw = 0;
+      if (!HAUNT.vaultTold) { HAUNT.vaultTold = true; setTimeout(() => toast(typeof TORCH !== 'undefined' && !TORCH.on ? '수장고 — 불이 없다. 손전등(F)' : '수장고 — 불이 없다', 3200), 900); }
+    } else {
+      const r = M.roomById.hall, z = VAULT.door ? VAULT.door.z : r.cz;
+      teleport(r);
+      M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set((r.x0 + 150) / CM, (M.feet + EYE) / CM, z / CM); M.yaw = -Math.PI / 2;
+    }
+    M.cam.position.copy(M.pos); M.cam.rotation.set(0, M.yaw, 0, 'YXZ');
+    M.openId = null; HAUNT.vaultBusy = false;
+    el.classList.remove('on');
+  }, 3100);
+}
+/** 매 프레임(stepHaunt 앞) — 수장고 안에서는 위층 빛을 끈다 · 전구 · 잠김 */
+function stepVault(dt) {
+  if (HAUNT.vaultLock > 0) {
+    HAUNT.vaultLock -= dt;
+    if (HAUNT.vaultLock <= 0 && !HAUNT.calm) hauntPA('수장고 문이 열렸습니다. 서두르십시오.', 2);
+  }
+  const inV = !!(M.room && M.room.vault);
+  if (VAULT.bulb) { const f = typeof nightFlick === 'function' ? nightFlick({ flicker: true, seed: 12.9 }, (HAUNT.t || 0) * 1.3) : 1; const k = (f < 0.5 ? 0.15 : 1) * (0.8 + 0.2 * Math.sin(M.t * 13)); VAULT.bulb.color.setRGB(2.2 * k, 1.76 * k, 1.2 * k); }
+  if (inV) {
+    for (const s of M.pool || []) s.sp.intensity = 0;
+    for (const l of [...(M.vpoint || []), ...(M.vspot || [])]) l.intensity = 0;
+    if (M.sun) M.sun.intensity = 0.015;
+    if (M.hemi) M.hemi.intensity = NIGHT.hemiI * 0.12;
+    if (M.handLight) M.handLight.intensity = 0.3;
+    HAUNT.inVault = true;
+  } else if (HAUNT.inVault) {
+    HAUNT.inVault = false;
+    if (M.sun) M.sun.intensity = NIGHT.moonI;
+    NIGHT.appliedK = -1;                                                  // 반구광 · 환경광을 다시 맞추게
+  }
+  // 문이 생기는 때 — 밤이 절반을 넘기면(두 번째 밤부터는 처음부터)
+  if (!VAULT.shown && hauntOK() && (HAUNT.dread >= 0.55 || HAUNT.nights >= 1)) vaultDoorShow(HAUNT.nights >= 1);
 }

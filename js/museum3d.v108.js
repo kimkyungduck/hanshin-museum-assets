@@ -538,7 +538,7 @@ function openAdmin() {
      되돌아올 때는 로비로(입장 지점). */
   if ($('adGoSecret')) {
     $('adGoSecret').onclick = () => {
-      const w = M.rooms.find((r) => r.secret);
+      const w = M.rooms.find((r) => r.secret && !r.vault);
       if (!w) return;
       const here = roomAt(M.pos.x * CM, M.pos.z * CM);
       close();
@@ -1077,6 +1077,7 @@ function buildScene() {
     buildRoomShell(r, g);
     if (r.content === 'champion') dressChampion(r, g);
     if (r.secret && r.content === 'workshop') dressWorkshop(r, g);
+    if (r.vault && typeof dressVault === 'function') dressVault(r, g);       // v108 — 지하 수장고(haunt.js)
     if (r.outdoor) dressOutdoor(r, g);
     if (r.id === 'foyer') dressFoyer(r, g);
     batchStatic(g);                              // 움직이지 않는 치장은 재질별로 합친다
@@ -3149,7 +3150,7 @@ function drawMinimap() {
   const F = mmFrame(lv, inField);
   const W = MM_W(), k = W / (F.x1 - F.x0), H = Math.round((F.z1 - F.z0) * k);
   M.mm = { F, k };
-  const shown = M.rooms.filter((r) => (!r.secret || M.canManage)
+  const shown = M.rooms.filter((r) => !r.vault && (!r.secret || M.canManage)
     && (inField ? (r.lv === 0 || r.outdoor) : (r.outdoor ? r.lv === lv || (lv === 0 && !r.terrain) : r.lv === lv)));
   const cells = shown.map((r) => {
     const x0 = Math.max(F.x0, r.x0), x1 = Math.min(F.x1, r.x1), z0 = Math.max(F.z0, r.z0), z1 = Math.min(F.z1, r.z1);
@@ -3237,6 +3238,7 @@ function setScrim(url) {
 
 function openExhibit(e) {
   if (e.npcRef && typeof npcAsk === 'function' && npcAsk(e.npcRef)) return;      // v99 — 관람객은 먼저 대답한다
+  if (e.onUse) { e.onUse(e); return; }                                          // v108 — 문(수장고)
   M.openId = e.id;
   setScrim(e.img);
   if (counted(e) && !M.seen.has(e.id)) { M.seen.add(e.id); saveSeen(); }

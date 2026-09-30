@@ -122,6 +122,11 @@ const ROOMS = [
   { id: 'practice', content: 'empty', outdoor: true, rect: { x: 4800, z: -800, w: 4000, d: 7400 }, lv: 0,
     mat: 'lawn', name: '퍼팅 연습장', en: 'PUTTING GREEN', accent: '#9BC27A',
     desc: '컵 넷짜리 연습 그린. 그린 위에서 퍼팅해 볼 수 있다.' },
+  /* v108 — 지하 수장고(호러 10단계). 명예의 전당 바로 밑. 통로가 없다 — 밤이 깊으면 명예의 전당 서쪽 벽에
+     생기는 '관계자 외 출입금지' 문으로만 내려간다(haunt.js). 미니맵 · 안내판 · 관리자 순간이동에 나오지 않는다 */
+  { id: 'vault', content: 'empty', rect: { x: 0, z: 0, w: 1600, d: 1500 }, lv: -1, h: 380,
+    mat: 'dark', secret: true, vault: true, name: '수장고', en: 'STORAGE', accent: '#8E4A40',
+    desc: '관계자 외 출입금지. 걸리지 못한 것들이 쌓여 있다.' },
 ];
 
 /**

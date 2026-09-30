@@ -1810,3 +1810,7 @@ body.is-touch .night-clock { top: 222px; }
 }
 body.is-touch .haunt-pa { top: 252px; }
 body.is-touch .haunt-say { bottom: 33%; }
+
+/* 수장고(v108) — 내려가고 올라갈 때 어둠 */
+.vault-fade { position: absolute; inset: 0; z-index: 29; background: #000; opacity: 0; pointer-events: none; transition: opacity .9s ease; }
+.vault-fade.on { opacity: 1; }
