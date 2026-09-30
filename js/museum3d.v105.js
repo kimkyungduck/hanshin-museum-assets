@@ -1739,6 +1739,7 @@ function assignLights() {
    ※ 전시물 스포트 풀(POOL_N)과 손전등은 원래 고정이라 그대로 둔다. */
 function virtualizeLights() {
   const keep = new Set([M.handLight, ...M.pool.map((sl) => sl.sp)]);
+  if (M.torch) keep.add(M.torch);                  // v105 — 손전등(torch.js)은 풀이 아니다
   const found = [];
   M.scene.updateMatrixWorld(true);
   M.scene.traverse((o) => { if ((o.isPointLight || o.isSpotLight) && !keep.has(o)) found.push(o); });
@@ -2605,6 +2606,7 @@ function bindInput() {
       }
       return;
     }
+    if (k === 'f' && !ev.repeat && !M.openId && !$('adminPanel')) { ev.preventDefault(); if (typeof torchToggle === 'function') torchToggle(); return; }   // v105 — 손전등
     if (k === 'm') { ev.preventDefault(); if (M.bgm) bgmToggle(); if (typeof sndToggle === 'function') sndToggle(); return; }   // 음악 · 소리 토글
     // 골프 — Space 를 누르고 있으면 힘을 모으고 놓으면 친다. Esc 는 그만두기
     if (k === ' ' && !M.openId && !$('adminPanel')) {
@@ -2778,6 +2780,7 @@ function loop(now) {
   animateFocus(dt);
   guardStep('flicker', () => { if (typeof stepFlicker === 'function') stepFlicker(dt); });   // v100 — 실내 조명 깜빡임 · 정전
   guardStep('haunt', () => { if (typeof stepHaunt === 'function') stepHaunt(dt); });        // v101 — 이상 현상
+  guardStep('torch', () => { if (typeof stepTorch === 'function') stepTorch(dt); });        // v105 — 손전등
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

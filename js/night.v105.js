@@ -74,6 +74,7 @@ function nightScene() {
   if (M.sun) { M.sun.color.copy(NIGHT.moon); M.sun.intensity = NIGHT.moonI; }
   if (M.hemi) { M.hemi.color.set(NIGHT.hemiSky); M.hemi.groundColor.set(NIGHT.hemiGnd); M.hemi.intensity = NIGHT.hemiI; }
   if (M.handLight) M.handLight.intensity *= 0.7;
+  if (typeof torchInit === 'function') torchInit();            // v105 — 손전등(끄면 세기 0 — 광원 수는 처음부터 고정)
   const U = M.post && M.post.uniforms;
   if (U) { if (U.uVig) U.uVig.value = 0.82; if (U.uLift) U.uLift.value = 0.12; }
 }

@@ -199,7 +199,8 @@ function stepHaunt(dt) {
       B.shadeOK = !HAUNT.ev && !hitsWall(x, z, M.room.y0) && shadeAt(x, z, M.roomById[B.room]);
       if (B.shadeOK) { shadeHide(); HAUNT.bsOwn = true; }
     }
-    if (B.shadeOK && HAUNT.shade) HAUNT.shade.root.visible = B.t >= B.dur && B.t < B.dur + 0.24 && B.k > 0.3;
+    // 손전등을 켜 두면 — 번쩍임 사이가 아니어도 빛 속에 계속 서 있다(torch.js)
+    if (B.shadeOK && HAUNT.shade) HAUNT.shade.root.visible = (B.t >= B.dur && B.t < B.dur + 0.24 && B.k > 0.3) || (typeof torchSees === 'function' && torchSees(HAUNT.shade.root.position));
   } else if (HAUNT.blackShade && B === null && HAUNT.bsArmed) { HAUNT.blackShade = false; HAUNT.bsArmed = false; if (HAUNT.bsOwn) shadeHide(); HAUNT.bsOwn = false; }
   if (HAUNT.blackShade && B && !B.quick) HAUNT.bsArmed = true;
 
@@ -210,8 +211,9 @@ function stepHaunt(dt) {
   if (HAUNT.next > 0) return;
   const out = M.room.outdoor, dr = HAUNT.dread;
   const mm = HAUNT.nights >= 1 ? 1 : 0;                                    // v104 — 두 번째 밤부터 '나란히 걷는 사람'
-  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm]]
-    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm]];
+  const bm = typeof TORCH !== 'undefined' && TORCH.on && dr > 0.2 ? 2.5 : 0;   // v105 — 빛 속에만 있는 사람
+  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm], ['beam', bm]]
+    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm]];
   let sum = W.reduce((s, w) => s + w[1], 0), r = Math.random() * sum, pick = W[0][0];
   for (const [k, w] of W) { r -= w; if (r <= 0) { pick = k; break; } }
   const ok = HAUNT_EV[pick] && HAUNT_EV[pick]();
