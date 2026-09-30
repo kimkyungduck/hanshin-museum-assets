@@ -515,7 +515,7 @@ function stepCrowd(M, dt) {
           else { n.x += ux * Math.min(step, dist); n.z += uz * Math.min(step, dist); }
           want = Math.atan2(mx, mz); walking = true;
           const pr = n.quirk === 'halt' ? 7 : n.quirk === 'back' ? 10 : n.quirk === 'freeze' ? 18 : 45;
-          if (n.state === 'walk' && dist > 150 && !n.path.some((w) => w.enter) && Math.random() < dt / pr) {
+          if (n.state === 'walk' && !n.finale && dist > 150 && !n.path.some((w) => w.enter) && Math.random() < dt / pr) {
             n.pause = 1.4 + Math.random() * 2.4;
             n.pauseYaw = n.quirk === 'back' ? n.yaw + Math.PI * (Math.random() < 0.5 ? 1 : -1) * 0.95
               : n.pd < 1200 ? Math.atan2(PX - n.x, PZ - n.z) : n.yaw + (Math.random() - 0.5) * 2.4;
@@ -689,6 +689,14 @@ function outStep(M, n, dt) {
   const pd = Math.hypot(P.x - n.x, P.z - n.z);
   const near = Math.abs((M.feet || 0) - (r.y0 + (n.fy || 0))) < 250;      // 나와 같은 높이에 있을 때만(데크 위에서는 모른 척)
   n.pd = near ? pd : 1e9;
+  if (n.finale) {
+    // v103 — 마지막 방송: 그 자리에 멈춰 건물(명예의 전당)을 바라본다
+    const h = M.roomById.hall;
+    n.state = 'look'; n.tgt = null; n.curV *= Math.max(0, 1 - dt * 5);
+    n.yaw += npcAng(Math.atan2(h.cx - n.x, h.cz - n.z) - n.yaw) * Math.min(1, dt * 1.5);
+    n.walkK = clamp(n.curV / n.speed, 0, 1);
+    return;
+  }
   let want = n.yaw, walking = false;
   const go = (spot, k) => { if (spot) { n.tgt = spot; n.vmax = n.speed * k; n.state = 'walk'; } };
 

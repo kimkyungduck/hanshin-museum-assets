@@ -180,6 +180,9 @@ function stepHaunt(dt) {
   if (!NIGHT.on || !M.ready || M.attract) return;
   HAUNT.t += dt;
   HAUNT.dread = clamp(HAUNT.t / 900, 0, 1);
+  if (HAUNT.calm) { stepTilts(dt); return; }                              // v103 — 결말 뒤 조용한 밤
+  stepFinale(dt);                                                          // v103 — 마지막 방송 · 결말
+  if (HAUNT.finale && HAUNT.finale.phase !== 'call') { if (HAUNT.ev) { HAUNT.ev.step(dt); if (HAUNT.ev.done) HAUNT.ev = null; } }
   stepHaunt4(dt);                                                          // v102 — 안내 방송 · 기울어진 액자 · 새 초상
   // 따라오는 발소리 — 돌아보면 끊긴다(숨소리)
   if (HAUNT.follow > 0) {
@@ -199,6 +202,7 @@ function stepHaunt(dt) {
   } else if (HAUNT.blackShade && B === null && HAUNT.bsArmed) { HAUNT.blackShade = false; HAUNT.bsArmed = false; if (HAUNT.bsOwn) shadeHide(); HAUNT.bsOwn = false; }
   if (HAUNT.blackShade && B && !B.quick) HAUNT.bsArmed = true;
 
+  if (HAUNT.finale && HAUNT.finale.phase !== 'call') return;
   if (HAUNT.ev) { HAUNT.ev.step(dt); if (HAUNT.ev.done) HAUNT.ev = null; return; }
   if (!hauntOK()) return;
   HAUNT.next -= dt;
@@ -265,9 +269,9 @@ function sndChime(sour) {
     }
   });
 }
-function hauntPA() {
-  const dr = HAUNT.dread, tier = dr < 0.25 ? 0 : dr < 0.55 ? 1 : 2;
-  let line = HAUNT.portraitNew ? '명예의 전당에 새 초상이 걸렸습니다. 확인해 주십시오.' : pickOf(PA_LINES[tier]);
+function hauntPA(custom, tierSet) {
+  const dr = HAUNT.dread, tier = tierSet != null ? tierSet : dr < 0.25 ? 0 : dr < 0.55 ? 1 : 2;
+  let line = custom || (HAUNT.portraitNew ? '명예의 전당에 새 초상이 걸렸습니다. 확인해 주십시오.' : pickOf(PA_LINES[tier]));
   HAUNT.portraitNew = false;
   const room = M.room ? M.room.name : '전시관';
   line = line.replace('{room}', room).replace('{n}', String((M.npcs ? M.npcs.length : 0) + 1));
@@ -419,8 +423,163 @@ function stepHaunt4(dt) {
   if (!hauntOK()) return;
   const k = 1.2 - 0.6 * HAUNT.dread;
   HAUNT.paT -= dt;
-  if (HAUNT.paT <= 0) { HAUNT.paT = (150 + Math.random() * 90) * k; hauntPA(); }
+  if (HAUNT.paT <= 0 && !HAUNT.finale) { HAUNT.paT = (150 + Math.random() * 90) * k; hauntPA(); }
   HAUNT.tiltT -= dt;
   if (HAUNT.tiltT <= 0) HAUNT.tiltT = hauntTilt() ? (60 + Math.random() * 60) * k : 8;
   if (!HAUNT.portrait && HAUNT.dread >= 0.45) { HAUNT.portraitTry = (HAUNT.portraitTry || 0) - dt; if (HAUNT.portraitTry <= 0) { HAUNT.portraitTry = 10; hauntPortrait(); } }
+}
+
+/* ══════════════════════════════════════════════════════════
+   마지막 방송 · 결말 — 호러 5단계 (v103)
+   ══════════════════════════════════════════════════════════
+   밤이 끝까지 깊어지면(머문 지 15분) 마지막 방송이 나온다 — "모든 관람객께서는 명예의 전당, 새 초상 앞으로 모여 주십시오."
+     · 관람객들이 하던 것을 멈추고 줄지어 명예의 전당으로 걸어가 초상을 둘러싸고 선다(2층 사람은 안 보는 사이 와 있다)
+     · 바깥 사람들은 그 자리에 멈춰 건물을 바라본다 · 정전이 잦아진다
+     · 정문으로 나가려 하면 — 화면이 튀고, 현관 안에 서 있다. "정문은 들어오는 문입니다"
+     · 명예의 전당, 초상 앞에 서면 — 모두가 나를 돌아본다 → 긴 정전 → 번쩍이는 사이 바로 앞에 그 사람 → "… 찾았다." → 하얗게
+     · 결말 카드 — 방명록 마지막 줄에 오늘의 관람객. [처음부터 다시] 또는 [조용히 둘러보기](이상 현상이 멎은 밤)
+   시험: 주소에 ?haunt=late 를 붙이면 밤이 거의 끝난 데서 시작한다 */
+try { if (/[?&]haunt=late/.test(location.search)) HAUNT.t = 870; } catch (e) { /* 없어도 된다 */ }
+const FIN_END_KEY = 'museum-night-end';
+
+function finaleStart() {
+  if (!HAUNT.portrait) hauntPortrait();
+  const P = HAUNT.portrait; if (!P) return false;
+  HAUNT.finale = { phase: 'call', t: 0, loops: 0, remind: 0 };
+  hauntPA('관람 시간이 끝났습니다. 모든 관람객께서는 명예의 전당, 새 초상 앞으로 모여 주십시오.', 2);
+  NIGHT.blackT = Math.min(NIGHT.blackT, 25);
+  const hall = M.roomById.hall, px = P.info.x, pz = P.info.z, face = P.E.rotation.y;
+  const inside = (M.npcs || []).filter((n) => !n.out);
+  inside.forEach((n, i) => {
+    if (n.talk) crowdTalkEnd(n.talk);
+    if (n.mono && n.mono.el) n.mono.el.remove(); n.mono = null;
+    // 초상 둘레 — 앞쪽 60° 는 비워 둔다(내가 들어설 자리)
+    let spot = null;
+    for (let k = 0; k < 8 && !spot; k++) {
+      const a = face + Math.PI / 6 + ((i + k * 0.37) / Math.max(1, inside.length)) * Math.PI * 5 / 3, R = 210 - k * 12;
+      const x = px + Math.sin(a) * R, z = pz + Math.cos(a) * R;
+      if (inRect(hall, x, z) && !hitsWall(x, z, hall.y0)) spot = { x, z };
+    }
+    if (!spot) spot = crowdSpot('hall', n);
+    n.finale = spot;
+    n.cool = n.noticeCool = n.monoCool = 1e9; n.pause = 0; n.speed = Math.min(n.speed, (n.v.natural || 1) * 0.85);
+    const route = n.room === 'hall' ? [] : crowdRoute(n.room, 'hall');
+    if (!route) { n.finaleWarp = true; n.state = 'look'; n.wait = 1e9; return; }
+    n.path = [];
+    for (const e of route) n.path.push({ x: e.from.x, z: e.from.z }, { x: e.p.x, z: e.p.z, enter: e.to }, { x: e.into.x, z: e.into.z });
+    n.path.push({ x: spot.x, z: spot.z });
+    n.goal = { x: spot.x, z: spot.z, lx: px, lz: pz }; n.state = 'walk'; n.wait = 1e9;
+  });
+  for (const n of M.npcs || []) if (n.out) { n.finale = true; if (n.mono && n.mono.el) n.mono.el.remove(); n.mono = null; }
+  return true;
+}
+function finaleCard() {
+  let k = 1;
+  try { k = (parseInt(localStorage.getItem(FIN_END_KEY), 10) || 0) + 1; localStorage.setItem(FIN_END_KEY, String(k)); } catch (e) { /* 기억 못 해도 된다 */ }
+  const d = new Date(), p2 = (v) => String(v).padStart(2, '0');
+  const stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':00';
+  const gb = M.exhibits.find((e) => e.type === 'guestbook');
+  if (gb) { gb.entries = (gb.entries || []).slice(); gb.entries.push({ name: '오늘의 관람객', body: '(퇴장 기록 없음)', color: '#8E4A40', created_at: stamp }); }
+  const el = document.createElement('div'); el.id = 'hauntCard'; el.className = 'haunt-card';
+  el.innerHTML = '<p class="hc-k">관람 종료</p><h2>관람해 주셔서 감사합니다</h2>'
+    + '<p>오늘 명예의 전당에 초상 한 점이 새로 걸렸습니다.<br>얼굴은 아직 마르지 않았습니다.</p>'
+    + '<p class="hc-gb">방명록 마지막 줄 — ' + stamp.slice(0, 16) + ' · 오늘의 관람객 · <em>퇴장 기록 없음</em></p>'
+    + (k > 1 ? '<p class="hc-n">' + k + '번째 밤이었습니다.</p>' : '')
+    + '<div class="hc-b"><button type="button" data-a="again">처음부터 다시</button><button type="button" data-a="calm">조용히 둘러보기</button></div>';
+  document.getElementById('gal').appendChild(el);
+  el.addEventListener('click', (ev) => {
+    const a = ev.target && ev.target.getAttribute && ev.target.getAttribute('data-a');
+    if (a === 'again') location.reload();
+    else if (a === 'calm') finaleCalm();
+  });
+}
+/** 조용히 둘러보기 — 이상 현상이 멎은 밤. 관람객은 다시 제 갈 길 */
+function finaleCalm() {
+  HAUNT.calm = true;
+  if (HAUNT.finale) HAUNT.finale.phase = 'done';
+  const c = document.getElementById('hauntCard'); if (c) c.remove();
+  const w = document.getElementById('hauntEnd'); if (w) { w.classList.add('out'); setTimeout(() => w.remove(), 2600); }
+  M.openId = null;
+  for (const id in NIGHT.fx) NIGHT.fx[id].unstable = false;
+  NIGHT.blackT = Infinity; NIGHT.black = null;
+  shadeHide(); HAUNT.follow = 0; HAUNT.ev = null;
+  for (const n of M.npcs || []) {
+    n.finale = null; n.finaleWarp = false;
+    if (n.out) continue;
+    n.state = 'look'; n.wait = 2 + Math.random() * 6; n.cool = 15 + Math.random() * 20; n.noticeCool = 40; n.monoCool = 60;
+    n.goal = { lx: n.x + Math.sin(n.yaw) * 100, lz: n.z + Math.cos(n.yaw) * 100 };
+  }
+  setTimeout(() => hauntPA('관람해 주셔서 감사합니다. 천천히 둘러보십시오. … 천천히.', 0), 3000);
+}
+function stepFinale(dt) {
+  const F = HAUNT.finale;
+  if (!F) {
+    if (!HAUNT.calm && HAUNT.dread >= 1 && hauntOK() && !HAUNT.ev) finaleStart();
+    return;
+  }
+  F.t += dt;
+  const P = HAUNT.portrait;
+  if (F.phase === 'call') {
+    // 2층 사람들 — 안 보는 사이 명예의 전당에 와 있다
+    for (const n of M.npcs || []) {
+      // 길이 막혀 45초 넘게 못 온 사람도 — 안 보는 사이에
+      if (!n.out && n.finale && !n.finaleWarp && F.t > 45 && Math.hypot(n.x - n.finale.x, n.z - n.finale.z) > 120) n.finaleWarp = true;
+      if (!n.finaleWarp) continue;
+      const r = M.roomById[n.room];
+      if (hauntView(n.x / CM, r.y0 / CM + 1.4, n.z / CM).on && (M.roomGroups[n.room] || {}).visible !== false) continue;
+      if (M.room && M.room.id === 'hall' && hauntView(n.finale.x / CM, 1.4, n.finale.z / CM).on) continue;
+      crowdEnter(n, 'hall'); n.x = n.finale.x; n.z = n.finale.z; n.finaleWarp = false;
+      n.state = 'look'; n.goal = { lx: P.info.x, lz: P.info.z }; n.path = [];
+    }
+    // 정문으로 나가려 하면 — 현관 안
+    const pl = M.roomById.plaza;
+    if (M.room && pl && M.room.id === 'plaza' && M.pos.z * CM > pl.z1 - 450) {
+      hauntGlitch();
+      const S = M.startPos;
+      teleport(S.room);
+      M.feet = floorAt(S.room, S.x, S.z); M.eyeFeet = M.feet;
+      M.pos.set(S.x / CM, (M.feet + EYE) / CM, S.z / CM); M.yaw = 0;
+      F.loops++;
+      hauntPA(F.loops > 1 ? '정문은 들어오는 문입니다. 몇 번을 나가셔도 그렇습니다.' : '정문은 들어오는 문입니다. 명예의 전당으로 가 주십시오.', 2);
+    }
+    // 오래 안 오면 — 다시 부른다(두 번까지)
+    F.remind -= dt;
+    if (F.t > 50 && F.remind <= 0 && !(M.room && M.room.id === 'hall')) { F.remind = 60; hauntPA('명예의 전당에서 모두 기다리고 있습니다.', 2); }
+    // 초상 앞에 서면
+    if (M.room && M.room.id === 'hall' && Math.hypot(P.info.x - M.pos.x * CM, P.info.z - M.pos.z * CM) < 380 && hauntOK()) {
+      F.phase = 'end'; F.t = 0;
+      NIGHT.black = null; NIGHT.blackT = Infinity;
+      for (const n of M.npcs || []) if (!n.out && n.room === 'hall') { n.state = 'look'; n.goal = { lx: M.pos.x * CM, lz: M.pos.z * CM }; n.path = []; }
+      sndSwell();
+    }
+    return;
+  }
+  if (F.phase === 'end') {
+    const PX = M.pos.x * CM, PZ = M.pos.z * CM;
+    for (const n of M.npcs || []) if (!n.out && n.room === 'hall') n.goal = { lx: PX, lz: PZ };      // 모두 나를 본다
+    if (F.t > 1.6 && !F.dark) {
+      F.dark = true;
+      HAUNT.blackShade = true;
+      NIGHT.black = { room: 'hall', t: 0, dur: 3.4, k: 1, on: false };
+      if (typeof sndBlack === 'function') sndBlack(false);
+    }
+    if (F.t > 2.8 && !F.said) {
+      F.said = true;
+      hauntSay('… 찾았다.');
+      if (typeof sndMurmur === 'function') { const f = hauntFwd(); sndMurmur({ x: PX + f.x * 120, z: PZ + f.z * 120, v: { hM: 1.9 }, room: 'hall' }, 1.1, true); }
+    }
+    if (F.t > 5.6 && !F.white) {
+      F.white = true;
+      const w = document.createElement('div'); w.id = 'hauntEnd'; w.className = 'haunt-end'; document.getElementById('gal').appendChild(w);
+      requestAnimationFrame(() => w.classList.add('on'));
+      sndChime(0);
+      if (M.locked) document.exitPointerLock();
+    }
+    if (F.t > 8.4) {
+      F.phase = 'done';
+      M.openId = 'haunt-end';                                             // 카드가 떠 있는 동안 걷지 않는다
+      shadeHide();
+      finaleCard();
+    }
+  }
 }
