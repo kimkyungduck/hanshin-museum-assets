@@ -107,8 +107,8 @@ const HAUNT_EV = {
     // 보이는 관람객이 모두 동시에 멈춰 나를 본다 — 말없이
     let n0 = 0;
     for (const n of M.npcs || []) {
-      if (n.out || n.talk || !(n.pd < 2200)) continue;
       const r = M.roomById[n.room];
+      if (n.out || n.talk || n.finale || !r || Math.abs(r.y0 - (M.feet || 0)) > 150 || Math.hypot(n.x - M.pos.x * CM, n.z - M.pos.z * CM) > 2200) continue;
       if (!hauntView(n.x / CM, r.y0 / CM + 1.5, n.z / CM).on) continue;
       n.state = 'notice'; n.noticeT = 5; n.noticeFar = true; n.path = []; n.pause = 0;
       if (n.mono && n.mono.el) n.mono.el.remove(); n.mono = null;
@@ -124,7 +124,21 @@ const HAUNT_EV = {
       const d = Math.hypot(e.into.x - PX, e.into.z - PZ), to = M.roomById[e.to];
       return d > 700 && to && hauntView(e.into.x / CM, to.y0 / CM + 1.4, e.into.z / CM).on;
     });
-    if (!cand.length) return false;
+    if (!cand.length) {
+      // v109 — 문이 안 보이면: 지금 방의 먼 끝, 벽 앞 1m
+      if (here.outdoor || here.w < 900 || here.d < 900) return false;
+      for (let k = 0; k < 14; k++) {
+        const x = here.x0 + 100 + Math.random() * (here.w - 200), z = here.z0 + 100 + Math.random() * (here.d - 200);
+        const nearWall = Math.min(x - here.x0, here.x1 - x, z - here.z0, here.z1 - z) < 160;
+        if (!nearWall || Math.hypot(x - PX, z - PZ) < 700 || hitsWall(x, z, here.y0)) continue;
+        if (!hauntView(x / CM, here.y0 / CM + 1.4, z / CM).on) continue;
+        if (!shadeAt(x, z, here)) return false;
+        sndSwell();
+        HAUNT.ev = shadeWatch({ x, z, room: here, near: 600, life: 9 });
+        return true;
+      }
+      return false;
+    }
     const e = pickOf(cand), to = M.roomById[e.to];
     // 문 가운데에서 1.3m 더 들어간 곳 — 문틀 안에 딱 들어오게
     const dx = e.into.x - e.p.x, dz = e.into.z - e.p.z, L = Math.hypot(dx, dz) || 1;
@@ -219,9 +233,18 @@ function stepHaunt(dt) {
   const bm = typeof TORCH !== 'undefined' && TORCH.on && dr > 0.2 ? 2.5 : 0;   // v105 — 빛 속에만 있는 사람
   const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm], ['beam', bm]]
     : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm]];
-  let sum = W.reduce((s, w) => s + w[1], 0), r = Math.random() * sum, pick = W[0][0];
-  for (const [k, w] of W) { r -= w; if (r <= 0) { pick = k; break; } }
-  const ok = HAUNT_EV[pick] && HAUNT_EV[pick]();
+  // v109 — 안 되는 사건(보이는 문이 없다 · 관람객이 안 보인다 …)은 빼고 그 자리에서 다시 고른다.
+  //         예전엔 실패하면 4초 뒤 다시 무작위 → 늘 성공하는 발소리 · 속삭임만 나왔다(밤새 그림자가 한 번도 안 나옴)
+  let ok = false, pick = null, left = W.filter((w) => w[1] > 0);
+  for (let tries = 0; tries < 4 && !ok && left.length; tries++) {
+    // 소리만 나는 것(발소리 · 속삭임)은 앞의 두 번 동안 가볍게 — 보이는 것부터 해 본다
+    const cand = tries < 2 ? left.map(([k, w]) => [k, k === 'follow' || k === 'whisper' ? w * 0.35 : w]) : left;
+    let sum = cand.reduce((s, w) => s + w[1], 0), r = Math.random() * sum;
+    pick = cand[0][0];
+    for (const [k, w] of cand) { r -= w; if (r <= 0) { pick = k; break; } }
+    ok = !!(HAUNT_EV[pick] && HAUNT_EV[pick]());
+    left = left.filter((w) => w[0] !== pick);
+  }
   HAUNT.next = ok ? (45 + Math.random() * 60) * (1.2 - 0.6 * dr) : 4;
   HAUNT.last = pick;
 }
