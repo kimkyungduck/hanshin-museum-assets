@@ -1843,3 +1843,7 @@ body.is-touch .photo-chip { top: 254px; }
 .photo-prev.on { animation: phPrev 3.6s ease both; }
 @keyframes phPrev { 0% { opacity: 0; transform: rotate(-3deg) translateY(12px); } 12%, 82% { opacity: 1; transform: rotate(-3deg); } 100% { opacity: 0; } }
 @media (max-width: 620px) { .photo-prev { width: 130px; bottom: 300px; left: 16px; } .rec-toast { top: 92px; left: 16px; } }
+
+/* 말풍선(v112) — 화면 가장자리에 붙었을 때는 꼬리를 감춘다(가리킬 머리가 화면 밖) */
+.npc-say.pin::after { display: none; }
+.npc-say.pin { box-shadow: 0 6px 20px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .08); }

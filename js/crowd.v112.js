@@ -301,18 +301,38 @@ function crowdBubble(T, next) {
   if (next) { T.el.textContent = T.lines[T.k]; T.el.classList.remove('pop'); void T.el.offsetWidth; T.el.classList.add('pop'); }
   sayPlace(T.el, s);
 }
-/** 말풍선을 그 사람 머리 위에 — 가까울 때(9m)만 */
+/** 말풍선을 그 사람 머리 위에 — 가까울 때(9m)만
+ *  v112 — 바짝 붙으면 머리 위가 화면 위로 잘려 말풍선이 통째로 숨었다(사용자 지적).
+ *    → 앞에 있고 좌우로 화면 안이면 **숨기지 않고 화면 가장자리에 붙인다**(꼬리는 감춘다).
+ *    → 같은 프레임의 말풍선끼리 겹치면 위로 비켜 쌓는다 */
+const _sayV = new THREE.Vector3(), _sayC = new THREE.Vector3();
 function sayPlace(el, s) {
   const g = M.roomGroups[s.room];
-  const p = new THREE.Vector3(s.x / CM, (M.roomById[s.room].y0 + (s.fy || 0)) / CM + s.hM + 0.28, s.z / CM);
+  const p = _sayV.set(s.x / CM, (M.roomById[s.room].y0 + (s.fy || 0)) / CM + s.hM + 0.28, s.z / CM);
   const d = Math.hypot(p.x - M.pos.x, p.z - M.pos.z);
+  const front = _sayC.copy(p).applyMatrix4(M.cam.matrixWorldInverse).z < -0.2;   // 카메라 앞인가
   const v = p.clone().project(M.cam);
-  const on = g && g.visible !== false && d < 9 && v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1 && !M.openId;
+  const on = g && g.visible !== false && d < 9 && front && Math.abs(v.x) < 1.15 && !M.openId;
   el.style.display = on ? '' : 'none';
-  if (on) {
-    el.style.transform = 'translate(' + ((v.x + 1) / 2 * innerWidth).toFixed(0) + 'px,' + ((1 - v.y) / 2 * innerHeight).toFixed(0) + 'px) translate(-50%, -100%)';
-    el.style.opacity = String(clamp(1.4 - d / 9, 0.35, 1));
+  if (!on) return;
+  // 같은 프레임의 다른 말풍선들 — 겹치지 않게
+  if (CROWD.sayT !== M.t) { CROWD.sayT = M.t; CROWD.sayRects = []; }
+  const w = el.offsetWidth || 160, h = el.offsetHeight || 34, m = 12;
+  let x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight;      // 말풍선 아래 가운데(꼬리 끝)
+  const top = (document.body.classList.contains('is-touch') || innerWidth < 620 ? 96 : 86) + h;
+  const pinned = y < top || y > innerHeight - 140;
+  y = clamp(y, top, innerHeight - 140);
+  x = clamp(x, m + w / 2, innerWidth - m - w / 2);
+  for (let k = 0; k < 5; k++) {
+    const hit = CROWD.sayRects.find((r) => Math.abs(r.x - x) < (r.w + w) / 2 + 6 && Math.abs(r.y - y) < (r.h + h) / 2 + 4);
+    if (!hit) break;
+    y = hit.y - hit.h - 6;
+    if (y < top) { y = hit.y + h + 6; }
   }
+  CROWD.sayRects.push({ x, y, w, h });
+  el.classList.toggle('pin', pinned);
+  el.style.transform = 'translate(' + x.toFixed(0) + 'px,' + y.toFixed(0) + 'px) translate(-50%, -100%)';
+  el.style.opacity = String(clamp(1.4 - d / 9, 0.45, 1));
 }
 
 /* ── 혼잣말(v96) — 한 사람이 몇 줄을 중얼거린다. 대화와 같은 자리에 뜨지만 흐린 글씨 ───────── */
@@ -588,12 +608,12 @@ const OUT_CAST = [
     say: '정원에서 노는 아이. 보호자는 보이지 않는다.' + String.fromCharCode(10) + '언제부터 여기 있었는지 아무도 모른다.' },
   { id: 'kidB', room: 'garden', ch: 'p8', role: 'kid', lead: 'kidA', label: '회녹색 옷의 남자아이', wear: '낡은 회녹색 셔츠',
     say: '여자아이 뒤를 졸졸 따라다닌다.' + String.fromCharCode(10) + '둘이 무슨 놀이를 하는지는 끝내 알 수 없다. 술래가 없다.' },
-  { id: 'plaza', room: 'plaza', ch: 'p3', role: 'stroll', lines: 'plaza', label: '광장을 서성이는 사람',
+  { id: 'plaza', room: 'plaza', ch: 'p9', role: 'stroll', lines: 'plaza', label: '광장을 서성이는 노신사',
     say: '분수 둘레를 몇 바퀴째 돌고 있다.' + String.fromCharCode(10) + '정문 쪽을 자꾸 돌아보지만 나가지는 않는다.' },
-  { id: 'putt', room: 'practice', ch: 'remy', role: 'stroll', lines: 'practice', label: '컵을 내려다보는 사람',
+  { id: 'putt', room: 'practice', ch: 'p10', role: 'stroll', lines: 'practice', label: '컵을 내려다보는 사람',
     K: { coat: '#8C7B62', pants: '#3A342C', hairC: '#2A2018', skin: '#CFA283', shoe: '#E6E0D4', h: 1.72 },
     say: '연습 그린의 컵을 한참 내려다본다.' + String.fromCharCode(10) + '손에 퍼터는 없다.' },
-  { id: 'watch', room: 'field', ch: 'remy', role: 'watch', label: '멀리 서 있는 사람',
+  { id: 'watch', room: 'field', ch: 'p11', role: 'watch', label: '멀리 서 있는 사람',
     K: { coat: '#141417', pants: '#101012', hairC: '#0E0C0B', skin: '#B39070', shoe: '#141414', h: 1.84 },
     zone: (x, z) => Math.abs(x - 2500) > 3300 && z < -2600 && z > -8200,
     say: '숲가에 서서 이쪽을 보고 있었다.' + String.fromCharCode(10) + '가까이 가면 없다. 돌아보면 또 저만치 서 있다.' },
