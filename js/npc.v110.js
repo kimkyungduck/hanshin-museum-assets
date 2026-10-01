@@ -218,7 +218,7 @@ async function buildNpcs(M) {
       x: start.vx, z: start.vz, tx: start.vx, tz: start.vz, lx: start.x, lz: start.z,
       yaw: Math.atan2(start.x - start.vx, start.z - start.vz),
       wait: 1 + i * 0.7, speed: 0.62 + (i % 3) * 0.07, phase: i * 1.3, walkK: 0,
-      mutter: i % 2 === 1,                 // v96 — 혼잣말하는 사람(구석을 보고 중얼거린다) · v99 둘 → 셋
+      mutter: i % 2 === 1 && (typeof NIGHT === 'undefined' || NIGHT.on),   // v110 — 낮엔 없음                 // v96 — 혼잣말하는 사람(구석을 보고 중얼거린다) · v99 둘 → 셋
     };
     // v92 — 실사 관람객은 **제 걸음 폭 · 박자 그대로의 속도**로 걷는다. 예전엔 정해 둔 속도(0.62~0.76m/s)에
     //       걸음 클립을 느리게 틀어 맞춰서 슬로 모션처럼 보였다(사람은 천천히 걸을 때 박자보다 보폭을 줄인다)
@@ -266,6 +266,23 @@ function npcSay(K, r, mutter) {
   }[K.hair] || '';
   const wear = K.real ? K.wear + '를 입은' : K.scarf ? '목도리를 두른' : (K.bag ? '가방을 멘' : '코트를 입은');
   L.push(`${look} ${wear} 사람이 서 있다.`.trim());
+  if (typeof NIGHT !== 'undefined' && !NIGHT.on) {
+    // v110 — 낮: 예전(v95) 설명
+    const day = {
+      portraits: '초상들을 차례로 올려다보고 있다. 아는 얼굴을 찾는 눈이다.',
+      photos: '사진을 하나하나 넘겨보고 있다. 한 장 앞에서 유난히 오래 멈춘다.',
+      clips: '화면 앞에 서 있다. 헛스윙이 나올 때만 어깨가 들썩인다.',
+      trophies: '명패를 읽고 있다. 받고 싶지 않은 상도 끝까지 읽는다.',
+      champion: '초상을 올려다보고 있다. 한참 동안 자리를 뜨지 않는다.',
+      lobby: '안내판을 읽는 척하면서 방명록 쪽을 보고 있다.',
+      scorecards: '스코어카드를 들여다보고 있다. 고쳐 쓴 자리를 유심히 본다.',
+    };
+    L.push(day[r.content] || '전시를 보고 있다.');
+    L.push('');
+    L.push('이름을 묻지 않았다. 본관은 관람객의 이름을 기록하지 않는다.');
+    L.push('※ 관람객은 소장품이 아닙니다. 말을 걸면 대답해 줍니다.');
+    return L.join(String.fromCharCode(10));
+  }
   // v96 — 조금씩 어긋나게
   const byRoom = {
     portraits: '초상들을 차례로 올려다보고 있다. 아는 얼굴을 찾는 눈이다. 제 얼굴을 찾는 것 같기도 하다.',

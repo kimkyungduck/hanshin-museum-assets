@@ -152,8 +152,9 @@ async function screenTitle() {
         <div class="ts-actions">
           <button class="ts-enter" id="btnEnter"><span id="tsEnterTx">전시관을 여는 중</span><i id="tsBar"></i></button>
           ${M.canManage ? '<button class="ts-sub" id="btnAdmin">⚙ 전시 설정</button>' : ''}
+          ${typeof NIGHT !== 'undefined' ? '<button class="ts-sub ts-mode" id="btnMode">' + (NIGHT.on ? '☀ 낮에 보기' : '☾ 밤으로') + '</button>' : ''}
         </div>
-        <p class="ts-note">배경음악이 함께 재생됩니다 · 끄기 <b>M</b></p>
+        <p class="ts-note">${typeof NIGHT !== 'undefined' && NIGHT.on ? '밤의 전시관 — 공포 연출이 있습니다 · 이어폰 권장 · 소리 끄기 <b>M</b>' : '배경음악이 함께 재생됩니다 · 끄기 <b>M</b>'}</p>
       </main>
       <aside class="ts-side">
         <div class="ts-count"><b>${M.total}</b><span>소장품</span></div>
@@ -165,6 +166,7 @@ async function screenTitle() {
   $('gal').classList.add('attract');
   $('btnEnter').onclick = () => enter();
   if ($('btnAdmin')) $('btnAdmin').onclick = openAdmin;
+  if ($('btnMode')) $('btnMode').onclick = () => museumSetMode(!NIGHT.on);      // v110 — 낮 / 밤
 
   try {
     initGL();

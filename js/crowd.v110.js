@@ -151,6 +151,11 @@ function crowdTopics() {
 }
 /** 이 방에서 나눌 이야기 — 방 주제 쪽으로 기운다. 가끔은 흔한 잡담 */
 function crowdLines(room) {
+  if (!isNightMode()) {                                                     // v110 — 낮: 밝은 이야기
+    const T = crowdTopicsDay(), r = M.roomById[room], k = r && r.content;
+    const pool = [].concat(T[k] || [], T[k] || [], T.any);
+    return pool.length && Math.random() < 0.75 ? pool[Math.floor(Math.random() * pool.length)] : DAY_TALKS[Math.floor(Math.random() * DAY_TALKS.length)];
+  }
   const T = crowdTopics(), r = M.roomById[room], k = r && r.content;
   const pool = [].concat(T[k] || [], T[k] || [], ROOM_TALKS[k] || [], ROOM_TALKS[k] || [], T.any);
   if (pool.length && Math.random() < 0.75) return pool[Math.floor(Math.random() * pool.length)];
@@ -269,7 +274,7 @@ function crowdTalkStep(T, dt) {
   // v99 — 내가 2.2m 안으로 들어오면 하던 이야기를 끊고 둘 다 나를 본다. 가까운 사람이 한 마디
   if (!T.interrupted && Math.min(a.pd || 1e9, b.pd || 1e9) < 220) {
     T.interrupted = true; T.intT = 6;
-    T.lines = T.lines.slice(0, Math.max(0, T.k + 1)).concat([pickOf(INTERRUPT)]);
+    T.lines = T.lines.slice(0, Math.max(0, T.k + 1)).concat([pickOf(isNightMode() ? INTERRUPT : DAY_INTERRUPT)]);
     T.forced = (a.pd || 1e9) < (b.pd || 1e9) ? a : b; T.forcedK = T.lines.length - 1;
     T.t = Math.min(T.t, 0.5);
   }
@@ -447,7 +452,7 @@ function stepCrowd(M, dt) {
     if (n.noticeCool <= 0 && n.pd < 230 && (n.state === 'look' || (n.state === 'walk' && !n.path.some((w) => w.enter)))) {
       n.noticeCool = 45 + Math.random() * 40;
       n.state = 'notice'; n.noticeT = n.quirk === 'freeze' ? 6 : 4.2; n.path = []; n.pause = 0;
-      if (n.quirk !== 'freeze' || Math.random() < 0.35) monoForce(n, pickOf(NEAR_IN), 'say', 0.7);
+      if (n.quirk !== 'freeze' || Math.random() < 0.35) monoForce(n, pickOf(isNightMode() ? NEAR_IN : DAY_NEAR), 'say', 0.7);
     } else if (n.state === 'mono' && n.noticeCool <= 0 && n.pd < 200) {
       // 구석을 보고 중얼거리던 사람 뒤에 서면 — 멈추고 천천히 돌아본다
       n.noticeCool = 45 + Math.random() * 30;
@@ -469,7 +474,7 @@ function stepCrowd(M, dt) {
         else if (Math.random() < 0.38 && crowdWander(n)) { /* 다른 방으로 */ } else crowdGo(n, crowdSpot(n.room, n));
       }
       if (n.mutter && !n.mono && n.monoCool <= 0 && Math.random() < dt / 5) monoStart(n, pickOf(MONO));    // 전시 앞에서도 중얼거린다
-      else if (!n.mutter && !n.mono && n.monoCool <= 0 && Math.random() < dt / 40) monoStart(n, [pickOf(MONO_SHORT)]);   // v99 — 누구나 가끔 한 마디
+      else if (!n.mutter && !n.mono && n.monoCool <= 0 && isNightMode() && Math.random() < dt / 40) monoStart(n, [pickOf(MONO_SHORT)]);   // v99 — 누구나 가끔 한 마디
     } else if (n.state === 'mono') {
       want = Math.atan2(n.goal.lx - n.x, n.goal.lz - n.z);
       if (!n.mono) { n.state = 'look'; n.wait = 1; }
@@ -519,7 +524,7 @@ function stepCrowd(M, dt) {
             n.pause = 1.4 + Math.random() * 2.4;
             n.pauseYaw = n.quirk === 'back' ? n.yaw + Math.PI * (Math.random() < 0.5 ? 1 : -1) * 0.95
               : n.pd < 1200 ? Math.atan2(PX - n.x, PZ - n.z) : n.yaw + (Math.random() - 0.5) * 2.4;
-            if (!n.mono && n.monoCool <= 0 && Math.random() < 0.4) monoStart(n, [pickOf(MONO_SHORT)]);
+            if (!n.mono && n.monoCool <= 0 && isNightMode() && Math.random() < 0.4) monoStart(n, [pickOf(MONO_SHORT)]);
           }
           n.phase += dt * n.speed * 7.2;
         }
@@ -598,6 +603,7 @@ function buildOutdoorNpcs(M) {
   const made = {};
   let i = 0;
   for (const C of OUT_CAST) {
+    if (C.role === 'watch' && !isNightMode()) continue;                    // v110 — 낮엔 숲가의 그 사람이 없다
     const r = M.roomById[C.room], g = M.roomGroups[C.room];
     if (!r || !g || !PEOPLE.byName[C.ch]) continue;
     const v = buildRealVisitor(Object.assign({ coat: '#555', pants: '#333', h: 1.7 }, C.K || {}), C.ch);
@@ -616,7 +622,8 @@ function buildOutdoorNpcs(M) {
     n.hit = hit;
     n.info = { id: 'npc-out-' + C.id, type: 'placard', icon: n.kid ? '🧒' : '🧑', label: C.label, title: C.label,
       subtitle: '관람객 · ' + r.name, x: n.x, z: n.z, y: 120, room: r.id,
-      body: C.say + String.fromCharCode(10) + String.fromCharCode(10) + '※ 관람객은 소장품이 아닙니다. 아직은.' };
+      body: isNightMode() ? C.say + String.fromCharCode(10) + String.fromCharCode(10) + '※ 관람객은 소장품이 아닙니다. 아직은.'
+        : (n.kid ? '정원에서 뛰어노는 아이.' : '바깥을 산책하는 관람객.') + String.fromCharCode(10) + String.fromCharCode(10) + '※ 관람객은 소장품이 아닙니다. 말을 걸면 대답해 줍니다.' };
     Object.defineProperty(n.info, 'npcRef', { value: n });      // v99 — 조사하면 먼저 대답한다(npcAsk)
     M.pickables.push(hit);
     M.artByMesh.set(hit, n.info);
@@ -715,7 +722,7 @@ function outStep(M, n, dt) {
       // 나를 알아챘다 — 둘 다 멈춰서 나를 본다
       n.state = 'stare'; n.tgt = null; n.wait = 3.2;
       if (n.mono) { if (n.mono.el) n.mono.el.remove(); n.mono = null; }
-      monoStart(n, pickOf(MONO_OUT.near), 'kid');
+      monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).near), 'kid');
       for (const o of M.npcs) if (o.lead === n) { o.state = 'stare'; o.tgt = null; o.wait = 3.2; }
     } else if (L) {
       // 따라가는 아이 — 앞 아이가 움직이면 뒤 1.2m 쪽으로, 멀면 뛴다
@@ -730,7 +737,7 @@ function outStep(M, n, dt) {
       n.wait -= dt;
       if (n.wait <= 0) { n.wait = 2 + Math.random() * 4; go(outSpot(n, { x: n.x, z: n.z, R: 1400 }), Math.random() < 0.35 ? 1.9 : 1); }
     }
-    if (n.state !== 'stare' && !n.mono && n.monoCool <= 0 && Math.random() < dt / 9) monoStart(n, pickOf(MONO_OUT.kid), 'kid');
+    if (n.state !== 'stare' && !n.mono && n.monoCool <= 0 && Math.random() < dt / 9) monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).kid), 'kid');
   } else if (n.role === 'watch') {
     if (n.state === 'look') {
       want = Math.atan2(P.x - n.x, P.z - n.z);                    // 늘 이쪽을 본다
@@ -758,14 +765,14 @@ function outStep(M, n, dt) {
     // 서성이는 사람 — 천천히 걷다 서다, 가끔 중얼거린다. 가까이 가면 나를 보고 한 마디
     if (n.state === 'look') {
       n.wait -= dt;
-      if (near && pd < 330 && n.cool <= 0 && !n.mono) { n.face = { x: P.x, z: P.z }; n.wait = Math.max(n.wait, 6); monoStart(n, pickOf(MONO_OUT.stranger), 'mono'); n.cool = 60; }
+      if (near && pd < 330 && n.cool <= 0 && !n.mono) { n.face = { x: P.x, z: P.z }; n.wait = Math.max(n.wait, 6); monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).stranger), isNightMode() ? 'mono' : 'say'); n.cool = 60; }
       if (n.wait <= 0) {
         n.wait = 6 + Math.random() * 9;
         const s = outSpot(n, { x: n.x, z: n.z, R: 1500 });
         if (s) { n.face = { x: s.x * 2 - n.x, z: s.z * 2 - n.z }; go(s, 0.82); }
       }
     }
-    if (!n.mono && n.monoCool <= 0 && Math.random() < dt / 16) monoStart(n, pickOf(MONO_OUT[n.cast.lines] || MONO), 'mono');
+    if (!n.mono && n.monoCool <= 0 && Math.random() < dt / (isNightMode() ? 16 : 30)) monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT)[n.cast.lines] || [['…']]), isNightMode() ? 'mono' : 'say');
   }
 
   if (n.state === 'walk') {
@@ -828,13 +835,84 @@ function npcAsk(n) {
   if (n.talk) crowdTalkEnd(n.talk);
   if (n.out) {
     if (n.role === 'watch') { monoForce(n, ['…'], 'mono', 0.3); n.cool = 0; return true; }
-    if (n.role === 'kid') { n.state = 'stare'; n.tgt = null; n.wait = 3.6; monoForce(n, pickOf(ASK_KID), 'kid', 0.3); return true; }
+    if (n.role === 'kid') { n.state = 'stare'; n.tgt = null; n.wait = 3.6; monoForce(n, pickOf(isNightMode() ? ASK_KID : DAY_OUT.near), 'kid', 0.3); return true; }
     n.state = 'look'; n.tgt = null; n.face = { x: PX, z: PZ }; n.wait = 7;
-    monoForce(n, pickOf(MONO_OUT.stranger), 'say', 0.3);
+    monoForce(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).stranger), 'say', 0.3);
   } else {
     n.state = 'notice'; n.noticeT = 5.5; n.path = []; n.pause = 0;
-    monoForce(n, pickOf(n.mutter && Math.random() < 0.5 ? ASK_MUTTER : ASK), 'say', 0.35);
+    monoForce(n, pickOf(!isNightMode() ? DAY_ASK : n.mutter && Math.random() < 0.5 ? ASK_MUTTER : ASK), 'say', 0.35);
   }
   if (!CROWD.askTold && typeof toast === 'function') { CROWD.askTold = true; toast('대답하는 동안 한 번 더 조사하면 그 사람을 자세히 본다', 3200); }
   return true;
+}
+
+/* ══════════════════════════════════════════════════════════
+   낮(v110) — 공포 없이 관람할 때의 대사. 밤 대사(위)는 그대로 둔다
+   ══════════════════════════════════════════════════════════ */
+const isNightMode = () => typeof NIGHT === 'undefined' || NIGHT.on;
+const DAY_TALKS = [
+  ['이 트로피, 작년 최종전 거 맞지?', '응. 그날 비 엄청 왔잖아.', '그래도 끝까지 다 쳤지.'],
+  ['사진 속에 너 있다!', '아… 그 벙커샷. 지우고 싶다.', '공은 나왔잖아. 세 번 만에.'],
+  ['18번 홀 호수 넘겨 봤어?', '두 번 빠졌어. 공 아직 바닥에 있을걸.', '잠수하면 보인대.'],
+  ['끝나고 한 라운드 어때?', '좋지. 이번엔 멀리건 없기.', '… 하나만 쓰자.'],
+  ['옛날 스코어카드 보니까 백 개 넘게 쳤네.', '그땐 다 그랬어. 지금은 90대!', '후반만 90대지.'],
+  ['우승자의 방 봤어?', '봤지. 초상이 너무 진지해.', '우승할 땐 원래 그래.'],
+  ['퍼팅 연습장 가서 내기할래?', 'OK 거리는 한 뼘이다.', '두 뼘.'],
+  ['카트 타 봤어? 생각보다 빨라.', '나무에 박을 뻔했어.', '브레이크는 스페이스야.'],
+  ['이 사진 몇 년도야?', '창단 첫 해. 다들 폼이 엉망이야.', '지금도 크게 다르진 않아.'],
+  ['홀인원 기록은 누구 거야?', '아직 아무도 없대.', '그럼 오늘이다.'],
+  ['여기 조명 좋다.', '전시관 같지? 우리 사진인데.', '우리 사진이라 더 좋다.'],
+  ['다음 달 정기전 코스 어디야?', '공지 떴어. 이번엔 산악 코스.', '공 많이 챙겨야겠다.'],
+];
+const DAY_NEAR = [['안녕하세요.'], ['좋은 구경 되세요.'], ['여기 처음 오셨어요?', '트로피실은 꼭 보세요.'], ['사진 갤러리 가 보셨어요?', '다들 젊었더라고요.'], ['아, 지나가세요.']];
+const DAY_ASK = [['네?'], ['저요? 그냥 구경 중이에요.'], ['18번 홀 쳐 보셨어요?', '호수 넘기기가 어렵더라고요.'], ['명예의 전당 초상들 멋지죠.'], ['카트 타 보세요. 재밌어요.'], ['스코어카드 보면 다들 고생했어요.']];
+const DAY_INTERRUPT = ['아, 안녕하세요.', '같이 보실래요?', '아 죄송해요, 길 막았죠.'];
+const DAY_OUT = {
+  plaza: [['분수 시원하다.'], ['날씨 좋다. 라운드 나가기 딱이네.']],
+  practice: [['한 뼘만 더…', '들어가라!'], ['오늘은 퍼팅이 잘 되네.']],
+  kid: [['술래잡기 하자!'], ['나 잡아 봐라!'], ['(깔깔)'], ['엄마 저기 있다!']],
+  near: [['안녕하세요!'], ['같이 놀래요?'], ['아저씨도 골프 쳐요?']],
+  stranger: [['안녕하세요.', '오늘 날씨 좋네요.'], ['연습 그린 가 보셨어요?', '컵이 넷이에요.']],
+};
+/** 낮의 선수 이야기 — v95 의 대사(기록은 같고 끝이 밝다) */
+function crowdTopicsDay() {
+  if (CROWD.topicsDay) return CROWD.topicsDay;
+  const A = M.archive || {}, P = (A.players || []).filter((p) => p && p.name);
+  const J = (w, a, b) => (typeof josa === 'function' ? josa(w, a, b) : a);
+  const f1 = (v) => (+v).toFixed(1);
+  const T = { trophies: [], portraits: [], scorecards: [], clips: [], champion: [], photos: [], any: [] };
+  const top = (f) => P.slice().sort((a, b) => f(b) - f(a))[0];
+  if (P.length) {
+    const r1 = P.slice().sort((a, b) => (a.rank || 99) - (b.rank || 99))[0];
+    if (r1 && r1.avgStrokes) T.trophies.push([`올해 1위가 ${r1.name}${J(r1.name, '이', '가')}지?`, `평균 ${f1(r1.avgStrokes)}타래. 넘사벽이야.`, '나도 저렇게 치고 싶다.']);
+    const bs = P.filter((p) => p.best).sort((a, b) => a.best - b.best)[0];
+    if (bs) T.scorecards.push([`${bs.name} 베스트가 ${bs.best}타래.`, '그날 퍼터가 불이었대.', '언젠가 나도 깬다.']);
+    const bd = top((p) => p.birdies || 0);
+    if (bd && bd.birdies) T.trophies.push([`버디왕은 ${bd.name}${J(bd.name, '이야', '야')}.`, `버디 ${bd.birdies}개? 말이 돼?`, '파 세이브도 잘하더라.']);
+    const wn = top((p) => p.roundWins || 0);
+    if (wn && wn.roundWins) T.champion.push([`${wn.name} 우승 몇 번 했지?`, `${wn.roundWins}번. 우승자의 방 단골이야.`, '이번엔 좀 쉬어 가라고 해.']);
+    const at = top((p) => p.roundsCompleted || 0);
+    if (at) T.portraits.push([`${at.name}${J(at.name, '이', '가')} 라운드 제일 많이 나왔대.`, `${at.roundsCompleted}번이나. 개근상이지.`, '성실함이 곧 실력이야.']);
+    const eg = P.find((p) => (p.hio || 0) > 0) || P.find((p) => (p.eagles || 0) > 0);
+    if (eg) T.trophies.push([`${eg.name} ${eg.hio ? '홀인원' : '이글'} 기록 있대!`, '진짜? 어느 홀에서?', '본인은 아직도 그 얘기만 해.']);
+    for (const p of P.slice(0, 14)) {
+      if (p.avgStrokes) T.portraits.push([`요즘 ${p.name} 폼 어때?`, `평균 ${f1(p.avgStrokes)}타. 많이 늘었어.`, '다음 라운드가 기대된다.']);
+      if (p.best && p.avgStrokes) T.photos.push([`이 사진 ${p.name} 아니야?`, `맞아. 베스트 ${p.best}타 친 날이래.`, '그래서 표정이 좋구나.']);
+    }
+  }
+  const w = typeof recentWinner === 'function' ? recentWinner(A) : null;
+  if (w) T.champion.push([`지난번${w.round.course ? ' ' + w.round.course : ''} 라운드 누가 이겼어?`,
+    `${w.name}${J(w.name, '이', '가')}.${w.round.best != null ? ' ' + w.round.best + '타로.' : ''}`, '초상 봤어? 표정이 비장하더라.']);
+  const cnt = {};
+  for (const r of A.rounds || []) if (r.course) cnt[r.course] = (cnt[r.course] || 0) + 1;
+  const cs = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  if (cs) T.scorecards.push([`${cs[0]} 요즘 자주 가네.`, `벌써 ${cs[1]}번째야. 거기 그린 빠르지.`, '벙커만 조심하면 돼.']);
+  for (const c of (A.clips || []).slice(0, 8)) {
+    if (!c.title) continue;
+    T.clips.push([`'${c.title}' 영상 봤어?`, c.players ? `${c.players} 나오는 거? 봤지.` : '봤지. 몇 번을 돌려 봤어.',
+      c.comment_count ? `댓글이 ${c.comment_count}개나 달렸더라.` : '다시 봐도 웃겨.']);
+  }
+  T.any = [...T.portraits, ...T.trophies.slice(0, 2), ...T.champion.slice(0, 1), ...T.clips.slice(0, 2)];
+  CROWD.topicsDay = T;
+  return T;
 }

@@ -10,8 +10,21 @@
       폰 uniform 한도에 닿는다. → 바깥 재질(userData.out)에만 셰이더 조각을 얹어 '투광등 배열'을 직접 계산한다.
       배열 크기는 고정(FLOOD_N) · 매 프레임 가까운 것을 채워 넣는다(재컴파일 없음).
       빛 계산은 three 의 RE_Direct 를 그대로 부른다 → 광택 바닥 · 물에 조명이 비친다. */
+/* v110 — 밤(공포) / 낮(그냥 관람)을 고른다. 표지의 '낮에 보기' 버튼 · 주소 ?mode=day|night. 이 기기에 기억한다 */
+const MUSEUM_MODE_KEY = 'museum-mode';
+function museumNight() {
+  try {
+    const q = /[?&]mode=(day|night)/.exec(location.search);
+    if (q) { localStorage.setItem(MUSEUM_MODE_KEY, q[1]); return q[1] === 'night'; }
+    return localStorage.getItem(MUSEUM_MODE_KEY) !== 'day';
+  } catch (e) { return true; }
+}
+function museumSetMode(night) {
+  try { localStorage.setItem(MUSEUM_MODE_KEY, night ? 'night' : 'day'); } catch (e) { /* 기억 못 하면 주소로 */ }
+  location.href = location.pathname + '?mode=' + (night ? 'night' : 'day');
+}
 const NIGHT = {
-  on: true,
+  on: museumNight(),
   fogC: 0x0A0E17, fogD: 0.0115, bg: 0x05070D,
   moon: new THREE.Color(0x9DB2DE), moonI: 0.34,
   hemiSky: 0x34425E, hemiGnd: 0x0B0A09, hemiI: 0.2,
