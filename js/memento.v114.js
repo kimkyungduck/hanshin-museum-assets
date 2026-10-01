@@ -22,6 +22,8 @@ const RECORDS = [
   ['end', '관람 종료', '초상 앞에 서면'],
   ['escape', '퇴장', '두 번째 밤, 세 번째 정문'],
   ['photo', '사진에만 찍힌 사람', '밤에 기념 사진을 찍으면'],
+  ['jump', '뒤에 있었다', '밤이 깊으면, 빠르게 돌아보지 마라'],
+  ['escroom', '방탈출 성공', '표지의 🔐 방탈출'],
 ];
 const REC_KEY = 'museum-records';
 const REC = { got: {} };

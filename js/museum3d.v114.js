@@ -153,6 +153,7 @@ async function screenTitle() {
           <button class="ts-enter" id="btnEnter"><span id="tsEnterTx">전시관을 여는 중</span><i id="tsBar"></i></button>
           ${M.canManage ? '<button class="ts-sub" id="btnAdmin">⚙ 전시 설정</button>' : ''}
           ${typeof NIGHT !== 'undefined' ? '<button class="ts-sub ts-mode" id="btnMode">' + (NIGHT.on ? '☀ 낮에 보기' : '☾ 밤으로') + '</button>' : ''}
+          ${typeof NIGHT !== 'undefined' && NIGHT.on && typeof escapeStart === 'function' ? '<button class="ts-sub ts-esc" id="btnEscape">🔐 방탈출</button>' : ''}
           ${typeof NIGHT !== 'undefined' && NIGHT.on && typeof recCount === 'function' ? '<button class="ts-sub ts-rec" id="btnRec">밤의 기록 ' + recCount() + '/' + RECORDS.length + '</button>' : ''}
         </div>
         <p class="ts-note">${typeof NIGHT !== 'undefined' && NIGHT.on ? '밤의 전시관 — 공포 연출이 있습니다 · 이어폰 권장 · 소리 끄기 <b>M</b>' : '배경음악이 함께 재생됩니다 · 끄기 <b>M</b>'}</p>
@@ -169,6 +170,7 @@ async function screenTitle() {
   if ($('btnAdmin')) $('btnAdmin').onclick = openAdmin;
   if ($('btnMode')) $('btnMode').onclick = () => museumSetMode(!NIGHT.on);      // v110 — 낮 / 밤
   if ($('btnRec')) $('btnRec').onclick = () => recPanel();                       // v111 — 밤의 기록
+  if ($('btnEscape')) $('btnEscape').onclick = () => escapeStart();               // v114 — 방탈출
 
   try {
     initGL();
@@ -2611,6 +2613,7 @@ function bindInput() {
       }
       return;
     }
+    if (k === 'j' && !ev.repeat && !M.openId && typeof ESC !== 'undefined' && ESC.on && ESC.ready) { ev.preventDefault(); escapeJournal(); return; }   // v114 — 쪽지
     if (k === 'p' && !ev.repeat && !M.openId && !$('adminPanel') && typeof takePhoto === 'function') { ev.preventDefault(); takePhoto(); return; }   // v111 — 기념 사진
     if (k === 'f' && !ev.repeat && !M.openId && !$('adminPanel')) { ev.preventDefault(); if (typeof torchToggle === 'function') torchToggle(); return; }   // v105 — 손전등
     if (k === 'm') { ev.preventDefault(); if (M.bgm) bgmToggle(); if (typeof sndToggle === 'function') sndToggle(); return; }   // 음악 · 소리 토글
@@ -2789,6 +2792,7 @@ function loop(now) {
   guardStep('torch', () => { if (typeof stepTorch === 'function') stepTorch(dt); });        // v105 — 손전등
   guardStep('score', () => { if (typeof stepScore === 'function') stepScore(dt); });        // v106 — 밤의 음악 · 심장 · 밤 시계
   guardStep('memento', () => { if (typeof stepMemento === 'function') stepMemento(dt); });  // v111 — 기념 사진 칩
+  guardStep('escape', () => { if (typeof stepEscape === 'function') stepEscape(dt); });    // v114 — 방탈출
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }
@@ -3250,6 +3254,7 @@ function openExhibit(e) {
   if (counted(e) && !M.seen.has(e.id)) { M.seen.add(e.id); saveSeen(); }
   $('ovBody').innerHTML = renderExhibit(e);
   if (typeof hauntNote === 'function') hauntNote(e);          // v102 — 관리자 메모 · 새 초상
+  if (e.onOpen) e.onOpen(e);                                   // v114 — 방탈출 쪽지
   // 스코어카드 홀별 표(22칸)는 기본 폭(620px)에 들어가지 않는다
   $('ovCard').classList.toggle('wide', !!e.card);
   $('overlay').classList.remove('hidden');

@@ -25,10 +25,10 @@ function museumSetMode(night) {
 }
 const NIGHT = {
   on: museumNight(),
-  fogC: 0x0A0E17, fogD: 0.0115, bg: 0x05070D,
+  fogC: 0x080B12, fogD: 0.0148, bg: 0x04050A,          // v114 — '별로 안 무섭다' → 더 짙게
   moon: new THREE.Color(0x9DB2DE), moonI: 0.34,
   hemiSky: 0x34425E, hemiGnd: 0x0B0A09, hemiI: 0.2,
-  envIn: 0.55, lightIn: 0.72,           // 실내 환경광 · 방 조명 배율(전시물 스포트는 그대로)
+  envIn: 0.36, lightIn: 0.55,           // 실내 환경광 · 방 조명 배율(전시물 스포트는 그대로) · v114 더 어둡게
   floods: [], lamps: [], t: 0,
 };
 /* 달 — 북쪽(그린 너머) 낮게. 달빛 그림자도 이 방향(world.js buildSun 이 SUN_DIR 을 쓴다) */
@@ -89,7 +89,7 @@ function nightScene() {
   if (M.handLight) M.handLight.intensity *= 0.7;
   if (typeof torchInit === 'function') torchInit();            // v105 — 손전등(끄면 세기 0 — 광원 수는 처음부터 고정)
   const U = M.post && M.post.uniforms;
-  if (U) { if (U.uVig) U.uVig.value = 0.82; if (U.uLift) U.uLift.value = 0.12; }
+  if (U) { if (U.uVig) U.uVig.value = 0.98; if (U.uLift) U.uLift.value = 0.07; if (U.uExposure) U.uExposure.value = 1.22; if (U.uGrain) U.uGrain.value = 0.03; }
 }
 
 /* ── 투광등 배열 — 바깥 재질에 얹는 셰이더 조각 ────────────────────── */
@@ -411,7 +411,7 @@ function stepFlicker(dt) {
     const e = 0.12 + 0.88 * k;
     for (const I of NIGHT.inMats) { I.m.envMapIntensity = I.env * e; I.m.emissiveIntensity = I.em * k; }
     if (M.hemi) M.hemi.intensity = NIGHT.hemiI * e;
-    const U = M.post && M.post.uniforms; if (U && U.uLift) U.uLift.value = 0.12 * e;      // 암부 들어올림도 함께 — 정전은 정말 깜깜하게
+    const U = M.post && M.post.uniforms; if (U && U.uLift) U.uLift.value = 0.07 * e;      // 암부 들어올림도 함께 — 정전은 정말 깜깜하게
   }
   if (typeof sndFlickTick === 'function') sndFlickTick(here, k, NIGHT.lastK == null ? 1 : NIGHT.lastK);
   NIGHT.lastK = k;

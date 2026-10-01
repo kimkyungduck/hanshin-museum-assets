@@ -10,7 +10,7 @@
      · 일제히 — 보이는 관람객들이 모두 하던 것을 멈추고 동시에 나를 본다(dread 가 오른 뒤)
      · 화면이 튄다 — 반전 · 흑백 · 붉은 번짐이 한순간
    ※ 피 · 비명 · 갑자기 튀어나오는 큰 소리는 없다. 이상한 것만 */
-const HAUNT = { t: 0, dread: 0, next: 60 + Math.random() * 40, ev: null, follow: 0, shade: null };
+const HAUNT = { t: 0, dread: 0, next: 30 + Math.random() * 20, ev: null, follow: 0, shade: null, jumpCool: 70, turnAcc: 0, lastYaw: null };   // v114 — 첫 현상 30초 안팎
 const WHISPER = ['… 여기야.', '뒤에.', '돌아보지 마.', '… 이름이 뭐였더라.', '같이 있자.', '거기 아니야.', '… 찾았다.', '한 홀만 더.', '불 끄지 마.'];
 
 function hauntOK() {
@@ -185,7 +185,7 @@ function shadeWatch(o) {
       this.t += dt;
       const PX = M.pos.x * CM, PZ = M.pos.z * CM, d = Math.hypot(o.x - PX, o.z - PZ);
       const V = hauntView(o.x / CM, (floorAt(o.room, o.x, o.z) || o.room.y0) / CM + 1.5, o.z / CM);
-      if (V.on) { if (!this.seen && typeof hauntRec === 'function') hauntRec(o.out ? 'fog' : 'shade'); this.seen = true; this.away = 0; if (Math.abs(V.x) < 0.3 && Math.abs(V.y) < 0.4) this.look += dt; } else this.away += dt;
+      if (V.on) { if (!this.seen) { if (typeof hauntRec === 'function') hauntRec(o.out ? 'fog' : 'shade'); sndStinger(0.045); } this.seen = true; this.away = 0; if (Math.abs(V.x) < 0.3 && Math.abs(V.y) < 0.4) this.look += dt; } else this.away += dt;
       const gone = d < o.near || this.look > 1.6 || this.t > o.life || (this.seen && this.away > 2.5) || !hauntOK();
       if (!gone) return;
       if (V.on) { if (o.out) hauntGlitch(); else hauntBlink(); }        // 보는 앞에서는 불이 깜빡이는 사이에
@@ -200,6 +200,7 @@ function stepHaunt(dt) {
   if (!NIGHT.on || !M.ready || M.attract) return;
   HAUNT.t += dt;
   HAUNT.dread = clamp(HAUNT.t / 900, 0, 1);
+  stepJump(dt);                                                            // v114 — 뒤돌면
   stepVault(dt);                                                           // v108 — 지하 수장고
   if (HAUNT.calm) { stepTilts(dt); return; }                              // v103 — 결말 뒤 조용한 밤
   secondNightInit();                                                       // v104 — 두 번째 밤
@@ -234,21 +235,21 @@ function stepHaunt(dt) {
   const out = M.room.outdoor, dr = HAUNT.dread;
   const mm = HAUNT.nights >= 1 ? 1 : 0;                                    // v104 — 두 번째 밤부터 '나란히 걷는 사람'
   const bm = typeof TORCH !== 'undefined' && TORCH.on && dr > 0.2 ? 2.5 : 0;   // v105 — 빛 속에만 있는 사람
-  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm], ['beam', bm]]
-    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm]];
+  const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm], ['beam', bm], ['distant', 1.2]]
+    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm], ['window', 2.2], ['distant', 1.5]];
   // v109 — 안 되는 사건(보이는 문이 없다 · 관람객이 안 보인다 …)은 빼고 그 자리에서 다시 고른다.
   //         예전엔 실패하면 4초 뒤 다시 무작위 → 늘 성공하는 발소리 · 속삭임만 나왔다(밤새 그림자가 한 번도 안 나옴)
   let ok = false, pick = null, left = W.filter((w) => w[1] > 0);
   for (let tries = 0; tries < 4 && !ok && left.length; tries++) {
     // 소리만 나는 것(발소리 · 속삭임)은 앞의 두 번 동안 가볍게 — 보이는 것부터 해 본다
-    const cand = tries < 2 ? left.map(([k, w]) => [k, k === 'follow' || k === 'whisper' ? w * 0.35 : w]) : left;
+    const cand = tries < 2 ? left.map(([k, w]) => [k, k === 'follow' || k === 'whisper' || k === 'distant' ? w * 0.35 : w]) : left;
     let sum = cand.reduce((s, w) => s + w[1], 0), r = Math.random() * sum;
     pick = cand[0][0];
     for (const [k, w] of cand) { r -= w; if (r <= 0) { pick = k; break; } }
     ok = !!(HAUNT_EV[pick] && HAUNT_EV[pick]());
     left = left.filter((w) => w[0] !== pick);
   }
-  HAUNT.next = ok ? (45 + Math.random() * 60) * (1.2 - 0.6 * dr) : 4;
+  HAUNT.next = ok ? (32 + Math.random() * 40) * (1.15 - 0.55 * dr) : 4;   // v114 — 더 자주
   HAUNT.last = pick;
 }
 /** 내 발소리 한 번 — 따라오는 중이면 한 박자 늦게, 2.5m 뒤에서 */
@@ -558,6 +559,7 @@ function finaleCalm() {
   setTimeout(() => hauntPA('관람해 주셔서 감사합니다. 천천히 둘러보십시오. … 천천히.', 0), 3000);
 }
 function stepFinale(dt) {
+  if (typeof ESC !== 'undefined' && ESC.on) return;                         // v114 — 방탈출 중엔 결말 대신 시간 제한
   const F = HAUNT.finale;
   if (!F) {
     if (!HAUNT.calm && HAUNT.dread >= 1 && hauntOK() && !HAUNT.ev) finaleStart();
@@ -949,4 +951,91 @@ function stepVault(dt) {
   }
   // 문이 생기는 때 — 밤이 절반을 넘기면(두 번째 밤부터는 처음부터)
   if (!VAULT.shown && hauntOK() && (HAUNT.dread >= 0.55 || HAUNT.nights >= 1)) vaultDoorShow(HAUNT.nights >= 1);
+}
+
+/* ══════════════════════════════════════════════════════════
+   v114 — 더 무섭게: 뒤돌면 · 창밖의 얼굴 · 먼 소리 · 소름 소리
+   ══════════════════════════════════════════════════════════ */
+/** 소름 끼치는 소리 — 높은 현이 긁히듯(불협 넷) + 바람 소리. 짧게 */
+function sndStinger(vol) {
+  const c = SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime + 0.01;
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+  const g = c.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.3);
+  lp.connect(g); sndPanned(g, 0, 0.7);
+  for (const f of [1480, 1568, 1661, 2093]) {
+    const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
+    o.detune.setValueAtTime(0, t0); o.detune.linearRampToValueAtTime(-90, t0 + 1.2);
+    const og = c.createGain(); og.gain.value = 0.25; o.connect(og); og.connect(lp); o.start(t0); o.stop(t0 + 1.35);
+  }
+  const n = Math.floor(c.sampleRate * 0.5), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = c.createBufferSource(); s.buffer = b; const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2400;
+  const sg = c.createGain(); sg.gain.value = 0.35; s.connect(hp); hp.connect(sg); sg.connect(lp); s.start(t0);
+}
+/** 먼 곳의 문 · 위층의 뛰는 발소리 */
+function sndSlam(vol, pan) {
+  const c = SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime + 0.02;
+  const o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
+  o.frequency.setValueAtTime(70, t0); o.frequency.exponentialRampToValueAtTime(32, t0 + 0.35);
+  sndEnv(g, t0, 0.004, vol, 0.45); o.connect(g); sndPanned(g, pan, 0.95); o.start(t0); o.stop(t0 + 0.55);
+  setTimeout(() => { if (typeof sndCrackle === 'function') sndCrackle(vol * 0.5); }, 60);
+}
+HAUNT_EV.distant = function () {
+  const pan = Math.random() * 2 - 1;
+  if (Math.random() < 0.5) sndSlam(0.16, pan);
+  else {
+    // 위층(또는 옆방)에서 누가 뛰어간다 — 발소리 여덟, 점점 멀어지며
+    const room = M.room && !M.room.outdoor ? M.room : { mat: 'oak' };
+    for (let i = 0; i < 8; i++) setTimeout(() => { if (typeof sndStep === 'function') sndStep(room, 0.42 - i * 0.04); }, i * 230);
+  }
+  return true;
+};
+/* 창밖의 얼굴 — 실내에서, 방 바깥 1.6m(바깥 땅 위) · 화면 안 · 4~14m. 유리창 너머로만 보인다 */
+HAUNT_EV.window = function () {
+  const here = M.room;
+  if (!here || here.outdoor || here.vault || HAUNT.blackShade) return false;
+  const PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  for (let k = 0; k < 30; k++) {
+    const side = Math.floor(Math.random() * 4), u = 0.15 + Math.random() * 0.7;
+    const x = side === 0 ? here.x0 - 160 : side === 1 ? here.x1 + 160 : here.x0 + u * here.w;
+    const z = side === 2 ? here.z0 - 160 : side === 3 ? here.z1 + 160 : here.z0 + u * here.d;
+    const r = M.rooms.find((q) => q.outdoor && !q.part && q.lv === 0 && inRect(q, x, z));
+    if (!r || (r.terrain && lakeDist(x, z) < 1.12)) continue;
+    const d = Math.hypot(x - PX, z - PZ); if (d < 400 || d > 1400) continue;
+    const fy = floorAt(r, x, z);
+    if (!(fy === fy) || hitsWall(x, z, fy) || !hauntView(x / CM, fy / CM + 1.4, z / CM).on) continue;
+    if (!shadeAt(x, z, r)) return false;
+    sndSwell();
+    HAUNT.ev = shadeWatch({ x, z, room: r, near: 250, life: 9 });
+    return true;
+  }
+  return false;
+};
+/* 뒤돌면 — 빠르게 뒤를 돌아보는 순간(0.35초 안에 130° 넘게) 바로 앞에 그 사람이 0.4초. 소름 소리 · 진동.
+   밤이 2할 넘게 깊었을 때 · 2~4분에 한 번까지 · 반쯤만 */
+function stepJump(dt) {
+  if (HAUNT.lastYaw == null) HAUNT.lastYaw = M.yaw;
+  // 순간이동(수장고 · 현관 되돌림)으로 시선이 바뀐 것은 '돌아본' 것이 아니다
+  const jumped = HAUNT.lpx != null && Math.hypot(M.pos.x - HAUNT.lpx, M.pos.z - HAUNT.lpz) > 2;
+  HAUNT.lpx = M.pos.x; HAUNT.lpz = M.pos.z;
+  if (jumped || M.openId) { HAUNT.turnAcc = 0; HAUNT.lastYaw = M.yaw; return; }
+  HAUNT.turnAcc = HAUNT.turnAcc * Math.exp(-dt / 0.35) + Math.abs(npcAng(M.yaw - HAUNT.lastYaw));
+  HAUNT.lastYaw = M.yaw;
+  HAUNT.jumpCool -= dt;
+  if (HAUNT.turnAcc < 2.3 || HAUNT.jumpCool > 0 || HAUNT.dread < 0.2 || HAUNT.ev || HAUNT.calm || HAUNT.blackShade || !hauntOK()) return;
+  HAUNT.jumpCool = 8;                                                    // 실패해도 잠깐은 쉰다
+  if (Math.random() > 0.55) return;
+  const f = hauntFwd(), r = M.room;
+  const x = M.pos.x * CM + f.x * 125, z = M.pos.z * CM + f.z * 125;
+  const room = r && inRect(r, x, z) ? r : null;
+  if (!room) return;
+  const fy = floorAt(room, x, z);
+  if (!(fy === fy) || hitsWall(x, z, fy) || !shadeAt(x, z, room)) return;
+  HAUNT.jumpCool = 150 + Math.random() * 90;
+  sndStinger(0.14);
+  if (typeof hapt === 'function') hapt([80, 30, 120]);
+  if (typeof hauntRec === 'function') hauntRec('jump');
+  HAUNT.ev = { t: 0, done: false, step(d) { this.t += d; if (this.t > 0.42 && !this.done) { shadeHide(); hauntGlitch(); this.done = true; } } };
 }

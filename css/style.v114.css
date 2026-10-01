@@ -1847,3 +1847,24 @@ body.is-touch .photo-chip { top: 254px; }
 /* 말풍선(v112) — 화면 가장자리에 붙었을 때는 꼬리를 감춘다(가리킬 머리가 화면 밖) */
 .npc-say.pin::after { display: none; }
 .npc-say.pin { box-shadow: 0 6px 20px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .08); }
+
+/* 방탈출(v114) — 남은 시간 · 쪽지 칩 · 번호판 */
+body.escape .night-clock { display: none; }
+.esc-timer { position: absolute; right: 24px; top: 254px; z-index: 20; pointer-events: none; font-family: 'Oswald', sans-serif; font-size: 20px;
+  letter-spacing: .08em; color: #E6DED0; text-shadow: 0 0 8px rgba(0, 0, 0, .9); }
+.esc-timer.late { color: #E07A6A; animation: escBlink 1s steps(2) infinite; }
+@keyframes escBlink { 50% { opacity: .45; } }
+.esc-chip { top: 326px; }
+body.is-touch .esc-chip { top: 290px; } @media (max-width: 620px) { .esc-chip { top: 290px; } .esc-timer { top: 222px; font-size: 17px; } }
+.esc-list li { flex-direction: column; gap: 4px; } .esc-list li span { text-align: left !important; line-height: 1.55; }
+.esc-pad { position: fixed; inset: 0; z-index: 60; background: rgba(2, 3, 4, .7); display: flex; align-items: center; justify-content: center; }
+.esc-pad .ep-box { width: 260px; background: #0F1210; border: 1px solid rgba(124, 224, 138, .25); padding: 18px; text-align: center; color: #C9C2B4; }
+.esc-pad .ep-k { font-size: 11px; letter-spacing: .3em; margin: 0 0 10px; color: #7CE08A; }
+.esc-pad .ep-scr { font: bold 34px monospace; color: #7CE08A; background: #050806; padding: 10px 0; margin-bottom: 12px; letter-spacing: .1em; }
+.esc-pad .ep-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.esc-pad .ep-keys button { font: 600 20px sans-serif; padding: 12px 0; background: #1C211E; color: #E6DED0; border: 1px solid rgba(255, 255, 255, .08); cursor: pointer; }
+.esc-pad .ep-keys button:active { background: #2C3530; }
+.esc-pad .ep-x { margin-top: 12px; font: inherit; font-size: 13px; padding: 7px 16px; background: transparent; color: #9A9488; border: 1px solid rgba(255, 255, 255, .2); cursor: pointer; }
+.haunt-end.dark { background: #050404; }
+.haunt-card.dark { color: #E6DED0; } .haunt-card.dark .hc-gb { color: #9A8E7C; border-top-color: rgba(255, 255, 255, .1); }
+.haunt-card.dark button { color: #E6DED0; border-color: #E6DED0; } .haunt-card.dark button:hover { background: #E6DED0; color: #050404; }

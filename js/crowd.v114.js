@@ -472,6 +472,7 @@ function stepCrowd(M, dt) {
     if (n.noticeCool <= 0 && n.pd < 230 && (n.state === 'look' || (n.state === 'walk' && !n.path.some((w) => w.enter)))) {
       n.noticeCool = 45 + Math.random() * 40;
       n.state = 'notice'; n.noticeT = n.quirk === 'freeze' ? 6 : 4.2; n.path = []; n.pause = 0;
+      if (isNightMode() && typeof HAUNT !== 'undefined' && HAUNT.dread > 0.35 && Math.random() < 0.4) n.smileFix = 1;   // v114 — 활짝, 굳은 웃음
       if (n.quirk !== 'freeze' || Math.random() < 0.35) monoForce(n, pickOf(isNightMode() ? NEAR_IN : DAY_NEAR), 'say', 0.7);
     } else if (n.state === 'mono' && n.noticeCool <= 0 && n.pd < 200) {
       // 구석을 보고 중얼거리던 사람 뒤에 서면 — 멈추고 천천히 돌아본다
@@ -483,7 +484,7 @@ function stepCrowd(M, dt) {
       want = Math.atan2(PX - n.x, PZ - n.z);
       n.noticeT -= dt;
       if (n.quirk === 'freeze' && n.pd < 380) n.noticeT = Math.max(n.noticeT, 0.4);    // 내가 곁에 있는 동안은 꼼짝 않고 본다
-      if (n.noticeT <= 0 || (n.pd > 700 && !n.noticeFar)) { n.state = 'look'; n.wait = 1 + Math.random() * 2; n.noticeFar = false; }
+      if (n.noticeT <= 0 || (n.pd > 700 && !n.noticeFar)) { n.state = 'look'; n.wait = 1 + Math.random() * 2; n.noticeFar = false; if (n.smileFix === 1) n.smileFix = null; }
     } else if (n.state === 'look') {
       want = Math.atan2(n.goal.lx - n.x, n.goal.lz - n.z);
       n.wait -= dt;
