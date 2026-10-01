@@ -29,7 +29,7 @@ function hauntShade() {
   if (HAUNT.shade) return HAUNT.shade;
   if (typeof PEOPLE === 'undefined' || !PEOPLE.ok || typeof buildRealVisitor !== 'function') return null;
   // v112 — 그 사람은 따로(p12 긴 검은 머리 여자). 예전엔 실내 관람객 Remy 를 검게 칠해 썼다(같은 얼굴이 실내에도 있었다)
-  const name = PEOPLE.byName && PEOPLE.byName.p12 ? 'p12' : PEOPLE.byName && PEOPLE.byName.remy ? 'remy' : 'p2';
+  const name = PEOPLE.byName && PEOPLE.byName.p12 ? 'p12' : 'p2';
   const v = buildRealVisitor({ coat: '#09090B', pants: '#070708', hairC: '#050505', skin: '#E4DFDA', shoe: '#0A0A0A', h: 1.9 }, name);
   if (name === 'p12') v.mesh.material.color.setRGB(0.86, 0.86, 0.9);         // 살갗을 조금 더 창백하게(옷은 아틀라스에서 검다)
   else if (name !== 'remy') v.mesh.material.color.setRGB(0.3, 0.3, 0.33);
