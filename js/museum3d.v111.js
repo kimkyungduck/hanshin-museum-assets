@@ -153,6 +153,7 @@ async function screenTitle() {
           <button class="ts-enter" id="btnEnter"><span id="tsEnterTx">전시관을 여는 중</span><i id="tsBar"></i></button>
           ${M.canManage ? '<button class="ts-sub" id="btnAdmin">⚙ 전시 설정</button>' : ''}
           ${typeof NIGHT !== 'undefined' ? '<button class="ts-sub ts-mode" id="btnMode">' + (NIGHT.on ? '☀ 낮에 보기' : '☾ 밤으로') + '</button>' : ''}
+          ${typeof NIGHT !== 'undefined' && NIGHT.on && typeof recCount === 'function' ? '<button class="ts-sub ts-rec" id="btnRec">밤의 기록 ' + recCount() + '/' + RECORDS.length + '</button>' : ''}
         </div>
         <p class="ts-note">${typeof NIGHT !== 'undefined' && NIGHT.on ? '밤의 전시관 — 공포 연출이 있습니다 · 이어폰 권장 · 소리 끄기 <b>M</b>' : '배경음악이 함께 재생됩니다 · 끄기 <b>M</b>'}</p>
       </main>
@@ -167,6 +168,7 @@ async function screenTitle() {
   $('btnEnter').onclick = () => enter();
   if ($('btnAdmin')) $('btnAdmin').onclick = openAdmin;
   if ($('btnMode')) $('btnMode').onclick = () => museumSetMode(!NIGHT.on);      // v110 — 낮 / 밤
+  if ($('btnRec')) $('btnRec').onclick = () => recPanel();                       // v111 — 밤의 기록
 
   try {
     initGL();
@@ -2609,6 +2611,7 @@ function bindInput() {
       }
       return;
     }
+    if (k === 'p' && !ev.repeat && !M.openId && !$('adminPanel') && typeof takePhoto === 'function') { ev.preventDefault(); takePhoto(); return; }   // v111 — 기념 사진
     if (k === 'f' && !ev.repeat && !M.openId && !$('adminPanel')) { ev.preventDefault(); if (typeof torchToggle === 'function') torchToggle(); return; }   // v105 — 손전등
     if (k === 'm') { ev.preventDefault(); if (M.bgm) bgmToggle(); if (typeof sndToggle === 'function') sndToggle(); return; }   // 음악 · 소리 토글
     // 골프 — Space 를 누르고 있으면 힘을 모으고 놓으면 친다. Esc 는 그만두기
@@ -2785,6 +2788,7 @@ function loop(now) {
   guardStep('haunt', () => { if (typeof stepHaunt === 'function') stepHaunt(dt); });        // v101 — 이상 현상
   guardStep('torch', () => { if (typeof stepTorch === 'function') stepTorch(dt); });        // v105 — 손전등
   guardStep('score', () => { if (typeof stepScore === 'function') stepScore(dt); });        // v106 — 밤의 음악 · 심장 · 밤 시계
+  guardStep('memento', () => { if (typeof stepMemento === 'function') stepMemento(dt); });  // v111 — 기념 사진 칩
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

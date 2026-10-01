@@ -91,7 +91,7 @@ function stepTorch(dt) {
   if (S && S.root.visible && torchSees(S.root.position)) {
     TORCH.hit += dt;
     if (TORCH.hit > 0.6) {
-      TORCH.hit = 0; torchDie(1.6);
+      TORCH.hit = 0; torchDie(1.6); if (typeof hauntRec === 'function') hauntRec('banish'); 
       if (typeof hapt === 'function') hapt([40, 50, 40]);
       shadeHide();
       if (HAUNT.ev) { HAUNT.ev.done = true; HAUNT.ev = null; }
@@ -127,6 +127,7 @@ function beamWatch(o) {
       this.t += dt;
       const S = HAUNT.shade; if (!S) { this.done = true; return; }
       S.root.visible = torchSees(S.root.position);
+      if (S.root.visible) { if (typeof hauntRec === 'function') hauntRec('beam'); }
       const d = Math.hypot(o.x - M.pos.x * CM, o.z - M.pos.z * CM);
       if (!TORCH.on || d < 450 || this.t > 9 || !hauntOK()) { shadeHide(); this.done = true; }
     },

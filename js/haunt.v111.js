@@ -114,6 +114,7 @@ const HAUNT_EV = {
       if (n.mono && n.mono.el) n.mono.el.remove(); n.mono = null;
       n0++;
     }
+    if (n0 >= 1) { if (typeof hauntRec === 'function') hauntRec('stare'); }
     return n0 >= 1;
   },
   shade() {
@@ -182,7 +183,7 @@ function shadeWatch(o) {
       this.t += dt;
       const PX = M.pos.x * CM, PZ = M.pos.z * CM, d = Math.hypot(o.x - PX, o.z - PZ);
       const V = hauntView(o.x / CM, (floorAt(o.room, o.x, o.z) || o.room.y0) / CM + 1.5, o.z / CM);
-      if (V.on) { this.seen = true; this.away = 0; if (Math.abs(V.x) < 0.3 && Math.abs(V.y) < 0.4) this.look += dt; } else this.away += dt;
+      if (V.on) { if (!this.seen && typeof hauntRec === 'function') hauntRec(o.out ? 'fog' : 'shade'); this.seen = true; this.away = 0; if (Math.abs(V.x) < 0.3 && Math.abs(V.y) < 0.4) this.look += dt; } else this.away += dt;
       const gone = d < o.near || this.look > 1.6 || this.t > o.life || (this.seen && this.away > 2.5) || !hauntOK();
       if (!gone) return;
       if (V.on) { if (o.out) hauntGlitch(); else hauntBlink(); }        // 보는 앞에서는 불이 깜빡이는 사이에
@@ -218,7 +219,7 @@ function stepHaunt(dt) {
       if (B.shadeOK) { shadeHide(); HAUNT.bsOwn = true; }
     }
     // 손전등을 켜 두면 — 번쩍임 사이가 아니어도 빛 속에 계속 서 있다(torch.js)
-    if (B.shadeOK && HAUNT.shade) HAUNT.shade.root.visible = (B.t >= B.dur && B.t < B.dur + 0.24 && B.k > 0.3) || (typeof torchSees === 'function' && torchSees(HAUNT.shade.root.position));
+    if (B.shadeOK && HAUNT.shade) { HAUNT.shade.root.visible = (B.t >= B.dur && B.t < B.dur + 0.24 && B.k > 0.3) || (typeof torchSees === 'function' && torchSees(HAUNT.shade.root.position)); if (HAUNT.shade.root.visible) { if (typeof hauntRec === 'function') hauntRec('black'); } }
   } else if (HAUNT.blackShade && B === null && HAUNT.bsArmed) { HAUNT.blackShade = false; HAUNT.bsArmed = false; if (HAUNT.bsOwn) shadeHide(); HAUNT.bsOwn = false; }
   if (HAUNT.blackShade && B && !B.quick) HAUNT.bsArmed = true;
 
@@ -440,14 +441,14 @@ function hauntPortrait() {
 function hauntNote(e) {
   if (!NIGHT.on) return;
   if (typeof VAULT !== 'undefined' && e === VAULT.special && !HAUNT.calm && !HAUNT.vaultLocked) {
-    HAUNT.vaultLocked = true; HAUNT.vaultLock = 10;
+    HAUNT.vaultLocked = true; HAUNT.vaultLock = 10; if (typeof hauntRec === 'function') hauntRec('today'); 
     setTimeout(() => { if (typeof sndBlack === 'function') sndBlack(false); hauntSay('… 거기 걸려야지.'); HAUNT.follow = 10; HAUNT.followYaw = M.yaw; }, 900);
     return;
   }
   const P = HAUNT.portrait;
   if (P && e === P.info) {
     if (P.eyes) return;
-    P.eyes = true;
+    P.eyes = true; if (typeof hauntRec === 'function') hauntRec('portrait'); 
     P.tex.image = portraitCanvas(true); P.tex.needsUpdate = true;        // 닫고 나면 — 눈이 있다
     P.info.body += String.fromCharCode(10) + String.fromCharCode(10) + '… 방금 전까지 얼굴이 없었던 것 같다.';
     return;
@@ -518,7 +519,7 @@ function finaleStart() {
 }
 function finaleCard() {
   const stamp = nightStamp();
-  nightLogPush('end', stamp);
+  nightLogPush('end', stamp); if (typeof hauntRec === 'function') hauntRec('end'); 
   const k = HAUNT.log.length;
   const gb = M.exhibits.find((e) => e.type === 'guestbook');
   if (gb) { gb.entries = (gb.entries || []).slice(); gb.entries.push({ name: '오늘의 관람객', body: '(퇴장 기록 없음)', color: '#8E4A40', created_at: stamp }); }
@@ -583,7 +584,7 @@ function stepFinale(dt) {
       teleport(S.room);
       M.feet = floorAt(S.room, S.x, S.z); M.eyeFeet = M.feet;
       M.pos.set(S.x / CM, (M.feet + EYE) / CM, S.z / CM); M.yaw = 0;
-      F.loops++;
+      F.loops++; if (typeof hauntRec === 'function') hauntRec('loop'); 
       hauntPA(F.loops > 1 ? (HAUNT.nights >= 1 ? '정문은 들어오는 문입니다. … 세 번째에는 모르겠습니다.' : '정문은 들어오는 문입니다. 몇 번을 나가셔도 그렇습니다.')
         : '정문은 들어오는 문입니다. 명예의 전당으로 가 주십시오.', 2);
     }
@@ -674,6 +675,7 @@ function secondNightInit() {
     for (const L of HAUNT.log.slice(-6)) gb.entries.push({ name: '오늘의 관람객', body: L.how === 'escape' ? '(퇴장)' : '(퇴장 기록 없음)', color: '#8E4A40', created_at: L.d });
   }
   if (typeof vaultDoorShow === 'function') vaultDoorShow(true);            // v108 — 수장고 문도 처음부터
+  if (typeof hauntRec === 'function') hauntRec('second');
   if (!HAUNT.portrait && hauntPortrait()) {
     const P = HAUNT.portrait, last = HAUNT.log[HAUNT.log.length - 1];
     P.eyes = true; P.tex.image = portraitCanvas(true); P.tex.needsUpdate = true;
@@ -721,6 +723,7 @@ function mimicWatch(o) {
       HAUNT.shade.root.rotation.y = M.yaw + Math.PI;                         // 내가 보는 쪽을 같이 본다
       const d = Math.hypot(o.x - PX, o.z - PZ);
       const V = hauntView(o.x / CM, (floorAt(o.room, o.x, o.z) || o.room.y0) / CM + 1.5, o.z / CM);
+      if (V.on) { if (typeof hauntRec === 'function') hauntRec('mimic'); }
       if (V.on && Math.abs(V.x) < 0.25) this.look += dt;
       if (!ok || d < 800 || this.look > 3 || this.t > 20 || !hauntOK()) {
         if (V.on) hauntGlitch();
@@ -733,7 +736,7 @@ function mimicWatch(o) {
 function finaleEscape() {
   const F = HAUNT.finale; F.phase = 'done';
   const stamp = nightStamp();
-  nightLogPush('escape', stamp);
+  nightLogPush('escape', stamp); if (typeof hauntRec === 'function') hauntRec('escape'); 
   const w = document.createElement('div'); w.id = 'hauntEnd'; w.className = 'haunt-end'; document.getElementById('gal').appendChild(w);
   requestAnimationFrame(() => w.classList.add('on'));
   if (M.locked) document.exitPointerLock();
@@ -908,7 +911,7 @@ function vaultGo(down) {
   for (let i = 0; i < 7; i++) setTimeout(() => { if (typeof sndStep === 'function') sndStep(down ? M.roomById.vault : stone, 0.75 - i * (down ? 0.04 : -0.02)); }, 700 + i * 340);
   setTimeout(() => {
     if (down) {
-      const r = M.roomById.vault;
+      const r = M.roomById.vault; if (typeof hauntRec === 'function') hauntRec('vault'); 
       teleport(r);
       M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set(r.cx / CM, (M.feet + EYE) / CM, (r.z1 - 180) / CM); M.yaw = 0;
       if (!HAUNT.vaultTold) { HAUNT.vaultTold = true; setTimeout(() => toast(typeof TORCH !== 'undefined' && !TORCH.on ? '수장고 — 불이 없다. 손전등(F)' : '수장고 — 불이 없다', 3200), 900); }

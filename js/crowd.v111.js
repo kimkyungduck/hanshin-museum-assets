@@ -457,7 +457,7 @@ function stepCrowd(M, dt) {
       // 구석을 보고 중얼거리던 사람 뒤에 서면 — 멈추고 천천히 돌아본다
       n.noticeCool = 45 + Math.random() * 30;
       n.state = 'notice'; n.noticeT = 5;
-      monoForce(n, pickOf(MONO_CAUGHT), 'mono', 1.2);
+      monoForce(n, pickOf(MONO_CAUGHT), 'mono', 1.2); if (typeof hauntRec === 'function') hauntRec('corner'); 
     }
     if (n.state === 'notice') {
       want = Math.atan2(PX - n.x, PZ - n.z);
@@ -722,7 +722,7 @@ function outStep(M, n, dt) {
       // 나를 알아챘다 — 둘 다 멈춰서 나를 본다
       n.state = 'stare'; n.tgt = null; n.wait = 3.2;
       if (n.mono) { if (n.mono.el) n.mono.el.remove(); n.mono = null; }
-      monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).near), 'kid');
+      monoStart(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).near), 'kid'); if (typeof hauntRec === 'function') hauntRec('kids'); 
       for (const o of M.npcs) if (o.lead === n) { o.state = 'stare'; o.tgt = null; o.wait = 3.2; }
     } else if (L) {
       // 따라가는 아이 — 앞 아이가 움직이면 뒤 1.2m 쪽으로, 멀면 뛴다
