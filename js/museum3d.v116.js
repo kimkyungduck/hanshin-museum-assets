@@ -1096,6 +1096,7 @@ function buildScene() {
   buildFacadeSign();
   buildDoorDressing();
   if (typeof buildNight === 'function') buildNight();          // v97 — 조명탑 · 가로등(벽이 선 뒤에 — 자리 검사)
+  if (typeof buildTraces === 'function') buildTraces();        // v116 — 전시관 밖의 흔적(낙서 · 이름 쓴 공 · 바를 정 · 벤치)
   buildExhibitMeshes();
 }
 

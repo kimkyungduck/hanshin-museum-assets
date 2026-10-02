@@ -31,6 +31,7 @@ const RECORDS = [
   ['bank', '둑 위의 사람들', '물속에서 올려다보면'],
   ['walker', '걸어오는 그 사람', '밤이 절반을 넘기면, 긴 방에서'],
   ['double', '같은 사람이 또', '방금 지나친 사람을 기억해 두면'],
+  ['traces', '흔적을 따라', '전시관 밖, 벽과 풀밭에 남은 것들'],
 ];
 const REC_KEY = 'museum-records';
 const REC = { got: {} };
