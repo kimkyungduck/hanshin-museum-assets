@@ -2795,6 +2795,7 @@ function loop(now) {
   guardStep('memento', () => { if (typeof stepMemento === 'function') stepMemento(dt); });  // v111 — 기념 사진 칩
   guardStep('escape', () => { if (typeof stepEscape === 'function') stepEscape(dt); });    // v114 — 방탈출
   guardStep('dlg', () => { if (typeof stepDlg === 'function') stepDlg(dt); });            // v115 — 대화창
+  guardStep('acts', () => { if (typeof stepActs === 'function') stepActs(dt); });         // v118 — 몸짓의 플래시 · 쿨다운
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

@@ -594,11 +594,14 @@ function npcPose(M, n, dt) {
     const k = n.walkK;
     v.walk.setEffectiveWeight(k); v.idle.setEffectiveWeight(1 - k);
     v.walk.timeScale = clamp((n.curV || 0) / v.natural, 0.35, n.out ? 2.1 : 1.3);      // 바깥 아이들은 뛴다
+    if (typeof actRestore === 'function') actRestore(v);       // v118 — 얹은 회전이 쌓이지 않게(acts.js 주석)
     v.mixer.update(dt);
+    if (typeof actSnap === 'function') actSnap(v);
     // 발소리 — 걸음 한 주기에 뒤꿈치가 두 번 닿는다
     const u = (v.walk.time % v.walk.getClip().duration) / v.walk.getClip().duration, hs = Math.floor(u * 2);
     if (hs !== n.hs) { n.hs = hs; if (k > 0.5 && typeof sndStep === 'function') sndStep(M.roomById[n.room], 0.55, n.x / CM, n.z / CM); }
     if (v.morph) npcFace(n, dt);
+    if (typeof actStep === 'function') actStep(n, dt);            // v118 — 몸짓(뒷짐 · 팔짱 · 사진 · 퍼팅 …)
     if (n.state === 'talk') { v.root.updateMatrixWorld(true); crowdGesture(n, CROWD.t + n.phase); }
     npcHead(n, dt);
   } else {
