@@ -330,7 +330,10 @@ function stepNightSound(dt, r, out, under) {
   N.hum.gain.setTargetAtTime(fx && fx.unstable && !NIGHT.black ? 0.006 + (1 - k) * 0.02 : 0, t, 0.05);
   if (under) return;
   // 풀벌레 — 바깥이면 크게, 실내면 벽 너머로 아주 작게
-  const cv = out ? (r.terrain || r.mat === 'lawn' ? 0.03 : 0.018) : 0.003;
+  let cv = out ? (r.terrain || r.mat === 'lawn' ? 0.03 : 0.018) : 0.003;
+  // v115 — 물가에 다가가면 풀벌레가 하나씩 꺼진다(무대의 '문턱')
+  if (out && r.terrain && typeof lakeDist === 'function') cv *= clamp((lakeDist(M.pos.x * CM, M.pos.z * CM) - 1.05) / 0.7, 0, 1);
+  if (typeof SCORE !== 'undefined' && SCORE.hush > 0) cv *= 0.2;              // 무언가 오기 전엔 조용해진다
   for (const C of N.cr) { C.t -= dt; if (C.t <= 0) { C.t = 0.55 + Math.random() * 0.5 + (Math.random() < 0.1 ? 2.5 : 0); sndChirp(C, cv * (0.6 + Math.random() * 0.5)); } }
   // 개구리 — 호숫가
   if (typeof lakeDist === 'function') {

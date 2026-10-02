@@ -235,6 +235,7 @@ function stepLake(t) {
     if (LAKE.surfMat) { LAKE.surfMat.map.offset.set(t * 0.012, t * 0.009); }
     lakeBubbles(t, cy);
   }
+  if (typeof deepStep === 'function') deepStep(t, Math.min(0.05, t - (LAKE.dt0 || t)), under); LAKE.dt0 = t;
 }
 
 function lakeSwitch(under) {
@@ -254,11 +255,12 @@ function lakeSwitch(under) {
   M.water.material = under ? LAKE.surfMat : LAKE.topMat;
   if (under) { S.fog.color.set(0x1D4A47); S.fog.density = 0.12; }
   else { S.fog.color.copy(LAKE.fog0.c); S.fog.density = LAKE.fog0.d; }
+  if (typeof deepSwitch === 'function') deepSwitch(under);                // v115 — 밤의 물속
   let ov = document.getElementById('uwVeil');
   if (!ov) { ov = document.createElement('div'); ov.id = 'uwVeil'; ov.className = 'uw-veil'; document.getElementById('gal').appendChild(ov); }
   ov.classList.toggle('on', under);
   if (LAKE.bub) LAKE.bub.visible = under;
-  if (under && !LAKE.told) { LAKE.told = true; toast('물속 — 바닥에 빠진 공이 ' + LAKE.balls + '개 보인다. 물가로 걸어 나가면 뭍으로 올라간다', 5200); }
+  if (under && !LAKE.told && !(typeof NIGHT !== 'undefined' && NIGHT.on)) { LAKE.told = true; toast('물속 — 바닥에 빠진 공이 ' + LAKE.balls + '개 보인다. 물가로 걸어 나가면 뭍으로 올라간다', 5200); }
 }
 
 /** 공기 방울 — 눈앞에서 조금씩 올라간다 */

@@ -10,7 +10,7 @@
      · 일제히 — 보이는 관람객들이 모두 하던 것을 멈추고 동시에 나를 본다(dread 가 오른 뒤)
      · 화면이 튄다 — 반전 · 흑백 · 붉은 번짐이 한순간
    ※ 피 · 비명 · 갑자기 튀어나오는 큰 소리는 없다. 이상한 것만 */
-const HAUNT = { t: 0, dread: 0, next: 30 + Math.random() * 20, ev: null, follow: 0, shade: null, jumpCool: 70, turnAcc: 0, lastYaw: null };   // v114 — 첫 현상 30초 안팎
+const HAUNT = { t: 0, dread: 0, next: 30 + Math.random() * 20, ev: null, follow: 0, shade: null, jumpCool: 140, turnAcc: 0, lastYaw: null };   // v114 — 첫 현상 30초 안팎
 const WHISPER = ['… 여기야.', '뒤에.', '돌아보지 마.', '… 이름이 뭐였더라.', '같이 있자.', '거기 아니야.', '… 찾았다.', '한 홀만 더.', '불 끄지 마.'];
 
 function hauntOK() {
@@ -190,6 +190,7 @@ function shadeWatch(o) {
       if (!gone) return;
       if (V.on) { if (o.out) hauntGlitch(); else hauntBlink(); }        // 보는 앞에서는 불이 깜빡이는 사이에
       else if (d < 1200 && typeof sndBreath === 'function') sndBreath(0.05, 0);
+      if (o.room && !o.room.outdoor) hauntStain(o.x, o.z, o.room);
       shadeHide(); this.done = true;
     },
   };
@@ -201,6 +202,7 @@ function stepHaunt(dt) {
   HAUNT.t += dt;
   HAUNT.dread = clamp(HAUNT.t / 900, 0, 1);
   stepJump(dt);                                                            // v114 — 뒤돌면
+  stepSeen();                                                              // v115 — 같은 사람이 또
   stepVault(dt);                                                           // v108 — 지하 수장고
   if (HAUNT.calm) { stepTilts(dt); return; }                              // v103 — 결말 뒤 조용한 밤
   secondNightInit();                                                       // v104 — 두 번째 밤
@@ -236,7 +238,8 @@ function stepHaunt(dt) {
   const mm = HAUNT.nights >= 1 ? 1 : 0;                                    // v104 — 두 번째 밤부터 '나란히 걷는 사람'
   const bm = typeof TORCH !== 'undefined' && TORCH.on && dr > 0.2 ? 2.5 : 0;   // v105 — 빛 속에만 있는 사람
   const W = out ? [['shadeOut', 3], ['whisper', 2], ['glitch', 1], ['follow', 1], ['mimic', 2.5 * mm], ['beam', bm], ['distant', 1.2]]
-    : [['follow', 3], ['shade', 3], ['glitch', 1.5], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm], ['window', 2.2], ['distant', 1.5]];
+    : [['follow', 3], ['shade', 3], ['glitch', 1], ['whisper', 2], ['stare', dr > 0.3 ? 1.5 : 0], ['blackShade', dr > 0.15 ? 1.5 : 0.4], ['mimic', 1.5 * mm], ['beam', bm], ['window', 2.2], ['distant', 1.5],
+       ['walker', dr > 0.5 && (HAUNT.walks || 0) < 2 ? 3 : 0], ['double', dr > 0.3 && (HAUNT.doubles || 0) < 3 ? 2.2 : 0]];
   // v109 — 안 되는 사건(보이는 문이 없다 · 관람객이 안 보인다 …)은 빼고 그 자리에서 다시 고른다.
   //         예전엔 실패하면 4초 뒤 다시 무작위 → 늘 성공하는 발소리 · 속삭임만 나왔다(밤새 그림자가 한 번도 안 나옴)
   let ok = false, pick = null, left = W.filter((w) => w[1] > 0);
@@ -1026,16 +1029,184 @@ function stepJump(dt) {
   HAUNT.jumpCool -= dt;
   if (HAUNT.turnAcc < 2.3 || HAUNT.jumpCool > 0 || HAUNT.dread < 0.2 || HAUNT.ev || HAUNT.calm || HAUNT.blackShade || !hauntOK()) return;
   HAUNT.jumpCool = 8;                                                    // 실패해도 잠깐은 쉰다
-  if (Math.random() > 0.55) return;
+  if (Math.random() > 0.35) return;                                       // v115 — 감독: '놀래킴은 지금의 절반'
   const f = hauntFwd(), r = M.room;
   const x = M.pos.x * CM + f.x * 125, z = M.pos.z * CM + f.z * 125;
   const room = r && inRect(r, x, z) ? r : null;
   if (!room) return;
   const fy = floorAt(room, x, z);
   if (!(fy === fy) || hitsWall(x, z, fy) || !shadeAt(x, z, room)) return;
-  HAUNT.jumpCool = 150 + Math.random() * 90;
+  HAUNT.jumpCool = 300 + Math.random() * 140;
   sndStinger(0.14);
   if (typeof hapt === 'function') hapt([80, 30, 120]);
   if (typeof hauntRec === 'function') hauntRec('jump');
   HAUNT.ev = { t: 0, done: false, step(d) { this.t += d; if (this.t > 0.42 && !this.done) { shadeHide(); hauntGlitch(); this.done = true; } } };
+}
+
+/* ══════════════════════════════════════════════════════════
+   v115 — 회의에서 정한 J-호러 장치: 걸어오는 그 사람 · 같은 사람이 또 · 벽의 얼룩
+   ══════════════════════════════════════════════════════════ */
+/** 그 사람의 고정 자세로 되돌린다(걷기 뒤) — 서 있기 한 순간 · 고개를 꺾는다 */
+function shadeFreeze() {
+  const v = HAUNT.shade; if (!v) return;
+  v.walk.setEffectiveWeight(0); v.idle.setEffectiveWeight(1); v.idle.time = 1.3; v.walk.time = 0; v.mixer.update(0);
+  v.root.updateMatrixWorld(true);
+  const B = typeof npcBones === 'function' ? npcBones(v) : {};
+  if (B.head && typeof boneRotWorld === 'function') { boneRotWorld(B.head, new THREE.Vector3(0, 0, 1), 0.42); boneRotWorld(B.head, new THREE.Vector3(1, 0, 0), 0.12); }
+}
+/* 걸어오는 그 사람(감독 3 · 기획자 1) — 밤이 절반을 넘기면 한 밤에 두 번까지.
+   긴 방 끝(12~16m)에 서 있다가 걷기를 0.3배로, 프레임을 건너뛰며 끊기게 다가온다. 그동안 소리가 전부 사라진다.
+   눈을 돌리면 그 사이 두 걸음씩 다가와 있다. 손전등으로 붙잡으면(0.6초) 사라진다. 2.5m 까지 오면 — 정전 · 손전등 배터리가 절반 */
+HAUNT_EV.walker = function () {
+  const here = M.room;
+  if (!here || here.vault || HAUNT.blackShade) return false;
+  const f = hauntFwd(), PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  for (let k = 0; k < 20; k++) {
+    const a = (Math.random() - 0.5) * 0.4, dx = f.x * Math.cos(a) - f.z * Math.sin(a), dz = f.z * Math.cos(a) + f.x * Math.sin(a);
+    // 트인 공간 끝까지의 거리(8~16m) — 같은 층 · 벽에 막히기 전까지(그랜드 홀은 여러 방이 트여 이어져 있다)
+    let edge = 0;
+    while (edge < 1700) {
+      const qx = PX + dx * (edge + 25), qz = PZ + dz * (edge + 25);
+      if (!walkerRoomAt(here, qx, qz) || hitsWall(qx, qz, here.outdoor ? floorAt(walkerRoomAt(here, qx, qz), qx, qz) : here.y0)) break;
+      edge += 25;
+    }
+    edge -= 120;
+    if (edge < 800) continue;
+    const D = Math.min(edge, 1200 + Math.random() * 400);
+    const x = PX + dx * D, z = PZ + dz * D;
+    const r = walkerRoomAt(here, x, z);
+    if (!r || (r.terrain && lakeDist(x, z) < 1.12)) continue;
+    const fy = floorAt(r, x, z);
+    if (!(fy === fy) || hitsWall(x, z, fy) || !hauntView(x / CM, fy / CM + 1.4, z / CM).on) continue;
+    if (!shadeAt(x, z, r)) return false;
+    HAUNT.walks = (HAUNT.walks || 0) + 1;
+    const v = HAUNT.shade;
+    v.idle.setEffectiveWeight(0); v.walk.setEffectiveWeight(1);
+    // 소리 — 전부 사라진다
+    if (typeof SND !== 'undefined' && SND.master && SND.ctx) { const g = SND.master.gain, t = SND.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.04, t + 1.2); }
+    if (typeof scoreHush === 'function') scoreHush(30);
+    if (typeof hauntRec === 'function') hauntRec('walker');
+    HAUNT.ev = walkerWatch({ x, z, room: r });
+    return true;
+  }
+  return false;
+};
+/** 같은 층에서 그 자리의 방(실내는 실내끼리 · 바깥은 바깥끼리) */
+function walkerRoomAt(here, x, z) {
+  return M.rooms.find((q) => !q.secret && !q.stair && q.outdoor === here.outdoor && Math.abs(q.y0 - here.y0) < 1 && (q.outdoor ? !q.part : true) && inRect(q, x, z)) || null;
+}
+function walkerWatch(o) {
+  const end = (dark) => {
+    const v = HAUNT.shade;
+    shadeHide(); shadeFreeze();
+    if (typeof SND !== 'undefined' && SND.master && SND.ctx) { const g = SND.master.gain, t = SND.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(SND.on ? 1 : 0, t + (dark ? 2.5 : 0.8)); }
+    if (dark) {
+      if (M.room && !M.room.outdoor && !NIGHT.black) NIGHT.black = { room: M.room.id, t: 0, dur: 1.6, k: 1, on: false };
+      else if (typeof hauntGlitch === 'function') hauntGlitch();
+      if (typeof sndBlack === 'function') sndBlack(false);
+      if (typeof TORCH !== 'undefined') TORCH.bat *= 0.5;
+      if (typeof hapt === 'function') hapt([120, 60, 200]);
+    }
+    if (typeof scoreHush === 'function') scoreHush(0);
+  };
+  return {
+    t: 0, away: 0, done: false,
+    step(dt) {
+      if (this.done) return;
+      const v = HAUNT.shade;
+      if (!v || !v.root.visible) { end(false); this.done = true; return; }          // 손전등이 쫓아냈다
+      this.t += dt;
+      const PX = M.pos.x * CM, PZ = M.pos.z * CM, d = Math.hypot(o.x - PX, o.z - PZ);
+      const fy = floorAt(o.room, o.x, o.z) || o.room.y0;
+      const V = hauntView(o.x / CM, fy / CM + 1.4, o.z / CM);
+      const ux = (PX - o.x) / (d || 1), uz = (PZ - o.z) / (d || 1);
+      let move = 0;
+      if (V.on) {
+        // 끊기는 걸음 — 0.22초마다 한 번씩만 움직이고, 걷기 동작도 그만큼씩 건너뛴다
+        this.stepT = (this.stepT || 0) - dt;
+        if (this.stepT <= 0) { this.stepT = 0.22; move = 0.35 * 0.22 * 100; v.mixer.update(0.22 * 0.3 * 2.2); }
+        this.away = 0;
+      } else {
+        // 안 보는 사이 — 1.1초마다 두 걸음
+        this.away += dt;
+        if (this.away > 1.1) { this.away = 0; move = 140; v.mixer.update(0.4); }
+      }
+      if (move) {
+        const nx = o.x + ux * Math.min(move, d - 200), nz = o.z + uz * Math.min(move, d - 200);
+        const nr = walkerRoomAt(o.room, nx, nz), nfy = nr ? floorAt(nr, nx, nz) : NaN;
+        if (nr && nfy === nfy && !hitsWall(nx, nz, nfy)) { o.x = nx; o.z = nz; v.root.position.set(nx / CM, nfy / CM, nz / CM); }
+      }
+      v.root.rotation.y = Math.atan2(ux, uz);
+      if (d < 260) { end(true); this.done = true; if (typeof hauntSay === 'function') setTimeout(() => hauntSay('…'), 1400); return; }
+      if (this.t > 45 || !hauntOK()) { end(false); this.done = true; }
+    },
+  };
+}
+/* 같은 사람이 또(감독 4 · 기획자 2) — 방금(20초 안) 가까이 지나친 실내 관람객이, 다음 방 문 안쪽에 같은 얼굴 · 같은 옷으로 서 있다.
+   말을 걸면 이름을 묻는다. 가까이 가거나 1분이 지나면 — 안 보는 사이 없다 */
+HAUNT_EV.double = function () {
+  if (typeof crowdGraph !== 'function' || !M.room || M.room.outdoor) return false;
+  const now = HAUNT.t, src = (M.npcs || []).filter((n) => !n.out && n.seenAt && now - n.seenAt < 20 && n.v && n.v.real);
+  if (!src.length) return false;
+  const n0 = pickOf(src), G = crowdGraph(), PX = M.pos.x * CM, PZ = M.pos.z * CM;
+  const cand = (G.get(M.room.id) || []).filter((e) => e.to !== n0.room && Math.hypot(e.into.x - PX, e.into.z - PZ) > 500);
+  if (!cand.length) return false;
+  const e = pickOf(cand), to = M.roomById[e.to], g = M.roomGroups[e.to];
+  const dx = e.into.x - e.p.x, dz = e.into.z - e.p.z, L = Math.hypot(dx, dz) || 1;
+  const x = e.p.x + dx / L * 190, z = e.p.z + dz / L * 190;
+  if (hitsWall(x, z, to.y0)) return false;
+  const v = buildRealVisitor(Object.assign({}, n0.kind, { shoe: n0.kind.sneak }), n0.charI != null ? n0.charI : 0);
+  v.idle.setEffectiveWeight(1); v.walk.setEffectiveWeight(0); v.mixer.update(n0.v.idle.time || 1);
+  v.root.position.set(x / CM, 0, z / CM); v.root.rotation.y = Math.atan2(e.p.x - x, e.p.z - z);
+  g.add(v.root);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.55, v.hM, 0.55), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(x / CM, v.hM / 2, z / CM); g.add(hit);
+  const ghost = { x, z, room: e.to, v, hM: v.hM, fy: 0, kid: false, out: false, info: null };
+  ghost.info = { id: 'npc-double', type: 'placard', label: n0.info.label, title: n0.info.label, room: e.to, x, z, y: 120,
+    onUse: () => { if (typeof hauntRec === 'function') hauntRec('double'); toast('… 이름이 뭐예요?', 2600); if (typeof sndMurmur === 'function') sndMurmur(ghost, 1.4, true); ghost.asked = true; } };
+  M.pickables.push(hit); M.artByMesh.set(hit, ghost.info);
+  HAUNT.doubles = (HAUNT.doubles || 0) + 1;
+  HAUNT.ev = {
+    t: 0, done: false, seen: false,
+    step(dt) {
+      if (this.done) return;
+      this.t += dt;
+      const d = Math.hypot(x - M.pos.x * CM, z - M.pos.z * CM), on = hauntView(x / CM, to.y0 / CM + 1.5, z / CM).on && (g.visible !== false);
+      if (on && d < 1400) { this.seen = true; if (typeof hauntRec === 'function' && d < 700) hauntRec('double'); }
+      if ((!on && (this.seen && (d < 350 || this.t > 20))) || this.t > 60 || !hauntOK()) {
+        g.remove(v.root); g.remove(hit);
+        const i = M.pickables.indexOf(hit); if (i >= 0) M.pickables.splice(i, 1); M.artByMesh.delete(hit);
+        v.mesh.material.dispose(); this.done = true;
+      }
+    },
+  };
+  return true;
+};
+/* 벽의 얼룩(감독 6) — 실내에서 그 사람이 벽 가까이 서 있다 사라지면, 그 자리 벽에 사람 모양 검은 얼룩이 남는다(지워지지 않는다) */
+function hauntStain(x, z, room) {
+  if (!room || room.outdoor || (HAUNT.stains || 0) >= 5) return;
+  const ds = [[x - room.x0, 'x0'], [room.x1 - x, 'x1'], [z - room.z0, 'z0'], [room.z1 - z, 'z1']].sort((a, b) => a[0] - b[0]);
+  if (ds[0][0] > 170) return;
+  const side = ds[0][1], g = M.roomGroups[room.id]; if (!g) return;
+  if (!HAUNT.stainTex) {
+    const cv = makeCanvas(128, 256), c = cv.getContext('2d');
+    c.filter = 'blur(7px)'; c.fillStyle = 'rgba(8,6,5,.92)';
+    c.beginPath(); c.ellipse(64, 44, 22, 28, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.moveTo(22, 250); c.bezierCurveTo(24, 120, 38, 82, 64, 80); c.bezierCurveTo(90, 82, 104, 120, 106, 250); c.closePath(); c.fill();
+    c.filter = 'none';
+    HAUNT.stainTex = new THREE.CanvasTexture(cv);
+  }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.75), new THREE.MeshBasicMaterial({ map: HAUNT.stainTex, transparent: true, opacity: 0.62, depthWrite: false }));
+  const px = side === 'x0' ? room.x0 + 3 : side === 'x1' ? room.x1 - 3 : x, pz = side === 'z0' ? room.z0 + 3 : side === 'z1' ? room.z1 - 3 : z;
+  m.position.set(px / CM, 0.9, pz / CM);
+  m.rotation.y = side === 'x0' ? Math.PI / 2 : side === 'x1' ? -Math.PI / 2 : side === 'z0' ? 0 : Math.PI;
+  m.renderOrder = 2; g.add(m);
+  HAUNT.stains = (HAUNT.stains || 0) + 1;
+}
+/** 최근에 본 관람객(같은 사람이 또 — 재료) — stepHaunt 앞에서 */
+function stepSeen() {
+  for (const n of M.npcs || []) {
+    if (n.out || !(n.pd < 900)) continue;
+    const r = M.roomById[n.room];
+    if (hauntView(n.x / CM, r.y0 / CM + 1.5, n.z / CM).on) n.seenAt = HAUNT.t;
+  }
 }

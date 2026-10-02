@@ -93,6 +93,7 @@ function stepScore(dt) {
     if (HAUNT.finale && HAUNT.finale.phase !== 'done') bpm = Math.max(bpm, HAUNT.finale.phase === 'end' ? 130 : 78);
     if (HAUNT.ev) bpm = Math.max(bpm, 70);
     if (HAUNT.vaultLock > 0) bpm = Math.max(bpm, 104);                  // v108 — 잠긴 수장고
+    if (typeof LAKE !== 'undefined' && LAKE.under) bpm = Math.max(bpm, 74 + (typeof DEEP !== 'undefined' ? DEEP.air * 1.3 : 0));   // v115 — 숨을 참는 동안
   }
   SCORE.bpm += (bpm - SCORE.bpm) * Math.min(1, dt * 1.5);
   if (SCORE.bpm > 55) {

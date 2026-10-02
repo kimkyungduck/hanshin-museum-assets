@@ -481,7 +481,8 @@ function stepCrowd(M, dt) {
       monoForce(n, pickOf(MONO_CAUGHT), 'mono', 1.2); if (typeof hauntRec === 'function') hauntRec('corner'); 
     }
     if (n.state === 'notice') {
-      want = Math.atan2(PX - n.x, PZ - n.z);
+      // v115 — 고개로 따라오는 동안엔 몸은 그대로(목만 돌아간다)
+      want = n.snapTrack > 0 ? n.yaw : Math.atan2(PX - n.x, PZ - n.z);
       n.noticeT -= dt;
       if (n.quirk === 'freeze' && n.pd < 380) n.noticeT = Math.max(n.noticeT, 0.4);    // 내가 곁에 있는 동안은 꼼짝 않고 본다
       if (n.noticeT <= 0 || (n.pd > 700 && !n.noticeFar)) { n.state = 'look'; n.wait = 1 + Math.random() * 2; n.noticeFar = false; if (n.smileFix === 1) n.smileFix = null; }
@@ -828,14 +829,29 @@ function npcHead(n, dt) {
   const talking = n.state === 'talk' && !(n.talk && n.talk.intT > 0);
   /* v101 — 모두가 고개로 나를 따라오니 오히려 무섭지 않았다(사용자 피드백). 고개로 따라오는 건 **얼어붙는 사람 하나**뿐,
      그것도 천천히 · 40° 까지. 나머지는 두리번거림(작게)과 고개 숙임만 */
+  /* v115 — 사용자: "고개는 평소엔 안 돌아가고, 대화하다가 지금보다 더 빠르게 돌아가면서 효과음" →
+     평소의 고개 따라오기 · 두리번거림을 없앴다. 꺾이는 건 대화 중의 두 순간뿐(dialog.js npcSnap · snapTrack) */
   if (n.listenT > 0) { n.listenT -= dt; tp = -0.32; }                    // v102 — 안내 방송 — 천장을 올려다본다
   else if (n.state === 'mono') tp = 0.22;                                   // 구석을 보며 고개를 떨군다
-  else if (n.quirk === 'freeze' && pd < 520 && !talking) {
-    const rel = npcAng(Math.atan2(PX - n.x, PZ - n.z) - n.yaw);
-    if (Math.abs(rel) < 1.6) ty = clamp(rel, -0.7, 0.7);
-  } else if (n.quirk === 'glance' && n.walkK > 0.4) ty = 0.3 * Math.sin(CROWD.t * 0.7 + n.phase) * Math.sin(CROWD.t * 0.23 + n.phase * 2);
-  n.hy = (n.hy || 0) + (ty - (n.hy || 0)) * Math.min(1, dt * 1.2);
-  n.hp = (n.hp || 0) + (tp - (n.hp || 0)) * Math.min(1, dt * 1.5);
+  if (n.snap) {
+    // 꺾기 — 0.05초마다 한 번씩 세 번에 끊어서(부드럽게 돌지 않는다) · 그대로 멈춰 있다가 아주 천천히 돌아온다
+    const S = n.snap; S.t += dt;
+    const k = Math.min(1, Math.floor(S.t / 0.05) / 3);
+    n.hy = S.from + (S.y - S.from) * k; n.hp = S.fromP + (S.p - S.fromP) * k;
+    if (S.t > 0.15 + S.hold) n.snap = null;
+  } else if (n.snapTrack > 0) {
+    // '아직 안 끝났잖아요' 뒤 — 걸어가는 나를 고개만 끝까지(몸은 그대로, 목이 돌 수 없는 데까지) · 뚝 · 뚝
+    n.snapTrack -= dt; n.trackT = (n.trackT || 0) - dt;
+    if (n.trackT <= 0) {
+      n.trackT = 0.16;
+      const rel = clamp(npcAng(Math.atan2(PX - n.x, PZ - n.z) - n.yaw), -2.75, 2.75);
+      if (Math.abs(rel - (n.hy || 0)) > 0.3) { n.hy = rel; if ((n.trackCracks = (n.trackCracks || 0) + 1) <= 5 && typeof sndCrack === 'function') sndCrack(0.16); }
+    }
+    n.hp = -0.05;
+  } else {
+    n.hy = (n.hy || 0) + (ty - (n.hy || 0)) * Math.min(1, dt * 0.6);
+    n.hp = (n.hp || 0) + (tp - (n.hp || 0)) * Math.min(1, dt * 1.5);
+  }
   if (Math.abs(n.hy) < 0.004 && Math.abs(n.hp) < 0.004) return;
   v.root.updateMatrixWorld(true);
   _hR.set(-Math.cos(n.yaw), 0, Math.sin(n.yaw));

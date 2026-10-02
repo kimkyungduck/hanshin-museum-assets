@@ -1868,3 +1868,22 @@ body.is-touch .esc-chip { top: 290px; } @media (max-width: 620px) { .esc-chip { 
 .haunt-end.dark { background: #050404; }
 .haunt-card.dark { color: #E6DED0; } .haunt-card.dark .hc-gb { color: #9A8E7C; border-top-color: rgba(255, 255, 255, .1); }
 .haunt-card.dark button { color: #E6DED0; border-color: #E6DED0; } .haunt-card.dark button:hover { background: #E6DED0; color: #050404; }
+
+/* 대화창(v115) — 화면 아래 */
+.dlg-box { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 25; width: min(720px, calc(100vw - 32px)); box-sizing: border-box;
+  padding: 16px 20px 14px; background: rgba(6, 6, 8, .86); border: 1px solid rgba(230, 222, 208, .14); color: #E6DED0; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+.dlg-box.on { opacity: 1; pointer-events: auto; }
+.dlg-box .dlg-who { margin: 0 0 6px; font-size: 11px; letter-spacing: .22em; color: #B07A6E; }
+.dlg-box .dlg-say { margin: 0 0 12px; font-size: 16px; line-height: 1.65; min-height: 1.65em; word-break: keep-all; }
+.dlg-box .dlg-ch { display: flex; flex-direction: column; gap: 6px; }
+.dlg-box .dlg-ch button { text-align: left; font: inherit; font-size: 14px; padding: 8px 12px; background: rgba(255, 255, 255, .04); color: #D8CFBF;
+  border: 1px solid rgba(255, 255, 255, .08); cursor: pointer; }
+.dlg-box .dlg-ch button:hover { background: rgba(176, 122, 110, .18); color: #fff; }
+.dlg-box .dlg-ch button b { display: inline-block; width: 20px; color: #B07A6E; font-weight: 600; }
+@media (max-width: 620px) { .dlg-box { bottom: 200px; padding: 12px 14px; } .dlg-box .dlg-say { font-size: 14.5px; } }
+/* 밤의 물속(v115) — 출렁이며 잠긴다 · 숨이 차면 가장자리부터 어두워진다 · 헤치고 걸으면 수면선 */
+.uw-veil.night { background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 30%, rgba(0, 4, 3, calc(.55 + var(--air, 0) * .4)) calc(100% - var(--air, 0) * 45%)); }
+.uw-veil.night.plunge { animation: uwPlunge .55s ease-out; }
+@keyframes uwPlunge { 0% { backdrop-filter: blur(6px) brightness(1.6); transform: translateY(-14px); } 40% { transform: translateY(8px); } 100% { backdrop-filter: none; transform: none; } }
+.uw-wade { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; pointer-events: none; height: calc(var(--wade, 0) * 34vh);
+  background: linear-gradient(to top, rgba(4, 12, 10, .55), rgba(10, 26, 22, .28) 70%, rgba(180, 220, 210, .16) 98%, rgba(0, 0, 0, 0)); transition: height .4s ease; }
