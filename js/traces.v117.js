@@ -158,6 +158,11 @@ function buildTracesInner() {
     ? [[[D.course + ' 18번 홀', BLK, 0.85], ['물 밑에 누가 있다', RED, 0.8]], '호수 쪽을 가리키는 화살표.']
     : [[[D.course + ' 그린 너무 빨라요', BLK, 0.8]], '밑에 \'ㅇㅈ\' 이라고 누가 답을 달았다.']);
   if (night) G.push([[['들어오지 마', RED, 1.1]], '손바닥 자국 위에 쓴 글씨.']);
+  // v117 — 💤 쉬는 회원. 앞쪽에 끼워 넣는다(벽이 모자라면 뒤의 것부터 빠지므로)
+  const RS = typeof restingList === 'function' ? restingList() : [];
+  if (RS.length) { const r = RS[0]; G.splice(1, 0, night
+    ? [[[r.name + ' 쉬는 중 💤', BLK, 0.85], ['깨우지 마', RED, 0.9]], (r.last ? '마지막 라운드 ' + r.last + '. ' : '') + '\'깨우지 마\' 는 안쪽에서 쓴 것처럼 거꾸로다.']
+    : [[[r.name + ' 언제 와?', BLK, 0.9], ['자리 맡아 둠', BLK, 0.7]], (r.last ? '마지막 라운드 ' + r.last + '. ' : '') + '여러 사람이 이름을 적어 놓았다.']); }
   const walls = traceWalls().sort(() => R() - 0.5);
   // 벽마다 쓴 자리 — 겹치지 않게(가로 구간 · 높이 둘 다 보고)
   const used = new Map();

@@ -32,6 +32,7 @@ const RECORDS = [
   ['walker', '걸어오는 그 사람', '밤이 절반을 넘기면, 긴 방에서'],
   ['double', '같은 사람이 또', '방금 지나친 사람을 기억해 두면'],
   ['traces', '흔적을 따라', '전시관 밖, 벽과 풀밭에 남은 것들'],
+  ['resting', '쉬는 사람', '쉬고 있는 회원 이야기를 끝까지 들으면'],
 ];
 const REC_KEY = 'museum-records';
 const REC = { got: {} };

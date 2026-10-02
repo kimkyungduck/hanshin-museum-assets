@@ -140,12 +140,24 @@ function crowdTopics() {
   for (const r of A.rounds || []) if (r.course) cnt[r.course] = (cnt[r.course] || 0) + 1;
   const cs = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
   if (cs) T.scorecards.push([`${cs[0]} 요즘 자주 가네.`, `벌써 ${cs[1]}번째. 갈 때마다 한 홀씩 길어져.`, '안개 낀 날엔 19번 홀이 보인대.']);
+  // v117 — 💤 쉬는 사람들. 밤엔 '쉰다' 는 말이 조금씩 다른 뜻이 된다
+  T.rest = [];
+  for (const r of (typeof restingList === 'function' ? restingList(A) : [])) {
+    const n = r.name, w = (s) => n + J(n, s[0], s[1]);
+    T.rest.push([`${n} 씨, 쉬는 중이라며?`, r.last ? `응. ${r.last} 라운드가 마지막이야.` : '응. 한동안 못 나온대.', '근데 어젯밤 연습 그린에 서 있던데.']);
+    T.rest.push([`${n} 씨 이름 옆에 💤 붙은 거 봤어?`, '쉰다는 표시래.', '… 명예의 전당 초상도 그 사람만 눈을 감고 있어.']);
+    if (r.lastDays) T.rest.push([`${n} 씨 안 나온 지 ${r.lastDays}일째야.`, '다들 쉰다고만 해.', '연락이 된다는 사람은 아무도 없어.']);
+    T.rest.push([`${n} 씨 자리, 비워 둔 거지?`, '응. 돌아올 때까지.', '그런데 갈 때마다 누가 앉아 있어.']);
+    if (r.p.best) T.rest.push([`${w(['은', '는'])} 베스트가 ${r.p.best}타였지.`, '쉬는 동안에도 스코어카드가 한 장씩 늘어.', '타수 칸은 비어 있고, 사인만 있어.']);
+    T.rest.push(['쉬는 사람은 여기 오면 안 된대.', `${n} 씨처럼?`, '… 쉿. 듣고 있어.']);
+  }
   for (const c of (A.clips || []).slice(0, 8)) {
     if (!c.title) continue;
     T.clips.push([`'${c.title}' 영상 봤어?`, '봤지. 끝에 웃음소리가 하나 더 들려.',
       c.comment_count ? `댓글이 ${c.comment_count}개인데, 하나는 아무도 안 쓴 거래.` : '되감아 보면 누가 카메라를 보고 있어.']);
   }
-  T.any = [...T.portraits, ...T.trophies.slice(0, 2), ...T.champion.slice(0, 1), ...T.clips.slice(0, 2)];
+  T.any = [...T.portraits, ...T.trophies.slice(0, 2), ...T.champion.slice(0, 1), ...T.clips.slice(0, 2), ...T.rest.slice(0, 3)];
+  T.portraits.push(...T.rest); T.photos.push(...T.rest.slice(0, 2)); T.lobby = T.rest.slice(0, 3);
   CROWD.topics = T;
   return T;
 }
@@ -944,12 +956,23 @@ function crowdTopicsDay() {
   for (const r of A.rounds || []) if (r.course) cnt[r.course] = (cnt[r.course] || 0) + 1;
   const cs = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
   if (cs) T.scorecards.push([`${cs[0]} 요즘 자주 가네.`, `벌써 ${cs[1]}번째야. 거기 그린 빠르지.`, '벙커만 조심하면 돼.']);
+  // v117 — 💤 쉬는 사람들 — 낮엔 보고 싶다는 이야기
+  T.rest = [];
+  for (const r of (typeof restingList === 'function' ? restingList(A) : [])) {
+    const n = r.name;
+    T.rest.push([`요즘 ${n} 씨 안 보이네?`, r.last ? `쉬는 중이래. ${r.last} 라운드가 마지막이었어.` : '잠깐 쉬는 중이래.', '빨리 돌아왔으면 좋겠다.']);
+    T.rest.push([`${n} 씨 언제 복귀한대?`, r.restDays ? `글쎄. 쉰 지 ${r.restDays}일째야.` : '아직 소식 없어.', '돌아오는 날 첫 라운드는 내가 쏜다.']);
+    if (r.p.avgStrokes) T.rest.push([`${n} 씨 없으니까 라운드가 조용해.`, `평균 ${f1(r.p.avgStrokes)}타 치던 사람인데.`, '단톡방에 사진이라도 올려 달라고 하자.']);
+    if (r.p.best) T.rest.push([`${n} 씨 베스트 ${r.p.best}타였지?`, '쉬는 동안 녹슬진 않았겠지.', '스윙은 몸이 기억해.']);
+    T.rest.push([`${n} 씨 이름 옆에 💤 붙었더라.`, '휴식 표시래. 기록은 그대로고.', '푹 쉬고 오라고 해.']);
+  }
   for (const c of (A.clips || []).slice(0, 8)) {
     if (!c.title) continue;
     T.clips.push([`'${c.title}' 영상 봤어?`, c.players ? `${c.players} 나오는 거? 봤지.` : '봤지. 몇 번을 돌려 봤어.',
       c.comment_count ? `댓글이 ${c.comment_count}개나 달렸더라.` : '다시 봐도 웃겨.']);
   }
-  T.any = [...T.portraits, ...T.trophies.slice(0, 2), ...T.champion.slice(0, 1), ...T.clips.slice(0, 2)];
+  T.any = [...T.portraits, ...T.trophies.slice(0, 2), ...T.champion.slice(0, 1), ...T.clips.slice(0, 2), ...T.rest.slice(0, 3)];
+  T.portraits.push(...T.rest); T.lobby = T.rest.slice(0, 2);
   CROWD.topicsDay = T;
   return T;
 }

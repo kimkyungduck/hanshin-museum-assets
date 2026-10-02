@@ -330,6 +330,7 @@ const ROSTER_GALLERY = [
 const DUMMY = {
   players: rosterToPlayers(ROSTER),
   gallery: ROSTER_GALLERY.map(([name, cheers]) => ({ name, gallery: true, cheers })),
+  resting: [{ name: N(5), since: '2026-08-30', last: '2026-06-07' }],   // v117 — 💤 휴식 중(샘플)
   memberPhotos: {},
   // 아래 이름은 모두 ROSTER 에서 가져온다(N(0)=1위 …). 지어낸 이름을 박아두지 않는다.
   rounds: [
@@ -471,6 +472,7 @@ async function loadArchive() {
          : 'golfscore 에 관리자로 로그인되어 있지 않습니다.')),
     players,
     gallery: buildGallery(ml, players),
+    resting: buildResting(ml, players),
     memberPhotos: rebasePhotos((mp && mp.photos) || {}, base),
     rounds: normalizeRounds(rdP.rows.length ? rdP.rows : ((rd && (rd.rounds || rd.list)) || [])),
     clips: clP.rows,
@@ -571,6 +573,27 @@ function buildGallery(ml, players) {
   return ml.members
     .filter((n) => groups[n] === 'gallery' && !played.has(n))
     .map((n) => ({ name: n, gallery: true, cheers: links[n] || null }));
+}
+
+/**
+ * 💤 휴식 중인 회원(v117) — members_list.php 의 rest {이름: 휴식 시작일} · restLast {이름: 마지막 라운드}.
+ * 기록 · 순위는 그대로고 표시만 다르다(golfscore 와 같다). 관람객들이 그 사람들 이야기를 한다.
+ */
+function buildResting(ml, players) {
+  if (!ml || !ml.rest) return [];
+  const last = ml.restLast || {}, has = new Set(players.map((p) => p.name));
+  return Object.keys(ml.rest).filter((n) => has.has(n)).map((n) => ({ name: n, since: ml.rest[n] || null, last: last[n] || null }));
+}
+/** 휴식 중인 회원 + 기록 · 며칠째인지 — 대사 · 낙서가 같이 쓴다 */
+function restingList(A) {
+  A = A || M.archive || {};
+  const P = A.players || [], now = Date.now();
+  const md = (s) => { const m = /^\d{4}-(\d{2})-(\d{2})/.exec(s || ''); return m ? (+m[1]) + '월 ' + (+m[2]) + '일' : null; };
+  const days = (s) => { const t = Date.parse(s || ''); return isFinite(t) ? Math.max(1, Math.round((now - t) / 864e5)) : null; };
+  return (A.resting || []).filter((r) => r && r.name).map((r) => ({
+    name: r.name, p: P.find((q) => q.name === r.name) || {},
+    last: md(r.last), lastDays: days(r.last), since: md(r.since), restDays: days(r.since),
+  }));
 }
 
 /**

@@ -43,10 +43,19 @@ function dlgNames() {
 /** 대화 나무 — { 노드: { say, ch: [[글, 다음]], fx } }. 다음: 노드 이름 · 'leave' · 'look'(살펴본다) */
 function dlgTree(n) {
   const N = dlgNames(), night = typeof NIGHT === 'undefined' || NIGHT.on;
+  const RS = typeof restingList === 'function' ? restingList() : [];
+  const rs = RS.length ? RS[(n.restI != null ? n.restI : (n.restI = Math.floor(Math.random() * RS.length)))] : null;
   if (!night) {
-    return { start: { say: pickOf([['안녕하세요. 구경 잘 하고 계세요?'], ['아, 안녕하세요.'], ['여기 처음 오셨어요?']])[0],
+    const day = { start: { say: pickOf([['안녕하세요. 구경 잘 하고 계세요?'], ['아, 안녕하세요.'], ['여기 처음 오셨어요?']])[0],
       ch: [['선수 이야기 해 주세요', 'talk'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
       talk: { say: () => { const L = typeof crowdLines === 'function' ? crowdLines(n.room) : ['좋은 전시죠.']; return L.join(' '); }, ch: [['하나 더요', 'talk'], ['떠난다', 'leave']] } };
+    if (rs) {                                                              // v117 — 쉬는 회원 소식
+      day.start.ch.splice(1, 0, ['쉬는 회원 소식 있어요?', 'rest']);
+      day.rest = { say: `${rs.name} 씨요? 요즘 쉬고 계세요.${rs.last ? ' ' + rs.last + ' 라운드가 마지막이었어요.' : ''}`, ch: [['어디 아프신 거예요?', 'rest2'], ['언제 돌아와요?', 'rest3'], ['떠난다', 'leave']] };
+      day.rest2 = { say: '아니요, 그냥 한동안 쉬신대요. 기록은 그대로 있어요. 명예의 전당 초상도요.', ch: [['언제 돌아와요?', 'rest3'], ['떠난다', 'leave']] };
+      day.rest3 = { say: `글쎄요.${rs.restDays ? ' 쉰 지 ' + rs.restDays + '일째인데,' : ''} 다들 기다려요. 돌아오시면 첫 라운드는 다 같이 나가기로 했어요.`, ch: [['선수 이야기 더 해 주세요', 'talk'], ['떠난다', 'leave']] };
+    }
+    return day;
   }
   const trees = [
     { // 우승 트로피 — 기획자 예시
@@ -82,7 +91,14 @@ function dlgTree(n) {
       d: { say: '… 지금 보고 있는 데요.', fx: 'behind', ch: [['떠난다', 'leave']] },
     },
   ];
-  const T = trees[(n.dlgI != null ? n.dlgI : (n.dlgI = Math.floor(Math.random() * trees.length)))] ;
+  if (rs) trees.push({ // v117 — 쉬는 사람(💤). 쉬다 보면 여기로 온다
+    start: { say: `${rs.name} 씨 아세요? 요즘 쉬고 계세요.`, ch: [['어디 아프대요?', 'b'], ['언제부터요?', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    b: { say: '아니요. 그냥 쉬는 거래요. … 쉬는 사람들은 다 그렇게 말해요.', ch: [['다들요?', 'd'], ['떠난다', 'leave']] },
+    c: { say: (rs.last ? `마지막으로 친 게 ${rs.last} 라운드예요.` : '꽤 됐어요.') + ' 그 뒤로도 스코어카드엔 이름이 적혀요. 타수 칸은 비어 있고요.', ch: [['누가 적는데요?', 'd'], ['떠난다', 'leave']] },
+    d: { say: '쉬다 보면 다들 여기로 와요. 조용하거든요. … 당신도 좀 쉬어 가실래요?', fx: 'behind', ch: [['… 아니요', 'e'], ['떠난다', 'leave']] },
+    e: { say: `${rs.name} 씨가 그러는데, 여기서 오래 쉬면 돌아가는 길을 잊는대요. 그래서 아직 못 돌아온 거예요.`, rec: 'resting', ch: [['떠난다', 'leave']] },
+  });
+  const T = trees[(n.dlgI != null && n.dlgI < trees.length ? n.dlgI : (n.dlgI = rs && Math.random() < 0.3 ? trees.length - 1 : Math.floor(Math.random() * trees.length)))];
   // 방탈출 — 쪽지를 들고 있으면
   if (typeof ESC !== 'undefined' && ESC.on && ESC.ready && ESC.found.size > 0 && !ESC.done) {
     T.start = Object.assign({}, T.start, { ch: [['이 쪽지 아세요?', 'note']].concat(T.start.ch) });
