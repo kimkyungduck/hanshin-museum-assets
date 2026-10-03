@@ -35,6 +35,7 @@ const RECORDS = [
   ['resting', '쉬는 사람', '쉬고 있는 회원 이야기를 끝까지 들으면'],
   ['shot', '찍혔다', '전시를 찍던 사람 곁에 오래 서 있으면'],
   ['beckon', '이리 와', '숲가의 그 사람을 멀리서 지켜보면'],
+  ['cart', '아무도 안 탄 카트', '밤의 카트길에서'],
 ];
 const REC_KEY = 'museum-records';
 const REC = { got: {} };

@@ -34,84 +34,164 @@ function npcSnap(n, yaw, pitch, hold) {
   sndCrack();
 }
 
-/* ── 대사 — 밤 ───────────────────────────────────────────── */
-function dlgNames() {
+/* ── 대사(v120) ─────────────────────────────────────────────
+   사용자: "죄다 말이 다 똑같이 하는데". 잰 것(운영 데이터): 실내 7명 중 3명이 '전좌현 씨 아세요?'(쉬는 사람 이야기를 30% 우선),
+   2명이 '이름이 뭐예요?' — 이야기를 사람마다 무작위로 뽑으면서 겹침을 막지 않았고, 낮엔 7명 모두 같은 인사였다.
+   → 이야기마다 id 를 두고 **아직 아무도 맡지 않은 이야기**를 나눠 준다(dlgDeal). 밤 11가지 · 낮 8가지 — 실내 7명이 모두 다르다.
+     쉬는 회원 이야기도 이제 한 사람만 한다. */
+function dlgData() {
   const A = M.archive || {}, P = (A.players || []).filter((p) => p && p.name);
+  const by = (f) => P.slice().sort((a, b) => f(b) - f(a))[0] || null;
   const w = typeof recentWinner === 'function' ? recentWinner(A) : null;
-  return { win: (w && w.name) || (P[0] && P[0].name) || '그분', any: (P[Math.floor(Math.random() * Math.max(1, P.length))] || {}).name || '그 회원' };
+  const rounds = (A.rounds || []).slice().sort((a, b) => String(b.played_at).localeCompare(String(a.played_at)));
+  const cnt = {}; for (const r of rounds) if (r.course) cnt[r.course] = (cnt[r.course] || 0) + 1;
+  const cs = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  const md = (s) => { const m = /^\d{4}-(\d{2})-(\d{2})/.exec(s || ''); return m ? (+m[1]) + '월 ' + (+m[2]) + '일' : '그날'; };
+  const J = (wd, a, b) => (typeof josa === 'function' ? josa(wd, a, b) : a);
+  return {
+    P, J, md, w,
+    r1: P.slice().sort((a, b) => (a.rank || 99) - (b.rank || 99))[0] || null,
+    best: P.filter((p) => p.best).sort((a, b) => a.best - b.best)[0] || null,
+    att: by((p) => p.roundsCompleted || 0), bird: by((p) => p.birdies || 0),
+    course: cs ? cs[0] : null, courseN: cs ? cs[1] : 0,
+    clip: (A.clips || []).find((c) => c.title && c.players) || (A.clips || []).find((c) => c.title) || null,
+    any: (P[Math.floor(Math.random() * Math.max(1, P.length))] || {}).name || '그 회원',
+  };
 }
+/** 아직 아무도 맡지 않은 이야기를 나눠 준다(모두 맡았으면 그때부터 겹친다) */
+function dlgDeal(n, key, ids) {
+  if (n[key] && ids.includes(n[key])) return n[key];
+  const held = new Set((M.npcs || []).filter((o) => o !== n).map((o) => o[key]).filter(Boolean));
+  const free = ids.filter((id) => !held.has(id));
+  return (n[key] = pickOf(free.length ? free : ids));
+}
+const DLG_TALK = (n) => ({ say: () => { const L = typeof crowdLines === 'function' ? crowdLines(n.room) : ['좋은 전시죠.']; return L.join(' '); }, ch: [['하나 더요', 'talk'], ['떠난다', 'leave']] });
 /** 대화 나무 — { 노드: { say, ch: [[글, 다음]], fx } }. 다음: 노드 이름 · 'leave' · 'look'(살펴본다) */
 function dlgTree(n) {
-  const N = dlgNames(), night = typeof NIGHT === 'undefined' || NIGHT.on;
+  const D = dlgData(), night = typeof NIGHT === 'undefined' || NIGHT.on, f1 = (v) => (+v).toFixed(1);
   const RS = typeof restingList === 'function' ? restingList() : [];
-  const rs = RS.length ? RS[(n.restI != null ? n.restI : (n.restI = Math.floor(Math.random() * RS.length)))] : null;
+  const rs = RS.length ? RS[(n.restI != null && n.restI < RS.length ? n.restI : (n.restI = Math.floor(Math.random() * RS.length)))] : null;
+  const LV = [['살펴본다', 'look'], ['떠난다', 'leave']], TK = ['선수 이야기 더 해 주세요', 'talk'];
   if (!night) {
-    const day = { start: { say: pickOf([['안녕하세요. 구경 잘 하고 계세요?'], ['아, 안녕하세요.'], ['여기 처음 오셨어요?']])[0],
-      ch: [['선수 이야기 해 주세요', 'talk'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
-      talk: { say: () => { const L = typeof crowdLines === 'function' ? crowdLines(n.room) : ['좋은 전시죠.']; return L.join(' '); }, ch: [['하나 더요', 'talk'], ['떠난다', 'leave']] } };
-    if (rs) {                                                              // v117 — 쉬는 회원 소식
-      day.start.ch.splice(1, 0, ['쉬는 회원 소식 있어요?', 'rest']);
-      day.rest = { say: `${rs.name} 씨요? 요즘 쉬고 계세요.${rs.last ? ' ' + rs.last + ' 라운드가 마지막이었어요.' : ''}`, ch: [['어디 아프신 거예요?', 'rest2'], ['언제 돌아와요?', 'rest3'], ['떠난다', 'leave']] };
-      day.rest2 = { say: '아니요, 그냥 한동안 쉬신대요. 기록은 그대로 있어요. 명예의 전당 초상도요.', ch: [['언제 돌아와요?', 'rest3'], ['떠난다', 'leave']] };
-      day.rest3 = { say: `글쎄요.${rs.restDays ? ' 쉰 지 ' + rs.restDays + '일째인데,' : ''} 다들 기다려요. 돌아오시면 첫 라운드는 다 같이 나가기로 했어요.`, ch: [['선수 이야기 더 해 주세요', 'talk'], ['떠난다', 'leave']] };
-    }
-    return day;
+    // 낮 — 사람마다 다른 관심사(실제 기록으로)
+    const T = {};
+    if (D.r1 && D.r1.avgStrokes) T.fan = {
+      start: { say: `${D.r1.name} 씨 팬이에요. 올해 1위잖아요.`, ch: [['평균이 몇 타예요?', 'b'], TK, ...LV] },
+      b: { say: `${f1(D.r1.avgStrokes)}타요. 트로피실에 이름이 제일 많아요. 저도 언젠가 저렇게 쳐 보고 싶어요.`, ch: [TK, ['떠난다', 'leave']] } };
+    if (D.course) T.course = {
+      start: { say: `${D.course} 가 보셨어요? 여기 멤버들 거기만 ${D.courseN}번 갔대요.`, ch: [['어떤 코스예요?', 'b'], TK, ...LV] },
+      b: { say: '그린이 빠르대요. 기록 보관실 스코어카드 보면 다들 퍼팅에서 고생했어요.', ch: [TK, ['떠난다', 'leave']] } };
+    if (D.clip) T.clip = {
+      start: { say: `'${D.clip.title}' 영상 보셨어요? 상영관에서 틀어 줘요.`, ch: [['재밌어요?', 'b'], TK, ...LV] },
+      b: { say: (D.clip.players ? D.clip.players + ' 나오는 거요. ' : '') + '몇 번을 봐도 웃겨요. 댓글이 더 웃기고요.', ch: [TK, ['떠난다', 'leave']] } };
+    if (D.best) T.best = {
+      start: { say: `기록 보관실 가 보셨어요? ${D.best.name} 베스트가 ${D.best.best}타래요.`, ch: [['대단하네요', 'b'], TK, ...LV] },
+      b: { say: '그날 퍼터가 불이었대요. 원본 스코어카드도 걸려 있어요. 사인까지요.', ch: [TK, ['떠난다', 'leave']] } };
+    if (D.att) T.att = {
+      start: { say: `${D.att.name} 씨가 라운드에 제일 많이 나왔대요. ${D.att.roundsCompleted}번이요.`, ch: [['개근상감이네요', 'b'], TK, ...LV] },
+      b: { say: '진짜로 상을 줘야 해요. 명예의 전당에 초상도 있어요. 표정이 제일 편안해요.', ch: [TK, ['떠난다', 'leave']] } };
+    if (D.w) T.win = {
+      start: { say: `지난 라운드${D.w.round.course ? ' ' + D.w.round.course : ''}, ${D.w.name} 씨가 우승했대요.`, ch: [['몇 타였어요?', 'b'], TK, ...LV] },
+      b: { say: (D.w.round.best != null ? D.w.round.best + '타요. ' : '') + '우승자의 방에 초상이 새로 걸렸어요. 가 보세요.', ch: [TK, ['떠난다', 'leave']] } };
+    if (rs) T.rest = {
+      start: { say: `${rs.name} 씨 소식 아세요? 요즘 쉬고 계세요.`, ch: [['어디 아프신 거예요?', 'b'], ['언제 돌아와요?', 'c'], ...LV] },
+      b: { say: `아니요, 그냥 한동안 쉬신대요.${rs.last ? ' ' + rs.last + ' 라운드가 마지막이었어요.' : ''} 기록은 그대로 있어요.`, ch: [['언제 돌아와요?', 'c'], ['떠난다', 'leave']] },
+      c: { say: `글쎄요.${rs.restDays ? ' 쉰 지 ' + rs.restDays + '일째인데,' : ''} 다들 기다려요. 돌아오시면 첫 라운드는 다 같이 나가기로 했어요.`, ch: [TK, ['떠난다', 'leave']] } };
+    T.newbie = {
+      start: { say: '저 오늘 처음 왔어요. 어디부터 보면 좋아요?', ch: [['트로피실이요', 'b1'], ['명예의 전당이요', 'b2'], ['18번 홀이요', 'b3'], ['떠난다', 'leave']] },
+      b1: { say: '트로피실이요? 고마워요. 반짝이는 건 일단 다 봐야죠.', ch: [TK, ['떠난다', 'leave']] },
+      b2: { say: '초상화가 있다던 데죠? 다들 진지한 얼굴이라던데, 궁금하네요.', ch: [TK, ['떠난다', 'leave']] },
+      b3: { say: '밖에 진짜 홀이 있어요? 티샷도 칠 수 있대요? 가 봐야겠다.', ch: [TK, ['떠난다', 'leave']] } };
+    const id = dlgDeal(n, 'dlgDay', Object.keys(T));
+    const tr = T[id]; tr.talk = DLG_TALK(n);
+    return tr;
   }
-  const trees = [
-    { // 우승 트로피 — 기획자 예시
-      start: { say: `이 트로피… ${N.win} 씨가 받은 거예요. 그다음 라운드엔 안 나오셨대요.`, ch: [['왜요?', 'b'], ['누구 얘기예요?', 'b2'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+  const T = {
+    trophy: { // 우승 트로피 — 기획자 예시
+      start: { say: `이 트로피… ${(D.w && D.w.name) || D.any} 씨가 받은 거예요. 그다음 라운드엔 안 나오셨대요.`, ch: [['왜요?', 'b'], ['누구 얘기예요?', 'b2'], ...LV] },
       b: { say: '글쎄요. 사진엔 계속 계시던데요.', ch: [['어느 사진이요?', 'c'], ['떠난다', 'leave']] },
-      b2: { say: `${N.win} 씨요. 당신도 알잖아요.`, ch: [['… 모르는데요', 'c'], ['떠난다', 'leave']] },
+      b2: { say: `${(D.w && D.w.name) || D.any} 씨요. 당신도 알잖아요.`, ch: [['… 모르는데요', 'c'], ['떠난다', 'leave']] },
       c: { say: '당신 회원이죠? 명단에서 본 얼굴인데.', ch: [['처음 왔어요', 'd'], ['… 그런가요?', 'd']] },
       d: { say: '처음 오신 분은 다들 그렇게 말해요.', fx: 'behind', ch: [['…', 'e'], ['떠난다', 'leave']] },
       e: { say: '그래서요, 어디까지 했죠? … 아, 사진. 사진은 당신 뒤에 있어요.', ch: [['떠난다', 'leave']] },
     },
-    { // 세는 사람
-      start: { say: '몇 명으로 보여요? 이 방에.', ch: [['두 명이요', 'b'], ['세 명이요', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    count: { // 세는 사람
+      start: { say: '몇 명으로 보여요? 이 방에.', ch: [['두 명이요', 'b'], ['세 명이요', 'c'], ...LV] },
       b: { say: '두 명. … 두 명. 이상하다. 저는 세 명으로 보이는데.', fx: 'behind', ch: [['누가 더 있어요?', 'd'], ['떠난다', 'leave']] },
       c: { say: '맞아요. 세 명. 한 명은 아까부터 당신 바로 뒤에 서 있어요.', fx: 'behind', ch: [['…', 'd'], ['떠난다', 'leave']] },
       d: { say: '아니에요. 잘못 봤어요. 제가 잘못 셌어요. 하나, 둘…', ch: [['떠난다', 'leave']] },
     },
-    { // 이름
-      start: { say: '이름이 뭐예요?', ch: [['말해 준다', 'b'], ['안 알려 줄래요', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    name: { // 이름
+      start: { say: '이름이 뭐예요?', ch: [['말해 준다', 'b'], ['안 알려 줄래요', 'c'], ...LV] },
       b: { say: '그 이름… 방명록에 벌써 있던데요. 어제 날짜로.', rec: 'name', ch: [['그럴 리가요', 'd'], ['떠난다', 'leave']] },
       c: { say: '괜찮아요. 곧 알게 돼요. 다 적히니까요.', ch: [['뭐가 적혀요?', 'd'], ['떠난다', 'leave']] },
       d: { say: '이름이요. 초상 아래 명패에. … 이름이 뭐예요?', fx: 'behind', ch: [['떠난다', 'leave']] },
     },
-    { // 물 — 호수로 이끈다
-      start: { say: '18번 홀 호수, 들어가 봤어요?', ch: [['네', 'b'], ['아니요', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    water: { // 물 — 호수로 이끈다
+      start: { say: '18번 홀 호수, 들어가 봤어요?', ch: [['네', 'b'], ['아니요', 'c'], ...LV] },
       b: { say: '그럼 데려왔겠네요. 발이 젖어 있잖아요.', ch: [['뭘요?', 'd'], ['떠난다', 'leave']] },
       c: { say: '들어가지 마세요. 거기, 줄 서 있어요.', ch: [['누가요?', 'd'], ['떠난다', 'leave']] },
       d: { say: '다들요. 둑 위에서 내려다보면서 기다리는 사람들이요. 물속 사람이 올라오길.', fx: 'behind', ch: [['떠난다', 'leave']] },
     },
-    { // 초상
-      start: { say: `명예의 전당 초상 중에… ${N.any} 씨 초상, 눈 감고 있지 않았어요?`, ch: [['아니요, 뜨고 있었어요', 'b'], ['기억 안 나요', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    portrait: { // 초상
+      start: { say: `명예의 전당 초상 중에… ${D.any} 씨 초상, 눈 감고 있지 않았어요?`, ch: [['아니요, 뜨고 있었어요', 'b'], ['기억 안 나요', 'c'], ...LV] },
       b: { say: '그럼 다행이다. 감고 있으면 안 되거든요. 감으면… 다른 데를 보러 간 거예요.', ch: [['어디를요?', 'd'], ['떠난다', 'leave']] },
       c: { say: '다시 보고 오세요. 지금쯤은 감고 있을 거예요.', ch: [['떠난다', 'leave']] },
       d: { say: '… 지금 보고 있는 데요.', fx: 'behind', ch: [['떠난다', 'leave']] },
     },
-  ];
-  if (rs) trees.push({ // v117 — 쉬는 사람(💤). 쉬다 보면 여기로 온다
-    start: { say: `${rs.name} 씨 아세요? 요즘 쉬고 계세요.`, ch: [['어디 아프대요?', 'b'], ['언제부터요?', 'c'], ['살펴본다', 'look'], ['떠난다', 'leave']] },
+    lost: { // 길 잃은 사람
+      start: { say: '출구가 어디예요? 아까부터 계속 같은 방이에요.', ch: [['현관으로 가세요', 'b'], ['저도 몰라요', 'c'], ...LV] },
+      b: { say: '현관이요? 거기서 왔어요. 현관에서 나가면… 다시 현관이에요.', ch: [['…', 'd'], ['떠난다', 'leave']] },
+      c: { say: '다행이다. 저만 그런 줄 알았어요. … 그럼 우리 둘 다 못 나가는 거네요.', ch: [['…', 'd'], ['떠난다', 'leave']] },
+      d: { say: '같이 다녀요, 그럼. 혼자 다니면 자꾸 사람이 늘어나요.', fx: 'behind', ch: [['떠난다', 'leave']] },
+    },
+  };
+  if (D.best) T.card = {
+    start: { say: `기록 보관실에 ${D.best.name} 씨 베스트 카드 있잖아요. ${D.best.best}타.`, ch: [['봤어요', 'b'], ['아직이요', 'c'], ...LV] },
+    b: { say: '18번 홀 칸, 자세히 봤어요? 숫자가 두 개 겹쳐 적혀 있어요.', ch: [['누가 썼는데요?', 'd'], ['떠난다', 'leave']] },
+    c: { say: '보지 마세요. 보면 빈칸에 당신 타수가 적혀요.', ch: [['…', 'd'], ['떠난다', 'leave']] },
+    d: { say: `${D.best.name} 씨 글씨가 아니에요. 그날 같이 친 사람 글씨도 아니고요. … 지금 당신 뒤에서 쓰고 있는 글씨랑 같아요.`, fx: 'behind', ch: [['떠난다', 'leave']] },
+  };
+  if (D.clip) T.clip = {
+    start: { say: `'${D.clip.title}' 영상, 끝까지 보셨어요?`, ch: [['네', 'b'], ['아니요', 'b'], ...LV] },
+    b: { say: '마지막 장면에서 멈춰 보세요. 카메라를 보는 사람이 하나 더 있어요.', ch: [['누군데요?', 'c'], ['떠난다', 'leave']] },
+    c: { say: (D.clip.players ? D.clip.players + ' 씨 바로 뒤에요. ' : '') + '웃는 얼굴인데… 눈은 안 웃어요.', fx: 'behind', ch: [['…', 'd'], ['떠난다', 'leave']] },
+    d: { say: '방금 그 얼굴 했어요. 당신 어깨 너머로.', ch: [['떠난다', 'leave']] },
+  };
+  if (D.att) T.att = {
+    start: { say: `${D.att.name} 씨는 ${D.att.roundsCompleted}번이나 나왔대요. 한 번도 안 빠지고.`, ch: [['대단하네요', 'b'], ['그게 왜요?', 'c'], ...LV] },
+    b: { say: '어젯밤에도 왔대요. 라운드 없는 날인데.', ch: [['어디에요?', 'd'], ['떠난다', 'leave']] },
+    c: { say: '세어 봤거든요. 스코어카드가 한 장 더 많아요.', ch: [['…', 'd'], ['떠난다', 'leave']] },
+    d: { say: '18번 홀 티잉 구역이요. 아직 거기 서 있대요. 같이 칠 사람을 기다린대요.', fx: 'behind', ch: [['떠난다', 'leave']] },
+  };
+  if (D.course) T.course = {
+    start: { say: `${D.course} 자주 가죠? 여기 사람들 거기만 ${D.courseN}번 갔대요.`, ch: [['좋은 코스라서요', 'b'], ['그게 왜요?', 'b'], ...LV] },
+    b: { say: '갈 때마다 한 홀씩 길어진대요. 지난번엔 19번 홀까지 쳤대요.', ch: [['19번 홀이요?', 'c'], ['떠난다', 'leave']] },
+    c: { say: '스코어카드에 칸이 있어요. 거기 적힐 이름은… 아직 안 정해졌대요.', fx: 'behind', ch: [['떠난다', 'leave']] },
+  };
+  if (rs) T.rest = { // v117 — 쉬는 사람(💤). 쉬다 보면 여기로 온다
+    start: { say: `${rs.name} 씨 아세요? 요즘 쉬고 계세요.`, ch: [['어디 아프대요?', 'b'], ['언제부터요?', 'c'], ...LV] },
     b: { say: '아니요. 그냥 쉬는 거래요. … 쉬는 사람들은 다 그렇게 말해요.', ch: [['다들요?', 'd'], ['떠난다', 'leave']] },
     c: { say: (rs.last ? `마지막으로 친 게 ${rs.last} 라운드예요.` : '꽤 됐어요.') + ' 그 뒤로도 스코어카드엔 이름이 적혀요. 타수 칸은 비어 있고요.', ch: [['누가 적는데요?', 'd'], ['떠난다', 'leave']] },
     d: { say: '쉬다 보면 다들 여기로 와요. 조용하거든요. … 당신도 좀 쉬어 가실래요?', fx: 'behind', ch: [['… 아니요', 'e'], ['떠난다', 'leave']] },
     e: { say: `${rs.name} 씨가 그러는데, 여기서 오래 쉬면 돌아가는 길을 잊는대요. 그래서 아직 못 돌아온 거예요.`, rec: 'resting', ch: [['떠난다', 'leave']] },
-  });
-  const T = trees[(n.dlgI != null && n.dlgI < trees.length ? n.dlgI : (n.dlgI = rs && Math.random() < 0.3 ? trees.length - 1 : Math.floor(Math.random() * trees.length)))];
+  };
+  const id = dlgDeal(n, 'dlgNight', Object.keys(T));
+  // 한 번 쓴 나무를 고쳐 쓰지 않게 얕은 복사(방탈출 선택지를 덧붙인다)
+  const tr = Object.assign({}, T[id]);
   // 방탈출 — 쪽지를 들고 있으면
   if (typeof ESC !== 'undefined' && ESC.on && ESC.ready && ESC.found.size > 0 && !ESC.done) {
-    T.start = Object.assign({}, T.start, { ch: [['이 쪽지 아세요?', 'note']].concat(T.start.ch) });
-    T.note = { say: () => {
+    tr.start = Object.assign({}, tr.start, { ch: [['이 쪽지 아세요?', 'note']].concat(tr.start.ch) });
+    tr.note = { say: () => {
       const un = ESC.clues.map((c, k) => k).filter((k) => !ESC.found.has(k));
       const k = un.length ? pickOf(un) : pickOf([0, 1, 2, 3]);
       const liar = !!(n.info && n.info.room === 'theater');               // 상영관 사람은 거짓 숫자를 준다
       const d = liar ? (ESC.clues[k].d + 3) % 10 : ESC.clues[k].d;
       return (k + 1) + '번째 숫자요? … ' + d + '. ' + (liar ? '틀림없어요. 저는 거짓말 안 해요.' : '나머지는 직접 찾으세요.');
     }, ch: [['고마워요', 'leave'], ['정말이에요?', 'note2']] };
-    T.note2 = { say: '… 저 여기 온 지 오래됐어요. 숫자는 안 변해요. 사람만 변하지.', ch: [['떠난다', 'leave']] };
+    tr.note2 = { say: '… 저 여기 온 지 오래됐어요. 숫자는 안 변해요. 사람만 변하지.', ch: [['떠난다', 'leave']] };
   }
-  return T;
+  return tr;
 }
 
 /* ── 대화창 ──────────────────────────────────────────────── */
@@ -225,7 +305,9 @@ function dlgClose(walkAway) {
     if (walkAway && n.willTrack) { n.willTrack = false; n.snapTrack = 5; n.trackCracks = 0; if (!n.out) n.noticeT = 5.5; }
   }
   DLG.n = null;
-  if (DLG.relock && M.renderer) { try { M.renderer.domElement.requestPointerLock(); } catch (e) { /* 클릭하면 다시 잠근다 */ } }
+  /* v120 — 다시 잠그는 대상은 #gal 이어야 한다. 예전엔 캔버스(renderer.domElement)를 잠가서 커서는 사라졌는데
+     M.locked(= pointerLockElement === gal)가 false 로 남아 → 마우스 시선이 먹지 않았다(사용자: "말을 걸고 다시 fps 컨트롤이 안 된다") */
+  if (DLG.relock && typeof tryLock === 'function') tryLock(document.getElementById('gal'));
 }
 /** 매 프레임 — 대화 중엔 카메라가 그 사람 얼굴 쪽으로 천천히 */
 function stepDlg(dt) {

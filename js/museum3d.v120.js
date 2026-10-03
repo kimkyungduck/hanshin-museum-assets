@@ -2705,7 +2705,10 @@ function bindInput() {
     else tryLock(gal);
   });
   document.addEventListener('pointerlockchange', () => {
+    const was = M.locked;
     M.locked = document.pointerLockElement === gal;
+    // v120 — 골프 중 Esc: 브라우저가 키를 고정 해제에 써 버려 keydown 이 안 온다 → 고정이 풀린 것으로 그만두기
+    if (was && !M.locked && typeof GOLF !== 'undefined' && GOLF.mode && typeof golfQuit === 'function') golfQuit();
     chip.classList.toggle('on', M.locked);
     chip.textContent = M.locked ? '🔓 해제 (Esc)' : '🔒 마우스 고정 · FPS 조작';
     $('gal').classList.toggle('locked', M.locked);
@@ -3252,7 +3255,7 @@ function setScrim(url) {
 }
 
 function openExhibit(e) {
-  if (e.npcRef && typeof dlgOpen === 'function' && e.npcRef.role !== 'watch') { dlgOpen(e.npcRef); return; }   // v115 — 대화창(상세 패널 대신)
+  if (e.npcRef && typeof dlgOpen === 'function' && e.npcRef.role !== 'watch' && e.npcRef.role !== 'golfer') { dlgOpen(e.npcRef); return; }   // 골퍼(v120)는 카트 · 스윙 중이라 한 마디만   // v115 — 대화창(상세 패널 대신)
   if (e.npcRef && typeof npcAsk === 'function' && npcAsk(e.npcRef)) return;      // v99 — 관람객은 먼저 대답한다
   if (e.onUse) { e.onUse(e); return; }                                          // v108 — 문(수장고)
   M.openId = e.id;

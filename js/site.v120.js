@@ -916,6 +916,13 @@ function golfHud() {
 function golfPaint(msg) {
   const el = golfHud();
   el.classList.toggle('hidden', !GOLF.mode);
+  let q = $('golfQuit');
+  if (!q && GOLF.mode) {
+    q = document.createElement('button'); q.id = 'golfQuit'; q.className = 'golf-quit'; q.textContent = '✕ 그만두기';
+    q.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); golfQuit(); });
+    $('gal').appendChild(q);
+  }
+  if (q) q.classList.toggle('hidden', !GOLF.mode);
   if (!GOLF.mode) return;
   const cl = golfClub();
   $('ghTitle').textContent = GOLF.course === 'hole' ? '18번 홀 · 파 3' : '퍼팅 연습';
@@ -925,7 +932,7 @@ function golfPaint(msg) {
   $('ghPow').style.transform = 'scaleX(' + (GOLF.mode === 'power' ? GOLF.power : 0).toFixed(3) + ')';
   $('ghIdeal').style.left = (golfIdeal(cl) * 100).toFixed(1) + '%';
   $('ghHelp').textContent = msg || (M.touch ? '드래그로 방향 · 버튼을 누르고 있다가 흰 선에서 놓기 · ✕ 그만두기'
-    : '마우스 · ←→ 로 방향 · Space 를 누르고 있다가 흰 선에서 놓기 · Esc 그만두기');
+    : '마우스 · ←→ 로 방향 · Space 를 누르고 있다가 흰 선에서 놓기 · W 로 걸어 나가기 · Esc 그만두기');
   if (!msg && GOLF.pv && GOLF.mode === 'aim') {
     $('ghHelp').textContent = (GOLF.pv.putt ? (GOLF.pv.ev === 'holed' ? '금색 선 = 들어가는 길 · ' : '선을 컵에 맞춰 보세요 · ') : '예상 비거리 ' + Math.round(GOLF.carry || 0) + 'm · ') + $('ghHelp').textContent;
   }
@@ -1070,6 +1077,13 @@ function golfStep(dt) {
     golfPaint();
   }
   // 방향 미세 조정 — ←/→ 또는 A/D(Shift 는 더 곱게)
+  /* v120 — 사용자: "골프를 치게 되면 끝날 때까지 나갈 수가 없다". Esc 하나뿐이었는데, 마우스 고정 중엔 브라우저가 Esc 를
+     고정 해제에 써 버려 골프가 끝나지 않았고, 폰 안내의 ✕ 는 버튼이 없었다 → ✕ 그만두기 버튼 · W/S(↑↓)로 걸어 나가기 · 고정이 풀리면 끝 */
+  if (GOLF.mode === 'aim') {
+    const K = M.keys || {};
+    GOLF.walkOut = (K.w || K.s || K.arrowup || K.arrowdown) ? (GOLF.walkOut || 0) + dt : 0;
+    if (GOLF.walkOut > 0.3) { GOLF.walkOut = 0; golfQuit('골프를 그만두고 걸어 나왔습니다'); return; }
+  }
   if (GOLF.mode === 'aim' || GOLF.mode === 'power') {
     const K = M.keys || {}, turn = (K.arrowleft || K.a ? 1 : 0) - (K.arrowright || K.d ? 1 : 0);
     if (turn) M.yaw += turn * (putt ? 0.2 : 0.38) * (K.shift ? 0.3 : 1) * dt;
