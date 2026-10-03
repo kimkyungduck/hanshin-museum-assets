@@ -1029,15 +1029,17 @@ function stepJump(dt) {
   HAUNT.jumpCool -= dt;
   if (HAUNT.turnAcc < 2.3 || HAUNT.jumpCool > 0 || HAUNT.dread < 0.2 || HAUNT.ev || HAUNT.calm || HAUNT.blackShade || !hauntOK()) return;
   HAUNT.jumpCool = 8;                                                    // 실패해도 잠깐은 쉰다
-  if (Math.random() > 0.35) return;                                       // v115 — 감독: '놀래킴은 지금의 절반'
+  if (typeof SCARE !== 'undefined' && (SCARE.ev || SCARE.cool > 50)) return;   // v123 — 다른 놀래킴 바로 뒤엔 쉰다
+  if (Math.random() > 0.6) return;                                        // v123 — 0.35 → 0.6(사용자: '눈에 잘 안 띈다')
   const f = hauntFwd(), r = M.room;
-  const x = M.pos.x * CM + f.x * 125, z = M.pos.z * CM + f.z * 125;
+  const x = M.pos.x * CM + f.x * 75, z = M.pos.z * CM + f.z * 75;           // v123 — 1.25m → 0.75m(얼굴이 화면을 채운다)
   const room = r && inRect(r, x, z) ? r : null;
   if (!room) return;
   const fy = floorAt(room, x, z);
   if (!(fy === fy) || hitsWall(x, z, fy) || !shadeAt(x, z, room)) return;
-  HAUNT.jumpCool = 300 + Math.random() * 140;
-  sndStinger(0.14);
+  HAUNT.jumpCool = 150 + Math.random() * 90;
+  if (typeof scareScream === 'function') { scareScream(0.75); SCARE.shake = 0.4; scareFx('flash'); SCARE.cool = Math.max(SCARE.cool, 60); }
+  else sndStinger(0.14);
   if (typeof hapt === 'function') hapt([80, 30, 120]);
   if (typeof hauntRec === 'function') hauntRec('jump');
   HAUNT.ev = { t: 0, done: false, step(d) { this.t += d; if (this.t > 0.42 && !this.done) { shadeHide(); hauntGlitch(); this.done = true; } } };

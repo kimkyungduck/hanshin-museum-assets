@@ -2805,7 +2805,8 @@ function loop(now) {
   guardStep('dlg', () => { if (typeof stepDlg === 'function') stepDlg(dt); });            // v115 — 대화창
   guardStep('acts', () => { if (typeof stepActs === 'function') stepActs(dt); });         // v118 — 몸짓의 플래시 · 쿨다운
   guardStep('horror', () => { if (typeof stepHorror === 'function') stepHorror(dt); });
-  guardStep('expand', () => { if (typeof stepExpand === 'function') stepExpand(dt); });   // v122 — 숲 · 클럽하우스 · 레인지   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
+  guardStep('expand', () => { if (typeof stepExpand === 'function') stepExpand(dt); });
+  guardStep('scare', () => { if (typeof stepScare === 'function') stepScare(dt); });     // v123 — 달려드는 것 · 천장의 것   // v122 — 숲 · 클럽하우스 · 레인지   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }
