@@ -672,6 +672,10 @@ const OUT_CAST = [
   { id: 'golfer', room: 'field', ch: 'p11', role: 'golfer', label: '카트를 모는 골퍼',
     daySay: '카트를 몰고 18번 홀을 도는 회원. 티샷 세 번, 그린에서 퍼팅 두 번 — 늘 같은 순서다.',
     say: '' },
+  { id: 'range1', room: 'range', ch: 'p14', role: 'range', bay: 2, label: '타석의 중년 골퍼',
+    daySay: '드라이빙 레인지 셋째 타석. 세 번 치고 숨을 고른다. 늘 같은 순서다.', say: '' },
+  { id: 'range2', room: 'range', ch: 'p15', role: 'range', bay: 5, label: '챙모자를 쓴 여성 골퍼',
+    daySay: '드라이빙 레인지 여섯째 타석. 공이 곧게 날아간다.', say: '' },
   { id: 'watch', room: 'field', ch: 'p11', role: 'watch', label: '멀리 서 있는 사람',
     K: { coat: '#141417', pants: '#101012', hairC: '#0E0C0B', skin: '#B39070', shoe: '#141414', h: 1.84 },
     zone: (x, z) => Math.abs(x - 2500) > 3300 && z < -2600 && z > -8200,
@@ -683,7 +687,7 @@ function buildOutdoorNpcs(M) {
   let i = 0;
   for (const C of OUT_CAST) {
     if (C.role === 'watch' && !isNightMode()) continue;                    // v110 — 낮엔 숲가의 그 사람이 없다
-    if (C.role === 'golfer' && isNightMode()) continue;                    // v120 — 골퍼는 낮에만(밤엔 같은 사람이 숲가에 선다)
+    if ((C.role === 'golfer' || C.role === 'range') && isNightMode()) continue;                    // v120 — 골퍼는 낮에만(밤엔 같은 사람이 숲가에 선다)
     const r = M.roomById[C.room], g = M.roomGroups[C.room];
     if (!r || !g || !PEOPLE.byName[C.ch]) continue;
     const v = buildRealVisitor(Object.assign({ coat: '#555', pants: '#333', h: 1.7 }, C.K || {}), C.ch);
@@ -776,7 +780,8 @@ function outStep(M, n, dt) {
   const pd = Math.hypot(P.x - n.x, P.z - n.z);
   const near = Math.abs((M.feet || 0) - (r.y0 + (n.fy || 0))) < 250;      // 나와 같은 높이에 있을 때만(데크 위에서는 모른 척)
   n.pd = near ? pd : 1e9;
-  if (n.role === 'golfer') { if (typeof golferStep === 'function') golferStep(M, n, dt); return; }   // v120 — 카트 · 티샷 · 퍼팅(acts.js)
+  if (n.role === 'golfer') { if (typeof golferStep === 'function') golferStep(M, n, dt); return; }
+  if (n.role === 'range') { if (typeof rangeStep === 'function') rangeStep(M, n, dt); return; }   // v122 — 드라이빙 레인지(expand.js)   // v120 — 카트 · 티샷 · 퍼팅(acts.js)
   if (n.finale) {
     // v103 — 마지막 방송: 그 자리에 멈춰 건물(명예의 전당)을 바라본다
     const h = M.roomById.hall;
@@ -931,7 +936,7 @@ function npcAsk(n) {
   if (n.talk) crowdTalkEnd(n.talk);
   if (n.out) {
     if (n.role === 'watch') { monoForce(n, ['…'], 'mono', 0.3); n.cool = 0; return true; }
-    if (n.role === 'golfer') { monoForce(n, pickOf(GOLFER_SAY), 'say', 0.3); return true; }
+    if (n.role === 'golfer' || n.role === 'range') { monoForce(n, pickOf(GOLFER_SAY), 'say', 0.3); return true; }
     if (n.role === 'kid') { n.state = 'stare'; n.tgt = null; n.wait = 3.6; monoForce(n, pickOf(isNightMode() ? ASK_KID : DAY_OUT.near), 'kid', 0.3); return true; }
     n.state = 'look'; n.tgt = null; n.face = { x: PX, z: PZ }; n.wait = 7;
     monoForce(n, pickOf((isNightMode() ? MONO_OUT : DAY_OUT).stranger), 'say', 0.3);

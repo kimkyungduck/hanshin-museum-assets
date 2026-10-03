@@ -1097,6 +1097,7 @@ function buildScene() {
   buildDoorDressing();
   if (typeof buildNight === 'function') buildNight();          // v97 — 조명탑 · 가로등(벽이 선 뒤에 — 자리 검사)
   if (typeof buildTraces === 'function') buildTraces();        // v116 — 전시관 밖의 흔적(낙서 · 이름 쓴 공 · 바를 정 · 벤치)
+  if (typeof buildExpand === 'function') buildExpand();        // v122 — 서쪽 숲 · 옛 클럽하우스 / 동쪽 드라이빙 레인지 · 주차장
   buildExhibitMeshes();
 }
 
@@ -2803,7 +2804,8 @@ function loop(now) {
   guardStep('escape', () => { if (typeof stepEscape === 'function') stepEscape(dt); });    // v114 — 방탈출
   guardStep('dlg', () => { if (typeof stepDlg === 'function') stepDlg(dt); });            // v115 — 대화창
   guardStep('acts', () => { if (typeof stepActs === 'function') stepActs(dt); });         // v118 — 몸짓의 플래시 · 쿨다운
-  guardStep('horror', () => { if (typeof stepHorror === 'function') stepHorror(dt); });   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
+  guardStep('horror', () => { if (typeof stepHorror === 'function') stepHorror(dt); });
+  guardStep('expand', () => { if (typeof stepExpand === 'function') stepExpand(dt); });   // v122 — 숲 · 클럽하우스 · 레인지   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }
@@ -3159,6 +3161,9 @@ function paintPrompt() {
    예전엔 같은 크기 칸의 격자였다 — 방 크기와 위치가 제각각인 복층 평면에서는 거짓말이 된다. */
 const MM_W = () => (innerWidth <= 620 ? 150 : 200);
 function mmFrame(lv, outdoorField) {
+  const zn = M.room && M.room.zone;                                   // v122 — 숲 · 클럽하우스 / 레인지 · 주차장
+  if (zn === 'west') return { x0: -9800, z0: -1000, x1: -3600, z1: 6800 };
+  if (zn === 'east') return { x0: 8400, z0: -1000, x1: 15200, z1: 6800 };
   if (outdoorField) return { x0: -4200, z0: -13200, x1: 9000, z1: 6800 };
   return { x0: -300, z0: -1100, x1: 5100, z1: 3300 };
 }
@@ -3184,8 +3189,8 @@ function drawMinimap() {
       + 'px;width:' + ((x1 - x0) * k).toFixed(1) + 'px;height:' + ((z1 - z0) * k).toFixed(1) + 'px">' + label + '</div>';
   }).join('');
   el.innerHTML = '<div class="mm-plan" style="width:' + W + 'px;height:' + H + 'px">' + cells
-    + '<i class="mm-me" id="mmMe"></i></div><b class="mm-lv">' + (inField ? '18번 홀' : (lv ? '2F' : '1F')) + '</b>';
-  M.mmKey = (inField ? 'F' : 'B') + lv;
+    + '<i class="mm-me" id="mmMe"></i></div><b class="mm-lv">' + (cur && cur.zone === 'west' ? '서쪽 숲' : cur && cur.zone === 'east' ? '드라이빙 레인지' : inField ? '18번 홀' : (lv ? '2F' : '1F')) + '</b>';
+  M.mmKey = (inField ? 'F' : 'B') + lv + ((cur && cur.zone) || '');
   M.meKey = '';
   paintMe();
 }
@@ -3201,7 +3206,7 @@ function paintMe() {
   // 층이 바뀌었거나 필드로 나갔으면 판을 새로 그린다
   const cur = M.room;
   const inField = cur && cur.outdoor && cur.lv === 0 && !String(cur.id).startsWith('ter');
-  const want = (inField ? 'F' : 'B') + (cur && !cur.outdoor ? cur.lv : (cur && cur.lv) || 0);
+  const want = (inField ? 'F' : 'B') + (cur && !cur.outdoor ? cur.lv : (cur && cur.lv) || 0) + ((cur && cur.zone) || '');
   if (want !== M.mmKey) { drawMinimap(); return; }
   const { F, k } = M.mm;
   const px = (M.pos.x * CM - F.x0) * k, pz = (M.pos.z * CM - F.z0) * k;
@@ -3258,7 +3263,7 @@ function setScrim(url) {
 }
 
 function openExhibit(e) {
-  if (e.npcRef && typeof dlgOpen === 'function' && e.npcRef.role !== 'watch' && e.npcRef.role !== 'golfer') { dlgOpen(e.npcRef); return; }   // 골퍼(v120)는 카트 · 스윙 중이라 한 마디만   // v115 — 대화창(상세 패널 대신)
+  if (e.npcRef && typeof dlgOpen === 'function' && e.npcRef.role !== 'watch' && e.npcRef.role !== 'golfer' && e.npcRef.role !== 'range') { dlgOpen(e.npcRef); return; }   // 골퍼(v120)는 카트 · 스윙 중이라 한 마디만   // v115 — 대화창(상세 패널 대신)
   if (e.npcRef && typeof npcAsk === 'function' && npcAsk(e.npcRef)) return;      // v99 — 관람객은 먼저 대답한다
   if (e.onUse) { e.onUse(e); return; }                                          // v108 — 문(수장고)
   M.openId = e.id;

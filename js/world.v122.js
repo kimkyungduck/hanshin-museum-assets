@@ -475,9 +475,10 @@ function buildRoomShell(r, g) {
     /* 천장은 아래를 본다 — 해·스포트는 닿지 않고 환경맵도 바닥(어두운 쪽)을 비춰서
        흰 천장이 올리브색으로 가라앉았다. 실제로는 벽·바닥에서 튄 빛이 천장을 밝힌다 →
        그 몫을 자체 발광으로 조금 준다 */
-    const cc = new THREE.Color(CEIL_COL[r.mat] || 0xE8E3D9);
+    const old = /^old/.test(r.mat || '');                                  // v122 — 옛 클럽하우스: 누렇게 바랜 천장 · 줄조명 없음
+    const cc = new THREE.Color(CEIL_COL[r.mat] || (old ? 0x857D70 : 0xE8E3D9));
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(wM, dM),
-      new THREE.MeshStandardMaterial({ color: cc, roughness: 0.95, emissive: cc.clone().multiplyScalar(r.mat === 'dark' ? 0.04 : 0.2) }));
+      new THREE.MeshStandardMaterial({ color: cc, roughness: 0.95, emissive: cc.clone().multiplyScalar(r.mat === 'dark' || old ? 0.04 : 0.2) }));
     ceil.rotation.x = Math.PI / 2;
     ceil.position.set(cx, hM, cz);
     ceil.material.userData.envK = 0.5;
@@ -490,7 +491,7 @@ function buildRoomShell(r, g) {
     const len = Math.max(1, wM - 2.4);
     const bars = [];
     for (let i = 0; i < n; i++) bars.push(boxAt(len, 0.02, 0.07, cx, hM - 0.012, r.z0 / CM + dM * (i + 0.5) / n));
-    g.add(new THREE.Mesh(mergeGeos(bars), strip));
+    if (!old) g.add(new THREE.Mesh(mergeGeos(bars), strip));
   }
   if (!hasRoomAbove(r)) {
     // 지붕 판 — 바깥에서 보이는 윗면 + 해를 막아 실내를 그늘지게 한다

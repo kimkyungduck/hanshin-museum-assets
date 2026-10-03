@@ -122,6 +122,34 @@ const ROOMS = [
   { id: 'practice', content: 'empty', outdoor: true, rect: { x: 4800, z: -800, w: 4000, d: 7400 }, lv: 0,
     mat: 'lawn', name: '퍼팅 연습장', en: 'PUTTING GREEN', accent: '#9BC27A',
     desc: '컵 넷짜리 연습 그린. 그린 위에서 퍼팅해 볼 수 있다.' },
+  /* v122 — 맵 확장. 서쪽: 숲길(woods + 조각 셋) · 옛 클럽하우스(실내 넷) / 동쪽: 드라이빙 레인지 · 주차장(expand.js) */
+  { id: 'woods', zone: 'west', content: 'empty', outdoor: true, rect: { x: -6200, z: -800, w: 2200, d: 7400 }, lv: 0,
+    mat: 'forest', name: '숲길', en: 'WOODLAND PATH', accent: '#7FA06A',
+    desc: '침엽수 사이 자갈길. 끝에 1998년에 문 닫은 옛 클럽하우스가 있다.' },
+  { id: 'woodsN', part: 'woods', zone: 'west', content: 'empty', outdoor: true, rect: { x: -9600, z: -800, w: 3400, d: 2600 }, lv: 0,
+    mat: 'forest', name: '숲길', en: 'WOODLAND PATH', accent: '#7FA06A', desc: '' },
+  { id: 'woodsS', part: 'woods', zone: 'west', content: 'empty', outdoor: true, rect: { x: -9600, z: 4200, w: 3400, d: 2400 }, lv: 0,
+    mat: 'forest', name: '숲길', en: 'WOODLAND PATH', accent: '#7FA06A', desc: '' },
+  { id: 'woodsW', part: 'woods', zone: 'west', content: 'empty', outdoor: true, rect: { x: -9600, z: 1800, w: 1000, d: 2400 }, lv: 0,
+    mat: 'forest', name: '숲길', en: 'WOODLAND PATH', accent: '#7FA06A', desc: '' },
+  { id: 'oclobby', zone: 'west', content: 'empty', rect: { x: -7400, z: 1800, w: 1200, d: 1200 }, lv: 0, h: 380,
+    mat: 'oldclub', name: '옛 클럽하우스', en: 'OLD CLUBHOUSE', accent: '#B08A4A',
+    desc: '1998년 폐관. 프런트에 방명록이 펼쳐진 채 굳어 있다.' },
+  { id: 'oclocker', zone: 'west', content: 'empty', rect: { x: -8600, z: 1800, w: 1200, d: 1200 }, lv: 0, h: 380,
+    mat: 'oldtile', name: '라커룸', en: 'LOCKER ROOM', accent: '#8C988E',
+    desc: '녹슨 라커 열여덟 칸. 이름표가 아직 붙어 있다.' },
+  { id: 'ocshower', zone: 'west', content: 'empty', rect: { x: -8600, z: 3000, w: 1200, d: 1200 }, lv: 0, h: 380,
+    mat: 'oldtile', name: '샤워실', en: 'SHOWER ROOM', accent: '#8C988E',
+    desc: '칸막이 넷. 바닥 타일 줄눈이 검다.' },
+  { id: 'ocdine', zone: 'west', content: 'empty', rect: { x: -7400, z: 3000, w: 1200, d: 1200 }, lv: 0, h: 380,
+    mat: 'oldclub', name: '식당', en: 'DINING ROOM', accent: '#B08A4A',
+    desc: '테이블 넷. 한 자리만 차려져 있다.' },
+  { id: 'range', zone: 'east', content: 'empty', outdoor: true, rect: { x: 8800, z: -800, w: 6200, d: 5400 }, lv: 0,
+    mat: 'lawn', name: '드라이빙 레인지', en: 'DRIVING RANGE', accent: '#9BC27A',
+    desc: '지붕 덮인 타석 여덟. 과녁 그린까지 50 · 80 · 100 · 150 야드.' },
+  { id: 'parking', zone: 'east', content: 'empty', outdoor: true, rect: { x: 8800, z: 4600, w: 6200, d: 2000 }, lv: 0,
+    mat: 'asphalt', name: '주차장', en: 'PARKING', accent: '#B8B4A8',
+    desc: '레인지 손님들 차. 몇 대는 오래 서 있었다.' },
   /* v108 — 지하 수장고(호러 10단계). 명예의 전당 바로 밑. 통로가 없다 — 밤이 깊으면 명예의 전당 서쪽 벽에
      생기는 '관계자 외 출입금지' 문으로만 내려간다(haunt.js). 미니맵 · 안내판 · 관리자 순간이동에 나오지 않는다 */
   { id: 'vault', content: 'empty', rect: { x: 0, z: 0, w: 1600, d: 1500 }, lv: -1, h: 380,
@@ -154,6 +182,8 @@ const CONNS = [
   ['champion', 'terE', 'window'],
   // 2층 사진 갤러리 — 그랜드 홀 위쪽 벽에 창을 내서 홀을 내려다본다
   ['gallery', 'grand', 'window'], ['gallery', 'hallW', 'window'],
+  // v122 — 옛 클럽하우스: 숲길에서 로비로, 로비에서 라커룸 · 식당으로, 라커룸에서 샤워실로
+  ['woods', 'oclobby', 'door'], ['oclobby', 'oclocker', 'door'], ['oclobby', 'ocdine', 'door'], ['oclocker', 'ocshower', 'door'],
 ];
 
 /** 외벽 모양 — [방, 면(n/s/e/w), 종류]. 바깥(또는 아무것도 없는 쪽)과 맞닿은 면에만 쓴다 */
@@ -164,6 +194,7 @@ const FACADE = [
   ['hall', 'w', 'window'], ['trophy', 'w', 'window'],
   ['archive', 'e', 'window'], ['theater', 'e', 'wall'],
   ['champion', 'e', 'window'],
+  ['ocdine', 'e', 'window'], ['oclobby', 'n', 'window'], ['oclocker', 'w', 'window'], ['ocdine', 's', 'window'],
 ];
 
 /* ── 분위기용 더미 오브젝트 ────────────────────────────────
@@ -707,7 +738,7 @@ function buildExhibits(A) {
   ROOMS.forEach((r, i) => {
     // 닫힌 방과 작업실은 소품을 두지 않는다(작업실은 빈 상태로 시작해야 쓸모가 있다)
     // 계단·바깥에는 소화기·화분을 두지 않는다(바깥 소품은 world.js 가 직접 만든다)
-    if (r.closed || r.secret || r.stair || r.outdoor) return;
+    if (r.closed || r.secret || r.stair || r.outdoor || r.zone) return;          // v122 — 새 구역(클럽하우스)은 expand.js 가 직접 꾸민다
     const a = PROPS[(i * 3) % PROPS.length];
     const b = PROPS[(i * 3 + 1) % PROPS.length];
     byRoom[r.id].push({ type: 'prop', sprite: a.sprite, icon: a.icon, label: a.label, title: a.label, body: a.say });

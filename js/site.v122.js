@@ -707,7 +707,7 @@ function dressGarden(r, g) {
   flowerBeds(g, [[-24, 16, 1.6, 7], [-16, 16, 1.6, 7], [-24, 42, 1.6, 7], [-16, 42, 1.6, 7]]);
   // 산울타리 — 정원 바깥 테두리(부딪힌다)
   const hedgeM = new THREE.MeshStandardMaterial({ color: 0x2E5A2A, roughness: 0.9 });
-  const hedges = [[-39.4, 29, 1.0, 72], [-20, 65.5, 40, 1.0]];
+  const hedges = [[-39.4, 10, 1.0, 34], [-39.4, 48, 1.0, 34], [-20, 65.5, 40, 1.0]];      // v122 — z 27~31m 쪽문(숲길로)
   for (const [x, z, w, d] of hedges) {
     const h = rbox(w, 1.1, d, 0.2, hedgeM); h.position.set(x, 0.55, z); h.castShadow = true; g.add(h);
     block(x * CM - w * 50 - 10, x * CM + w * 50 + 10, z * CM - d * 50 - 10, z * CM + d * 50 + 10);
@@ -774,8 +774,9 @@ function dressPractice(r, g) {
   for (const [x, z, ry] of [[58, 14, 0], [76, 14, 0], [52, 34, Math.PI / 2]]) { const b = buildObject3D('bench'); b.position.set(x, 0, z); b.rotation.y = ry; g.add(b); }
   for (const [x, z, s] of [[84, 4, 1.3], [86, 30, 1.2], [52, 60, 1.1], [84, 44, 1.2]]) g.add(smallTree(x, 0, z, s));
   const hedgeM = new THREE.MeshStandardMaterial({ color: 0x2E5A2A, roughness: 0.9 });
-  const h = rbox(1.0, 1.1, 72, 0.2, hedgeM); h.position.set(87.4, 0.55, 29); h.castShadow = true; g.add(h);
-  block(8690, 8800, -800, 6600);
+  // v122 — z 44~48m 쪽문(드라이빙 레인지로)
+  for (const [z, d] of [[18.5, 51], [56.5, 17]]) { const h = rbox(1.0, 1.1, d, 0.2, hedgeM); h.position.set(87.4, 0.55, z); h.castShadow = true; g.add(h); }
+  block(8690, 8800, -800, 4400); block(8690, 8800, 4800, 6600);
 }
 
 /* ══════════════════════════════════════════════════════════

@@ -144,6 +144,7 @@ const ACT_SHOT = [['… 안 나오네요.'], ['어? 화면엔 두 분인데.'], 
 function actPick(n) {
   const night = isNightMode(), r = M.roomById[n.room];
   if (n.role === 'golfer') return golferAct(n);
+  if (n.role === 'range') return rangeAct(n);
   // v120 — 사물을 쓰러 왔다(정수기 · 벤치)
   if (!n.out && n.state === 'look' && n.goal && n.goal.use && !n.goal.used) return n.goal.kind;
   if (n.out) {
@@ -174,6 +175,7 @@ function actPick(n) {
 function actOk(n, id) {
   const s = n.state, A = ACTS[id];
   if (n.role === 'golfer') return golferAct(n) === id;
+  if (n.role === 'range') return rangeAct(n) === id;
   if (id === 'drink' || id === 'sit') return s === 'look';
   if (n.out) {
     if (id === 'beckon') return s === 'look';
@@ -324,13 +326,13 @@ function actStep(n, dt) {
     if (!A.end && A.id === 'pockets' && n.state === 'look' && !n.out && Math.random() < 0.5) { A.t = 0; A.dur = 4 + Math.random() * 5; }
     else A.end = true;
   }
-  if (!A.id && (A.cool <= 0 || (n.role === 'golfer' && golferAct(n)) || usePending)) {
+  if (!A.id && (A.cool <= 0 || (n.role === 'golfer' && golferAct(n)) || n.role === 'range' || usePending)) {
     const id = actPick(n);
     if (id) {
       const D = ACTS[id].dur, walkish = n.state === 'walk' || id === 'putt' || n.state === 'stare' || n.state === 'mono';
       Object.assign(A, { id, t: 0, end: false, dur: walkish ? 999 : D ? D[0] + Math.random() * (D[1] - D[0]) : 4 + Math.random() * 6,
         slow: id === 'clap' && night, shoot: 0, snapT: 2 + Math.random() * 3, hitPh: 0, hitK: -1, ev: {}, useE: null, sub: null });
-      if (n.role === 'golfer') A.dur = 999;
+      if (n.role === 'golfer' || n.role === 'range') A.dur = 999;
       else if (id === 'drink' || id === 'sit') {
         // 정수기 · 벤치 — 다 할 때까지 그 자리(crowd 의 대기 시간을 늘린다)
         n.goal.used = true; A.useE = n.goal.use;
