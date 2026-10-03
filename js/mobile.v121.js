@@ -19,7 +19,8 @@ function mobileSetup() {
   if (!gal || MOB.dock) return;
   const dock = MOB.dock = document.createElement('div'); dock.className = 'm-dock'; dock.id = 'mDock';
   gal.appendChild(dock);
-  // 지도 — 끄고 켜기(기억한다)
+  // 지도 — 끄고 켜기(기억한다). v121: ui.js 가 먼저 만들었으면 그대로 쓴다
+  if (!document.getElementById('mmBtn')) {
   const mm = document.createElement('button'); mm.id = 'mmBtn'; mm.className = 'bgm-chip mm-btn'; mm.setAttribute('aria-label', '지도');
   mm.innerHTML = '<i class="ci">🗺</i><span class="ct"> 지도</span>';
   let off = false; try { off = localStorage.getItem('museum-mm') === '0'; } catch (e) { /* 기본 켬 */ }
@@ -31,6 +32,7 @@ function mobileSetup() {
     try { localStorage.setItem('museum-mm', now ? '0' : '1'); } catch (e) { /* 기억 못 해도 된다 */ }
   });
   gal.appendChild(mm);
+  }
   // 처음 안내 — 한 번 움직이거나 둘러보면 사라진다
   const hl = document.createElement('div'); hl.className = 'm-hint l'; hl.innerHTML = '<i></i>밀어서 이동<br><small>끝까지 밀면 달리기</small>';
   const hr = document.createElement('div'); hr.className = 'm-hint r'; hr.innerHTML = '끌어서 둘러보기';

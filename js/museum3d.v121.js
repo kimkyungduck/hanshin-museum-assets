@@ -842,7 +842,7 @@ function galMarkup() {
       <p class="ctrl-hint" id="ctrlHint">
         이동 <b>W</b><b>A</b><b>S</b><b>D</b> · 달리기 <b>Shift</b> &nbsp;·&nbsp; 둘러보기 <b>드래그</b> &nbsp;·&nbsp; 조사 <b>E</b> · 클릭
       </p>
-      <button class="lock-chip" id="lockChip">🔒 마우스 고정 · FPS 조작</button>
+      <button class="lock-chip" id="lockChip" aria-label="마우스 고정"><i class="ci"></i><span class="ct">마우스 고정 · FPS 조작</span></button>
       <button class="bgm-chip hidden" id="bgmChip" aria-label="배경음악"></button>
       ${M.canManage ? '<button class="admin-chip" id="adminChip" aria-label="전시 설정"><i class="ci">⚙</i><span class="ct"> 전시 설정 (F2)</span></button>' : ''}
       <div class="stick" id="stick"><i id="knob"></i></div>
@@ -2580,10 +2580,12 @@ const PITCH_UP = 0.55;
 
 function bindInput() {
   const gal = $('gal'), stick = $('stick'), knob = $('knob');
+  if (typeof uiSetup === 'function') uiSetup();               // v121 — 도구 레일(ui.js)
 
   const enableTouch = () => {
     if (M.touch) return;
     M.touch = true;
+    if (typeof uiDock === 'function') uiDock();
     document.body.classList.add('is-touch');
     $('prKey').textContent = 'TAP';
     paintPrompt();
@@ -2710,7 +2712,7 @@ function bindInput() {
     // v120 — 골프 중 Esc: 브라우저가 키를 고정 해제에 써 버려 keydown 이 안 온다 → 고정이 풀린 것으로 그만두기
     if (was && !M.locked && typeof GOLF !== 'undefined' && GOLF.mode && typeof golfQuit === 'function') golfQuit();
     chip.classList.toggle('on', M.locked);
-    chip.textContent = M.locked ? '🔓 해제 (Esc)' : '🔒 마우스 고정 · FPS 조작';
+    chip.innerHTML = '<i class="ci"></i><span class="ct">' + (M.locked ? '마우스 고정 해제 (Esc)' : '마우스 고정 · FPS 조작') + '</span>';
     $('gal').classList.toggle('locked', M.locked);
     $('ctrlHint').innerHTML = M.locked
       ? '이동 <b>W</b><b>A</b><b>S</b><b>D</b> · 달리기 <b>Shift</b> · 둘러보기 <b>마우스</b> · 조사 <b>좌클릭</b> · 해제 <b>Esc</b>'
@@ -2801,6 +2803,7 @@ function loop(now) {
   guardStep('escape', () => { if (typeof stepEscape === 'function') stepEscape(dt); });    // v114 — 방탈출
   guardStep('dlg', () => { if (typeof stepDlg === 'function') stepDlg(dt); });            // v115 — 대화창
   guardStep('acts', () => { if (typeof stepActs === 'function') stepActs(dt); });         // v118 — 몸짓의 플래시 · 쿨다운
+  guardStep('horror', () => { if (typeof stepHorror === 'function') stepHorror(dt); });   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

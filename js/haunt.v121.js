@@ -1188,14 +1188,31 @@ function hauntStain(x, z, room) {
   if (ds[0][0] > 170) return;
   const side = ds[0][1], g = M.roomGroups[room.id]; if (!g) return;
   if (!HAUNT.stainTex) {
-    const cv = makeCanvas(128, 256), c = cv.getContext('2d');
-    c.filter = 'blur(7px)'; c.fillStyle = 'rgba(8,6,5,.92)';
-    c.beginPath(); c.ellipse(64, 44, 22, 28, 0, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.moveTo(22, 250); c.bezierCurveTo(24, 120, 38, 82, 64, 80); c.bezierCurveTo(90, 82, 104, 120, 106, 250); c.closePath(); c.fill();
-    c.filter = 'none';
+    /* v121 — 사용자 스크린샷: 번진 연기처럼 보여 사람으로 읽히지 않았다(blur 7px · 머리와 몸통 두 덩어리뿐).
+       → 윤곽을 또렷하게: 머리 · 늘어진 긴 머리카락 · 좁은 어깨 · 늘어뜨린 두 팔 · 가슴께에 짚은 손바닥 둘 · 아래로 흘러내린 물자국 */
+    const W = 200, H = 440, cv = makeCanvas(W, H), c = cv.getContext('2d'), R = rnd(919);
+    c.fillStyle = 'rgba(12,9,8,.95)'; c.filter = 'blur(2.2px)';
+    const body = () => {
+      c.beginPath(); c.ellipse(100, 58, 25, 32, 0, 0, Math.PI * 2); c.fill();                       // 머리
+      c.beginPath(); c.moveTo(74, 52); c.bezierCurveTo(66, 110, 70, 150, 78, 170); c.lineTo(122, 170); c.bezierCurveTo(130, 150, 134, 110, 126, 52); c.fill();   // 늘어진 머리카락
+      c.beginPath(); c.moveTo(58, 128); c.bezierCurveTo(70, 104, 130, 104, 142, 128); c.lineTo(136, 300); c.bezierCurveTo(120, 316, 80, 316, 64, 300); c.closePath(); c.fill();   // 몸통
+      for (const s of [-1, 1]) { c.beginPath(); c.moveTo(100 + s * 40, 128); c.quadraticCurveTo(100 + s * 54, 200, 100 + s * 52, 268); c.lineTo(100 + s * 42, 270); c.quadraticCurveTo(100 + s * 42, 200, 100 + s * 30, 136); c.fill(); }   // 팔
+      for (const s of [-1, 1]) { c.beginPath(); c.moveTo(100 + s * 14, 300); c.lineTo(100 + s * 18, 420); c.lineTo(100 + s * 6, 420); c.lineTo(100 + s * 2, 300); c.fill(); }   // 다리(아래로 옅어진다)
+    };
+    body();
+    // 가슴께에 짚은 손바닥 둘(벽을 안에서 민 것처럼)
+    for (const s of [-1, 1]) { c.save(); c.translate(100 + s * 26, 190); c.beginPath(); c.ellipse(0, 6, 12, 14, 0, 0, Math.PI * 2); c.fill();
+      for (let f = 0; f < 4; f++) { c.beginPath(); c.ellipse(-9 + f * 6, -14 - Math.abs(f - 1.5) * 2, 3, 9, 0, 0, Math.PI * 2); c.fill(); } c.restore(); }
+    // 흘러내린 자국
+    c.filter = 'blur(1px)';
+    for (let i = 0; i < 16; i++) { const x = 64 + R() * 72, y = 250 + R() * 60, L = 40 + R() * 110; c.fillRect(x, y, 2 + R() * 2.5, L); c.beginPath(); c.arc(x + 1.5, y + L, 2.6, 0, 6.28); c.fill(); }
+    // 아래로 갈수록 옅게
+    c.filter = 'none'; c.globalCompositeOperation = 'destination-in';
+    const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.62, 'rgba(0,0,0,.95)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = gr; c.fillRect(0, 0, W, H);
     HAUNT.stainTex = new THREE.CanvasTexture(cv);
   }
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.75), new THREE.MeshBasicMaterial({ map: HAUNT.stainTex, transparent: true, opacity: 0.62, depthWrite: false }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.76), new THREE.MeshBasicMaterial({ map: HAUNT.stainTex, transparent: true, opacity: 0.72, depthWrite: false }));
   const px = side === 'x0' ? room.x0 + 3 : side === 'x1' ? room.x1 - 3 : x, pz = side === 'z0' ? room.z0 + 3 : side === 'z1' ? room.z1 - 3 : z;
   m.position.set(px / CM, 0.9, pz / CM);
   m.rotation.y = side === 'x0' ? Math.PI / 2 : side === 'x1' ? -Math.PI / 2 : side === 'z0' ? 0 : Math.PI;

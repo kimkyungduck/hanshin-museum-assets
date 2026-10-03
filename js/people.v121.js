@@ -168,18 +168,22 @@ function peopleMaterial(ch, K) {
     // MakeHuman 사람 — 제 옷 그대로(아틀라스에 이미 색이 있다)
     (ch.J.parts || []).forEach((p, i) => { if (i < P) rgh[i] = p.rough; });
   }
+  // v121 — 머리카락 부위(사람마다 번호가 다르다). 사용자: "npc 는 좀 투명도가 있던데" — 옅은 가닥이 alphaTest(0.5)에 걸려
+  //        숭숭 뚫려 뒤 계단이 비쳤다(앞머리가 덮는 얼굴까지). 셰이더에서 머리카락 알파만 진하게 올린다
+  const hair = []; for (let i = 0; i < P; i++) hair.push(ch.v === 2 && ch.J.parts && ch.J.parts[i] && ch.J.parts[i].kind === 'hair' ? 1 : (ch.v === 1 && i === 3 ? 1 : 0));
   // MakeHuman 옷 · 머리는 얇은 판(뒷면이 보인다) — 양면
   const m = new THREE.MeshStandardMaterial({ map: T.c, normalMap: T.n, alphaTest: 0.5, roughness: 1, metalness: 0,
     side: ch.v === 2 ? THREE.DoubleSide : THREE.FrontSide });
   m.userData.noBatch = true;
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uTint = { value: tint }; sh.uniforms.uColz = { value: colz }; sh.uniforms.uLum = { value: lum }; sh.uniforms.uRgh = { value: rgh };
+    sh.uniforms.uTint = { value: tint }; sh.uniforms.uColz = { value: colz }; sh.uniforms.uLum = { value: lum }; sh.uniforms.uRgh = { value: rgh }; sh.uniforms.uHair = { value: hair };
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float aPart; uniform vec3 uTint[8]; uniform float uColz[8], uLum[8], uRgh[8];\nvarying vec3 vTint; varying float vColz, vLum, vRgh;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n  int pi = int(aPart + 0.5); vTint = uTint[pi]; vColz = uColz[pi]; vLum = uLum[pi]; vRgh = uRgh[pi];');
+      .replace('#include <common>', '#include <common>\nattribute float aPart; uniform vec3 uTint[8]; uniform float uColz[8], uLum[8], uRgh[8], uHair[8];\nvarying vec3 vTint; varying float vColz, vLum, vRgh, vHair;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n  int pi = int(aPart + 0.5); vTint = uTint[pi]; vColz = uColz[pi]; vLum = uLum[pi]; vRgh = uRgh[pi]; vHair = uHair[pi];');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vTint; varying float vColz, vLum, vRgh;')
+      .replace('#include <common>', '#include <common>\nvarying vec3 vTint; varying float vColz, vLum, vRgh, vHair;')
       .replace('#include <map_fragment>', `#include <map_fragment>
+        if (vHair > 0.5) diffuseColor.a = smoothstep(0.06, 0.32, diffuseColor.a);   // 머리숱 — 옅은 가닥까지 채운다
         {
           float lum = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
           // 새로 입히기 — 천의 명암(평균 대비)만 남기고 색은 새로. 어두운 천은 잡음이 커서 명암을 조금 눌러 쓴다
