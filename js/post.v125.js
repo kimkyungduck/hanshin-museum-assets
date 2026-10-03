@@ -289,15 +289,21 @@ function createPost(renderer, scene, camera, opt = {}) {
   function enableAO(on) {
     if (!useAO) return false;
     aoOn = on !== false;
-    aoSkip = [];
-    scene.traverse((o) => {
-      if (o.isSprite) { aoSkip.push(o); return; }          // v97 — 번짐(스프라이트)은 깊이를 남기지 않는다
-      if (!o.isMesh) return;
-      const m = Array.isArray(o.material) ? o.material[0] : o.material;
-      if (!m || m.transparent || m.alphaTest > 0 || m.isShaderMaterial || m.isMeshBasicMaterial && m.depthWrite === false) aoSkip.push(o);
-    });
+    collectSkip();
     return aoOn;
   }
+  /* v125 — 목록을 처음 한 번만 모았더니, 나중에 생긴 반투명한 것(빛 번짐 · 물결 · 손자국 · 발자국 · 방탈출 물건의 빛 …)이
+     깊이 프리패스에 그대로 그려져 둘레에 검은 네모 그늘이 졌다 → 1.5초마다 다시 모은다 */
+  function collectSkip() {
+    aoSkip = [];
+    scene.traverse((o) => {
+      if (o.isSprite || o.isLine || o.isLineSegments || o.isPoints) { aoSkip.push(o); return; }   // v97 — 번짐(스프라이트)은 깊이를 남기지 않는다
+      if (!o.isMesh) return;
+      const m = Array.isArray(o.material) ? o.material[0] : o.material;
+      if (!m || m.transparent || m.alphaTest > 0 && !o.isSkinnedMesh || m.isShaderMaterial || m.isMeshBasicMaterial && m.depthWrite === false || m.depthTest === false) aoSkip.push(o);
+    });
+  }
+  let aoFrame = 0;
 
   function render(t) {
     finalMat.uniforms.uTime.value = t;
@@ -309,6 +315,7 @@ function createPost(renderer, scene, camera, opt = {}) {
 
     // (+) SSAO — 법선·깊이 프리패스 → 차폐 → 깊이 인식 블러
     if (useAO && aoOn) {
+      if (++aoFrame % 90 === 0) collectSkip();
       const was = aoSkip.map((m) => m.visible);
       aoSkip.forEach((m) => { m.visible = false; });
       const bg = scene.background, fog = scene.fog;

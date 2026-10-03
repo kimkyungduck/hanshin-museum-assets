@@ -223,6 +223,6 @@ function buildRealVisitor(K, i = 0) {
   idle.time = Math.random() * ch.clips.idle.duration;
   // 걷는 속도 1 배일 때 m/s — 한 주기 걸음 폭(단위 키) × 키 / 주기
   const natural = ch.clips.walk.speed ? ch.clips.walk.speed * h : (ch.clips.walk.stride || 0.6) * h / ch.clips.walk.duration;
-  return { root, mesh, mixer, walk, idle, natural, hM: h, real: true, morph: ch.morph && ch.morph.blink != null ? ch.morph : null,
+  return { root, mesh, mixer, walk, idle, natural, hM: h, real: true, chName: ch.name, morph: ch.morph && ch.morph.blink != null ? ch.morph : null,
     label: ch.v === 2 ? J.label : null, wear: ch.v === 2 ? J.wear : null };
 }

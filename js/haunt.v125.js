@@ -379,7 +379,73 @@ function stepTilts(dt) {
 }
 
 /* ── 새 초상 ──────────────────────────────────────────── */
-function portraitCanvas(eyes) {
+/* v125 — 사용자: "초상화 없는 거 … 그냥 사람 실루엣으로 하니까 느낌이 팍 식네".
+   이름 없는 초상(이젤) · 수장고의 초상들은 검은 윤곽뿐이었다 → 사람 얼굴을 따로 그려(오프스크린 렌더) 유화로 칠한다.
+     · 이름 없는 초상 — '그 사람'(p12). 처음엔 눈을 감고 있다가, 한 번 들여다보고 나면 눈을 뜨고 있다
+     · 수장고 북쪽 벽 스물네 점 — 같은 얼굴(그 사람, 눈을 뜬)
+     · 수장고 '오늘의 관람객' — 오늘 말을 건 관람객의 얼굴(내려갈 때 다시 그린다)
+   사람 모델이 아직 없으면 예전 윤곽 그림으로 */
+const FACE_CACHE = {};
+function faceRender(name, eyes, mood) {
+  const key = name + '|' + (eyes ? 1 : 0) + '|' + (mood || '');
+  if (FACE_CACHE[key]) return FACE_CACHE[key];
+  if (typeof PEOPLE === 'undefined' || !PEOPLE.ok || !PEOPLE.byName || !PEOPLE.byName[name] || !M.renderer || typeof buildRealVisitor !== 'function') return null;
+  const W = 480, H = 600, R = M.renderer;
+  const v = buildRealVisitor({ coat: '#111', pants: '#111', h: 1.7 }, name);
+  v.walk.setEffectiveWeight(0); v.idle.setEffectiveWeight(1); v.idle.time = 1.3; v.mixer.update(0);
+  const mi = v.mesh.morphTargetInfluences, mo = v.morph;
+  if (mi && mo) { if (mo.blink != null) mi[mo.blink] = eyes ? 0 : 1; if (mo.smile != null) mi[mo.smile] = mood === 'smile' ? 0.55 : 0; if (mo.talk != null) mi[mo.talk] = mood === 'open' ? 0.35 : 0; }
+  const sc = new THREE.Scene(); sc.add(v.root); v.root.updateMatrixWorld(true);
+  const B = typeof npcBones === 'function' ? npcBones(v) : {}, hp = B.head ? B.head.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(0, 1.55, 0);
+  const key1 = new THREE.DirectionalLight(0xFFE0B8, 2.6); key1.position.set(-0.9, hp.y + 0.7, 1.1); sc.add(key1);
+  const rim = new THREE.DirectionalLight(0x9AB0C8, 1.1); rim.position.set(1.0, hp.y + 0.4, -1.0); sc.add(rim);
+  sc.add(new THREE.HemisphereLight(0x8C8070, 0x1A120C, 0.45));
+  const cam = new THREE.PerspectiveCamera(17, W / H, 0.05, 10);
+  cam.position.set(hp.x + 0.04, hp.y + 0.12, hp.z + 1.6); cam.lookAt(hp.x, hp.y + 0.0, hp.z);
+  const rt = new THREE.WebGLRenderTarget(W, H); rt.texture.colorSpace = THREE.SRGBColorSpace;
+  const prevT = R.getRenderTarget(), prevC = R.getClearColor(new THREE.Color()), prevA = R.getClearAlpha();
+  const buf = new Uint8Array(W * H * 4);
+  try {
+    R.setRenderTarget(rt); R.setClearColor(0x1A140F, 1); R.clear(); R.render(sc, cam);
+    R.readRenderTargetPixels(rt, 0, 0, W, H, buf);
+  } finally { R.setRenderTarget(prevT); R.setClearColor(prevC, prevA); rt.dispose(); sc.remove(v.root); }
+  // 캔버스로 — 위아래를 뒤집어 옮기고 유화로 칠한다
+  const cv = makeCanvas(W, H), c = cv.getContext('2d'), im = c.createImageData(W, H);
+  for (let y = 0; y < H; y++) im.data.set(buf.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4);
+  // 색 — 바랜 바니시(따뜻하게 · 채도를 낮추고 · 대비를 조금)
+  for (let i = 0; i < im.data.length; i += 4) {
+    const r0 = im.data[i], g0 = im.data[i + 1], b0 = im.data[i + 2], l = 0.3 * r0 + 0.59 * g0 + 0.11 * b0;
+    const k = (x) => clamp((x - 128) * 1.12 + 128, 0, 255);
+    im.data[i] = k(l + (r0 - l) * 0.55 + 14); im.data[i + 1] = k(l + (g0 - l) * 0.55 + 4); im.data[i + 2] = k(l + (b0 - l) * 0.55 - 12);
+  }
+  c.putImageData(im, 0, 0);
+  // 붓결 — 밑색을 집어 짧은 획을 겹친다
+  const src = c.getImageData(0, 0, W, H).data, Rn = rnd(name.length * 31 + (eyes ? 7 : 3));
+  for (let i = 0; i < 4200; i++) {
+    const x = Rn() * W, y = Rn() * H, p = ((y | 0) * W + (x | 0)) * 4;
+    c.save(); c.translate(x, y); c.rotate(Rn() * Math.PI); c.globalAlpha = 0.28;
+    c.fillStyle = 'rgb(' + src[p] + ',' + src[p + 1] + ',' + src[p + 2] + ')'; c.fillRect(-4 - Rn() * 6, -1.2, 8 + Rn() * 12, 2.4 + Rn() * 1.5); c.restore();
+  }
+  c.globalAlpha = 1;
+  // 아직 얼굴이 없다(이름 없는 초상의 처음) — 얼굴 자리를 문질러 뭉갠다
+  if (!eyes) { const tmp = makeCanvas(W, H), tc = tmp.getContext('2d'); tc.filter = 'blur(16px)'; tc.drawImage(cv, 0, 0);
+    c.save(); c.beginPath(); c.ellipse(W / 2, H * 0.3, 92, 118, 0, 0, Math.PI * 2); c.clip(); c.drawImage(tmp, 0, 0);
+    c.fillStyle = 'rgba(40,30,22,.35)'; c.fillRect(0, 0, W, H); c.restore(); }
+  // 가장자리 어둠 · 갈라짐
+  const vg = c.createRadialGradient(W / 2, H * 0.42, H * 0.22, W / 2, H * 0.5, H * 0.72); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,5,3,.82)');
+  c.fillStyle = vg; c.fillRect(0, 0, W, H);
+  c.strokeStyle = 'rgba(20,12,6,.22)'; c.lineWidth = 0.8;
+  for (let i = 0; i < 70; i++) { let x = Rn() * W, y = Rn() * H; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 7; j++) { x += (Rn() - 0.5) * 40; y += (Rn() - 0.5) * 40; c.lineTo(x, y); } c.stroke(); }
+  return (FACE_CACHE[key] = cv);
+}
+/** 초상 그림 — who 의 얼굴(없으면 예전 윤곽). 받은 쪽이 위에 덧그리므로 늘 새 캔버스로 돌려준다 */
+function portraitCanvas(eyes, who, mood) {
+  let face = null;
+  try { face = faceRender(who || 'p12', eyes, mood); } catch (e) { face = null; }
+  if (face) { const cv = makeCanvas(face.width, face.height); cv.getContext('2d').drawImage(face, 0, 0); return cv; }
+  return portraitSil(eyes);
+}
+function portraitSil(eyes) {
   const W = 480, H = 600, cv = makeCanvas(W, H), c = cv.getContext('2d');
   const g = c.createRadialGradient(W / 2, H * 0.4, 20, W / 2, H * 0.45, H * 0.75);
   g.addColorStop(0, '#3A3129'); g.addColorStop(0.6, '#1C1713'); g.addColorStop(1, '#0B0907');
@@ -838,11 +904,11 @@ function dressVault(r, g) {
   }
   g.add(frames, pics);
   // 동쪽 벽 — 오늘 날짜의 초상
-  const sc = portraitCanvas(true), sctx = sc.getContext('2d');
+  const sc = portraitCanvas(true, HAUNT.metCh || 'p1', 'smile'), sctx = sc.getContext('2d');
   sctx.fillStyle = '#8C7A52'; sctx.fillRect(sc.width / 2 - 90, sc.height - 70, 180, 40);
   sctx.fillStyle = '#1A140E'; sctx.font = 'bold 22px sans-serif'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
   const d = new Date(); sctx.fillText(d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.', sc.width / 2, sc.height - 50);
-  const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace;
+  const st = new THREE.CanvasTexture(sc); st.colorSpace = THREE.SRGBColorSpace; VAULT.specialTex = st;
   const sp = new THREE.Group(); sp.position.set(W - 0.06, 1.55, 7.5); sp.rotation.y = -Math.PI / 2;
   sp.add(new THREE.Mesh(new THREE.BoxGeometry(0.98, 1.2, 0.06), wood));
   const spPic = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 1.08), std(0xFFFFFF, 0.55)); spPic.material.map = st; spPic.position.z = 0.032; sp.add(spPic);
@@ -912,6 +978,16 @@ function vaultDoorShow(quiet) {
   if (!quiet) { HAUNT.doorNew = true; HAUNT.paT = Math.min(HAUNT.paT, 10); }
   return true;
 }
+/** 수장고 '오늘의 관람객' — 오늘 말을 건 관람객의 얼굴로 다시 그린다(날짜 명패까지) */
+function vaultSpecialFace() {
+  if (!VAULT.specialTex || !HAUNT.metCh || VAULT.faceOf === HAUNT.metCh) return;
+  const sc = portraitCanvas(true, HAUNT.metCh, 'smile'), c = sc.getContext('2d');
+  c.fillStyle = '#8C7A52'; c.fillRect(sc.width / 2 - 90, sc.height - 70, 180, 40);
+  c.fillStyle = '#1A140E'; c.font = 'bold 22px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const d = new Date(); c.fillText(d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.', sc.width / 2, sc.height - 50);
+  VAULT.specialTex.image = sc; VAULT.specialTex.needsUpdate = true; VAULT.faceOf = HAUNT.metCh;
+  if (VAULT.special) VAULT.special.img = sc.toDataURL('image/jpeg', 0.85);
+}
 /** 내려가고 올라가기 — 어둠 · 삐걱 · 계단 발소리 */
 function vaultGo(down) {
   if (HAUNT.vaultBusy) return;
@@ -931,7 +1007,7 @@ function vaultGo(down) {
   for (let i = 0; i < 7; i++) setTimeout(() => { if (typeof sndStep === 'function') sndStep(down ? M.roomById.vault : stone, 0.75 - i * (down ? 0.04 : -0.02)); }, 700 + i * 340);
   setTimeout(() => {
     if (down) {
-      const r = M.roomById.vault; if (typeof hauntRec === 'function') hauntRec('vault'); 
+      const r = M.roomById.vault; if (typeof hauntRec === 'function') hauntRec('vault'); vaultSpecialFace();
       teleport(r);
       M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set(r.cx / CM, (M.feet + EYE) / CM, (r.z1 - 180) / CM); M.yaw = 0;
       if (!HAUNT.vaultTold) { HAUNT.vaultTold = true; setTimeout(() => toast(typeof TORCH !== 'undefined' && !TORCH.on ? '수장고 — 불이 없다. 손전등(F)' : '수장고 — 불이 없다', 3200), 900); }

@@ -179,17 +179,18 @@ function dlgTree(n) {
   const id = dlgDeal(n, 'dlgNight', Object.keys(T));
   // 한 번 쓴 나무를 고쳐 쓰지 않게 얕은 복사(방탈출 선택지를 덧붙인다)
   const tr = Object.assign({}, T[id]);
-  // 방탈출 — 쪽지를 들고 있으면
-  if (typeof ESC !== 'undefined' && ESC.on && ESC.ready && ESC.found.size > 0 && !ESC.done) {
-    tr.start = Object.assign({}, tr.start, { ch: [['이 쪽지 아세요?', 'note']].concat(tr.start.ch) });
+  // 방탈출(v125 — 그 사람의 물건) — 아직 못 찾은 물건이 어디 있는지 귀띔한다. 상영관 사람은 엉뚱한 데를 댄다
+  if (typeof ESC !== 'undefined' && ESC.on && ESC.ready && !ESC.done && typeof ESC_ITEMS !== 'undefined' && ESC.found.size < ESC_ITEMS.length) {
+    tr.start = Object.assign({}, tr.start, { ch: [['그 사람 물건, 혹시 보셨어요?', 'note']].concat(tr.start.ch) });
     tr.note = { say: () => {
-      const un = ESC.clues.map((c, k) => k).filter((k) => !ESC.found.has(k));
-      const k = un.length ? pickOf(un) : pickOf([0, 1, 2, 3]);
-      const liar = !!(n.info && n.info.room === 'theater');               // 상영관 사람은 거짓 숫자를 준다
-      const d = liar ? (ESC.clues[k].d + 3) % 10 : ESC.clues[k].d;
-      return (k + 1) + '번째 숫자요? … ' + d + '. ' + (liar ? '틀림없어요. 저는 거짓말 안 해요.' : '나머지는 직접 찾으세요.');
+      const un = ESC_ITEMS.map((d, k) => k).filter((k) => !ESC.found.has(k));
+      const it = ESC_ITEMS[pickOf(un)];
+      const liar = !!(n.info && n.info.room === 'theater');
+      const where = { theater: '상영관', trophy: '트로피실', vault: '수장고', mezz: '2층 회랑', hall: '명예의 전당', archive: '기록 보관실' };
+      const room = liar ? pickOf(Object.keys(where).filter((k) => k !== it.room)) : it.room;
+      return it.name + '요? … ' + where[room] + '에서 봤어요. ' + (liar ? '틀림없어요. 저는 거짓말 안 해요.' : '빛나고 있었어요. 아주 희미하게.');
     }, ch: [['고마워요', 'leave'], ['정말이에요?', 'note2']] };
-    tr.note2 = { say: '… 저 여기 온 지 오래됐어요. 숫자는 안 변해요. 사람만 변하지.', ch: [['떠난다', 'leave']] };
+    tr.note2 = { say: '… 그 사람 물건은 찾아 주면 안 돼요. 찾아 주면 — 배웅하러 나와요.', ch: [['떠난다', 'leave']] };
   }
   return tr;
 }
@@ -199,6 +200,7 @@ function dlgOpen(n) {
   if (DLG.open || !n) return;
   if (n.talk) crowdTalkEnd(n.talk);
   if (n.mono && n.mono.el) n.mono.el.remove(); n.mono = null;
+  if (n.v && n.v.chName && typeof HAUNT !== 'undefined') HAUNT.metCh = n.v.chName;   // v125 — 수장고 '오늘의 관람객' 얼굴
   DLG.open = true; DLG.n = n; DLG.tree = dlgTree(n); DLG.relock = M.locked;
   M.openId = 'dlg';
   if (M.locked) document.exitPointerLock();
