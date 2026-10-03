@@ -59,7 +59,8 @@ function sndChip() {
     c.addEventListener('click', (ev) => { ev.stopPropagation(); sndToggle(); });
     (document.getElementById('gal') || document.body).appendChild(c);
   }
-  c.textContent = SND.on ? '🔊 소리 끄기' : '🔈 소리 켜기';
+  c.innerHTML = SND.on ? '<i class="ci">🔊</i><span class="ct"> 소리 끄기</span>' : '<i class="ci">🔈</i><span class="ct"> 소리 켜기</span>';
+  c.setAttribute('aria-label', SND.on ? '소리 끄기' : '소리 켜기');
   c.classList.toggle('off', !SND.on);
 }
 

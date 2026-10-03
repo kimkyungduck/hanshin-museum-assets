@@ -1887,3 +1887,97 @@ body.is-touch .esc-chip { top: 290px; } @media (max-width: 620px) { .esc-chip { 
 @keyframes uwPlunge { 0% { backdrop-filter: blur(6px) brightness(1.6); transform: translateY(-14px); } 40% { transform: translateY(8px); } 100% { backdrop-filter: none; transform: none; } }
 .uw-wade { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; pointer-events: none; height: calc(var(--wade, 0) * 34vh);
   background: linear-gradient(to top, rgba(4, 12, 10, .55), rgba(10, 26, 22, .28) 70%, rgba(180, 220, 210, .16) 98%, rgba(0, 0, 0, 0)); transition: height .4s ease; }
+
+/* ══════════════════════════════════════════════════════════
+   터치 레이아웃(v119) — 폰 · 태블릿(가로 · 세로). js/mobile.js 주석 참고
+   ══════════════════════════════════════════════════════════ */
+body.is-touch .gal { --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px); }
+body.is-touch .ctrl-hint, body.is-touch .lock-chip, body.is-touch .rt-desc { display: none; }
+body.is-touch .room-tag { margin-left: var(--sl); }
+.mm-btn { display: none; }
+body.is-touch .mm-btn { display: flex; }
+/* 아이콘 버튼 — 손가락 크기(44px 이상) · 글자는 감춘다 */
+body.is-touch :is(#sndChip, #mmBtn, #escChip, #adminChip, #torchChip, #photoChip) {
+  position: relative; top: auto; right: auto; left: auto; bottom: auto; margin: 0;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%; clip-path: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-size: 19px; line-height: 1; color: #F4F1EA; letter-spacing: 0;
+  background: rgba(10, 12, 11, .5); box-shadow: inset 0 0 0 1px rgba(244, 241, 234, .26);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); -webkit-tap-highlight-color: transparent;
+}
+body.is-touch :is(#sndChip, #mmBtn, #escChip, #adminChip, #torchChip, #photoChip) .ct { display: none; }
+body.is-touch :is(#sndChip, #mmBtn, #escChip, #adminChip, #torchChip, #photoChip) .ci { font-style: normal; }
+body.is-touch :is(#sndChip, #mmBtn, #escChip, #adminChip, #torchChip, #photoChip):active { transform: scale(.92); }
+body.is-touch :is(#sndChip, #mmBtn).off { opacity: .55; }
+body.is-touch .cb { font: 600 8.5px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .02em; color: rgba(244, 241, 234, .8); }
+/* 독 — 오른쪽 위, 가끔 누르는 것 */
+.m-dock { display: none; }
+body.is-touch .m-dock { display: flex; flex-direction: column; gap: 10px; position: absolute; z-index: 21;
+  right: calc(14px + var(--sr)); top: calc(92px + var(--st)); }
+body.is-touch .night-clock { top: calc(66px + var(--st)); right: calc(20px + var(--sr)); font-size: 10px; }
+body.is-touch .progress { right: calc(18px + var(--sr)); top: calc(20px + var(--st)); width: 132px; }
+/* 엄지 — 오른쪽 아래, 자주 누르는 것 */
+body.is-touch .act-btn { width: 80px; height: 80px; right: calc(16px + var(--sr)); bottom: calc(20px + var(--sb)); }
+body.is-touch #torchChip { position: absolute; right: calc(28px + var(--sr)); bottom: calc(114px + var(--sb)); width: 56px; height: 56px; font-size: 22px; }
+body.is-touch #torchChip:not(.off) { background: rgba(227, 197, 103, .32); box-shadow: inset 0 0 0 1px rgba(246, 231, 180, .7), 0 0 18px rgba(227, 197, 103, .35); }
+body.is-touch #torchChip.low .cb { color: #E07A6A; }
+body.is-touch #photoChip { position: absolute; right: calc(34px + var(--sr)); bottom: calc(182px + var(--sb)); }
+body.is-touch .jump-btn { right: calc(108px + var(--sr)); bottom: calc(28px + var(--sb)); width: 54px; height: 54px; font-size: 22px; }
+body.is-touch .prompt { bottom: calc(112px + var(--sb)); max-width: calc(100vw - 180px); }
+body.is-touch .prompt .pr-text { min-width: 0; }
+body.is-touch .prompt .pr-text b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 미니맵 — 왼쪽 위로 작게(엄지 자리를 비운다) · 지도 버튼으로 끈다 */
+body.is-touch .minimap { left: calc(10px + var(--sl)); bottom: auto; top: calc(78px + var(--st)); transform: scale(.66); transform-origin: 0 0; opacity: .9; }
+.gal.mm-off .minimap { display: none; }
+/* 방탈출 · 안내 방송 · 기록 알림 — 겹치지 않게 */
+body.is-touch .esc-timer { right: auto; left: 50%; transform: translateX(-50%); top: calc(70px + var(--st)); font-size: 17px; }
+body.is-touch .haunt-pa { top: calc(108px + var(--st)); max-width: calc(100vw - 120px); }
+body.is-touch .rec-toast { left: 50%; top: calc(150px + var(--st)); margin-left: -110px; width: 220px; box-sizing: border-box; }
+/* 조이스틱 — 끝까지 밀면 금빛(달리기) */
+.stick.run i { background: radial-gradient(circle at 38% 32%, #FFF6D8, #E39A3A); box-shadow: 0 0 20px rgba(227, 154, 58, .85); }
+/* 처음 안내 */
+.m-hint { display: none; }
+body.is-touch .m-hint { display: block; position: absolute; z-index: 19; pointer-events: none; text-align: center; font-size: 12.5px; line-height: 1.5;
+  color: rgba(244, 241, 234, .82); text-shadow: 0 1px 8px rgba(0, 0, 0, .8); transition: opacity .8s; animation: mHint 2.4s ease-in-out infinite; }
+body.is-touch .m-hint small { font-size: 10.5px; color: rgba(244, 241, 234, .6); }
+body.is-touch .m-hint.l { left: calc(34px + var(--sl)); bottom: calc(150px + var(--sb)); width: 120px; }
+body.is-touch .m-hint.l i { display: block; width: 76px; height: 76px; margin: 0 auto 8px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(244, 241, 234, .45);
+  background: radial-gradient(circle, rgba(246, 231, 180, .5) 0 16px, transparent 17px); }
+body.is-touch .m-hint.r { right: calc(30px + var(--sr)); top: 46%; width: 110px; }
+body.is-touch .m-hint.r::before { content: '↔'; display: block; font-size: 26px; margin-bottom: 4px; }
+.gal.m-used .m-hint { opacity: 0; }
+@keyframes mHint { 50% { opacity: .55; } }
+/* 대화창 — 엄지 버튼을 감추고 선택지를 크게 */
+body.is-touch .dlg-box { bottom: calc(14px + var(--sb)); max-height: 64vh; overflow-y: auto; padding: 14px 16px; }
+body.is-touch .dlg-box .dlg-say { font-size: 15px; }
+body.is-touch .dlg-box .dlg-ch button { min-height: 46px; font-size: 15px; padding: 10px 14px; }
+.gal:has(.dlg-box.on) :is(.act-btn, .jump-btn, #torchChip, #photoChip, .prompt, .m-hint) { display: none !important; }
+.gal:has(.overlay:not(.hidden)) :is(.m-dock, #torchChip, #photoChip, .jump-btn) { visibility: hidden; }
+/* 번호판 · 기록 — 낮은 화면(가로)에서도 다 보이게 */
+@media (max-height: 460px) {
+  .esc-pad .ep-box { transform: scale(.82); }
+  .rec-panel .rp-box { padding: 14px 16px 12px; }
+}
+/* 가로로 든 폰 — 높이가 375 안팎 */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.is-touch .m-dock { flex-direction: row; top: calc(62px + var(--st)); right: calc(16px + var(--sr)); }
+  body.is-touch .night-clock { top: calc(112px + var(--st)); }
+  body.is-touch .act-btn { width: 72px; height: 72px; bottom: calc(14px + var(--sb)); }
+  body.is-touch #torchChip { bottom: calc(98px + var(--sb)); right: calc(26px + var(--sr)); width: 52px; height: 52px; }
+  body.is-touch #photoChip { right: calc(100px + var(--sr)); bottom: calc(102px + var(--sb)); }
+  body.is-touch .jump-btn { right: calc(100px + var(--sr)); bottom: calc(22px + var(--sb)); width: 50px; height: 50px; }
+  body.is-touch .prompt { bottom: calc(18px + var(--sb)); max-width: calc(100vw - 340px); }
+  body.is-touch .minimap { top: calc(62px + var(--st)); transform: scale(.56); }
+  body.is-touch .rt-kr { font-size: 19px; }
+  body.is-touch .m-hint.l { bottom: calc(40px + var(--sb)); }
+  body.is-touch .m-hint.r { right: 30%; top: 40%; }
+  body.is-touch .dlg-box { max-height: 78vh; width: min(640px, calc(100vw - 32px - var(--sl) - var(--sr))); }
+  body.is-touch .dlg-box .dlg-ch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  body.is-touch .dlg-box .dlg-ch button { min-height: 42px; }
+  body.is-touch .haunt-pa { top: calc(14px + var(--st)); }
+  body.is-touch .esc-timer { top: calc(14px + var(--st)); }
+  body.is-touch .rec-toast { top: calc(60px + var(--st)); }
+}
+body.is-touch .sh-nav { min-width: 46px; height: 46px; font-size: 22px; }
+body.is-touch .ov-frame img { touch-action: pan-y; }
+.bgm-chip .ci, .admin-chip .ci, .bgm-chip .cb { font-style: normal; }

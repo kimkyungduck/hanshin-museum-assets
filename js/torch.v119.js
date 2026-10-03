@@ -44,8 +44,8 @@ function torchChip() {
     TORCH.chip = c;
   }
   const n = Math.ceil(TORCH.bat * 4), bars = '▮'.repeat(n) + '▯'.repeat(4 - n);
-  const txt = (TORCH.on ? '🔦 손전등 끄기 ' : '🔦 손전등 ') + bars;
-  if (c.textContent !== txt) c.textContent = txt;
+  const txt = '<i class="ci">🔦</i><span class="ct">' + (TORCH.on ? ' 손전등 끄기 ' : ' 손전등 ') + '</span><em class="cb">' + bars + '</em>';
+  if (c.dataset.h !== txt) { c.dataset.h = txt; c.innerHTML = txt; c.setAttribute('aria-label', TORCH.on ? '손전등 끄기' : '손전등 켜기'); }
   c.classList.toggle('off', !TORCH.on);
   c.classList.toggle('low', TORCH.bat < 0.2);
 }

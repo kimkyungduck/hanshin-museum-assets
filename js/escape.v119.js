@@ -117,7 +117,7 @@ function escapeChip() {
     document.getElementById('gal').appendChild(c);
     const tm = ESC.timerEl = document.createElement('div'); tm.className = 'esc-timer'; document.getElementById('gal').appendChild(tm);
   }
-  c.textContent = '📝 쪽지 ' + ESC.found.size + '/4';
+  c.innerHTML = '<i class="ci">📝</i><span class="ct"> 쪽지 </span><em class="cb">' + ESC.found.size + '/4</em>'; c.setAttribute('aria-label', '쪽지');
 }
 function escapeJournal() {
   let w = document.getElementById('escJournal');

@@ -844,7 +844,7 @@ function galMarkup() {
       </p>
       <button class="lock-chip" id="lockChip">🔒 마우스 고정 · FPS 조작</button>
       <button class="bgm-chip hidden" id="bgmChip" aria-label="배경음악"></button>
-      ${M.canManage ? '<button class="admin-chip" id="adminChip">⚙ 전시 설정 (F2)</button>' : ''}
+      ${M.canManage ? '<button class="admin-chip" id="adminChip" aria-label="전시 설정"><i class="ci">⚙</i><span class="ct"> 전시 설정 (F2)</span></button>' : ''}
       <div class="stick" id="stick"><i id="knob"></i></div>
       <button class="act-btn off" id="actBtn" aria-label="조사하기">
         <span class="act-icon" id="actIcon">🔍</span><span class="act-tx" id="actTx">조사</span>
@@ -2587,6 +2587,7 @@ function bindInput() {
     document.body.classList.add('is-touch');
     $('prKey').textContent = 'TAP';
     paintPrompt();
+    if (typeof mobileSetup === 'function') mobileSetup();       // v119 — 폰 화면 정리(mobile.js)
   };
   if (matchMedia('(pointer: coarse)').matches) enableTouch();
 
@@ -2668,6 +2669,7 @@ function bindInput() {
       M.move.x = ev.clientX; M.move.y = ev.clientY;
       let dx = ev.clientX - M.move.ox, dy = ev.clientY - M.move.oy;
       const l = Math.hypot(dx, dy), max = 48;
+      stick.classList.toggle('run', l > 72);                    // v119 — 달리기 표시(끝까지 밀면)
       if (l > max) { dx = dx / l * max; dy = dy / l * max; }
       knob.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
     }
@@ -2685,7 +2687,7 @@ function bindInput() {
     }
   };
   const end = (ev) => {
-    if (M.move && (!ev || ev.pointerId === M.move.id)) { M.move = null; stick.classList.remove('on'); }
+    if (M.move && (!ev || ev.pointerId === M.move.id)) { M.move = null; stick.classList.remove('on', 'run'); }
     if (M.look && (!ev || ev.pointerId === M.look.id)) M.look = null;
   };
   gal.addEventListener('pointermove', onMove);
@@ -2753,7 +2755,7 @@ function readMove() {
     const dx = M.move.x - M.move.ox, dy = M.move.y - M.move.oy;
     const l = Math.hypot(dx, dy);
     if (l > 12) { f += -dy / Math.max(l, 48); s += dx / Math.max(l, 48); }
-    if (l > 88) run = true;                          // 폰 — 조이스틱을 끝까지 밀면 달린다
+    if (l > 72) run = true;                          // 폰 — 조이스틱을 끝까지 밀면 달린다(v119: 88 → 72, 손잡이가 금빛으로)
   }
   return { f: clamp(f, -1, 1), s: clamp(s, -1, 1), run };
 }
@@ -3509,8 +3511,8 @@ async function hydratePhoto(e) {
   M.gal = { list: data.images, i: 0 };
   if (hint) {
     hint.textContent = data.sample
-      ? `샘플 ${data.images.length}장 — ‹ › 또는 ←→ 로 넘깁니다`
-      : `${data.images.length}장 묶음 — ‹ › 또는 ←→ 로 넘깁니다`;
+      ? `샘플 ${data.images.length}장 — ${M.touch ? '옆으로 밀거나 ‹ › 로' : '‹ › 또는 ←→ 로'} 넘깁니다`
+      : `${data.images.length}장 묶음 — ${M.touch ? '옆으로 밀거나 ‹ › 로' : '‹ › 또는 ←→ 로'} 넘깁니다`;
   }
   galShow(0);
 }

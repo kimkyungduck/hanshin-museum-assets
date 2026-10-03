@@ -476,6 +476,7 @@ function stepCrowd(M, dt) {
     n.monoCool = (n.monoCool || 0) - dt;
     n.asked = (n.asked || 0) - dt;
     if (n.out) { outStep(M, n, dt); npcPose(M, n, dt); continue; }
+    if (!n.goal) n.goal = { lx: n.x + Math.sin(n.yaw) * 100, lz: n.z + Math.cos(n.yaw) * 100 };   // v119 — 첫 프레임 전에 상태가 바뀌어도(대화 등)
     let want = n.yaw, walking = false;
     // v99 — 나와의 거리(같은 층 · 같은 방 또는 3m 안). 마주치면 멈춰서 나를 본다
     const rr = M.roomById[n.room], pd = Math.hypot(PX - n.x, PZ - n.z);

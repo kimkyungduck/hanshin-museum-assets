@@ -73,7 +73,7 @@ const PHOTO = { busy: false, chip: null };
 function photoChip() {
   if (PHOTO.chip || !M.ready || M.attract) return;
   const c = PHOTO.chip = document.createElement('button');
-  c.id = 'photoChip'; c.className = 'bgm-chip photo-chip'; c.textContent = '📷 사진';
+  c.id = 'photoChip'; c.className = 'bgm-chip photo-chip'; c.innerHTML = '<i class="ci">📷</i><span class="ct"> 사진</span>'; c.setAttribute('aria-label', '사진 찍기');
   c.addEventListener('click', (ev) => { ev.stopPropagation(); takePhoto(); });
   (document.getElementById('gal') || document.body).appendChild(c);
 }
