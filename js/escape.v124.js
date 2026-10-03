@@ -34,7 +34,7 @@ function escapeClues() {
   const sc = M.exhibits.filter((e) => e.room === 'archive' && e.card && e.node).length;
   out.push({ d: sc % 10, text: '기록 보관실 벽에 걸린 스코어카드는 모두 몇 장인가.\n그 끝자리.' });
   // 4 — 수장고, 오늘 날짜의 초상
-  out.push({ d: new Date().getDate() % 10, text: '수장고 동쪽 벽, 아직 걸리지 않은 초상.\n명패에 적힌 날짜의 \'일\' — 그 끝자리.\n(수장고는 명예의 전당 서쪽 벽의 문)' });
+  out.push({ d: new Date().getDate() % 10, text: '수장고 동쪽 벽, 아직 걸리지 않은 초상.\n명패에 적힌 날짜의 \'일\' — 그 끝자리.\n(수장고 — 1층 명예의 전당 남쪽 벽, 빨간 등이 켜진 철문 · 미니맵의 빨간 점)' });
   return out;
 }
 /** 쪽지 하나 — 작은 받침대 위 종이(어둠 속에서 희미하게 보인다) */

@@ -3189,7 +3189,10 @@ function drawMinimap() {
     return '<div class="' + cls + '" style="left:' + ((x0 - F.x0) * k).toFixed(1) + 'px;top:' + ((z0 - F.z0) * k).toFixed(1)
       + 'px;width:' + ((x1 - x0) * k).toFixed(1) + 'px;height:' + ((z1 - z0) * k).toFixed(1) + 'px">' + label + '</div>';
   }).join('');
-  el.innerHTML = '<div class="mm-plan" style="width:' + W + 'px;height:' + H + 'px">' + cells
+  // v124 — 수장고 문(생겼으면) — 1층 평면에서 빨간 점
+  const vd = typeof VAULT !== 'undefined' && VAULT.door && VAULT.door.x != null && !inField && lv === 0 && !(cur && cur.zone)
+    ? '<i class="mm-door" title="수장고" style="left:' + ((VAULT.door.x - F.x0) * k).toFixed(1) + 'px;top:' + ((VAULT.door.z - F.z0) * k).toFixed(1) + 'px"></i>' : '';
+  el.innerHTML = '<div class="mm-plan" style="width:' + W + 'px;height:' + H + 'px">' + cells + vd
     + '<i class="mm-me" id="mmMe"></i></div><b class="mm-lv">' + (cur && cur.zone === 'west' ? '서쪽 숲' : cur && cur.zone === 'east' ? '드라이빙 레인지' : inField ? '18번 홀' : (lv ? '2F' : '1F')) + '</b>';
   M.mmKey = (inField ? 'F' : 'B') + lv + ((cur && cur.zone) || '');
   M.meKey = '';

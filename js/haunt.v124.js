@@ -884,18 +884,31 @@ function vaultDoorShow(quiet) {
   if (VAULT.shown) return true;
   const r = M.roomById.hall, g = M.roomGroups.hall; if (!r || !g) return false;
   if (!quiet && M.room && M.room.id === 'hall') return false;
-  // 자리 — 서쪽 벽(x0)에서 전시물과 1.7m 넘게 떨어진 곳
-  const onWall = M.exhibits.filter((e) => e.room === 'hall' && Math.abs(e.x - r.x0) < 80).map((e) => e.z);
-  let z = null;
-  for (let t = r.z0 + 220; t <= r.z1 - 220; t += 40) if (onWall.every((q) => Math.abs(q - t) > 170)) { z = t; break; }
-  if (z == null) z = r.z1 - 220;
+  /* v124 — 사용자: "방탈출에서 수장고를 찾으라는데 어딘지 모르겠네". 서쪽 벽은 통창이라 밤엔 검은 철문이 검은 유리에 묻혔다
+     → 막힌 남쪽 벽(트로피실과 맞닿은 벽)의 서쪽 끝 · 문 위에 빨간 비상등과 'B1 수장고' 표지 · 문틈으로 새는 빛 · 미니맵에 빨간 점 */
+  const onWall = M.exhibits.filter((e) => e.room === 'hall' && Math.abs(e.z - r.z1) < 80).map((e) => e.x);
+  let x = null;
+  for (let t = r.x0 + 200; t <= r.x1 - 200; t += 40) if (onWall.every((q) => Math.abs(q - t) > 170)) { x = t; break; }
+  if (x == null) x = r.x0 + 200;
+  const z = r.z1;
   const wood = new THREE.MeshStandardMaterial({ color: 0x2A1D14, roughness: 0.7 }), metal = new THREE.MeshStandardMaterial({ color: 0x2E2C2A, roughness: 0.5, metalness: 0.6 });
   [wood, metal].forEach((m) => { m.userData.noBatch = true; m.envMap = M.envIn; m.envMapIntensity = 0.4; });
-  const D = vaultDoorMesh(wood, metal); D.position.set(r.x0 / CM + 0.03, 0, z / CM); D.rotation.y = Math.PI / 2; g.add(D);
-  const hit = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.2, 1.2), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(r.x0 / CM + 0.25, 1.1, z / CM); g.add(hit);
-  VAULT.doorInfo = { id: 'vault-door', type: 'placard', icon: '🚪', label: '관계자 외 출입금지', title: '관계자 외 출입금지', room: 'hall', x: r.x0 + 30, z, y: 110, onUse: () => vaultGo(true) };
+  const D = vaultDoorMesh(wood, metal); D.position.set(x / CM, 0, z / CM - 0.13); D.rotation.y = Math.PI; g.add(D);      // 방 안(북)을 본다
+  // 빨간 비상등 + 'B1 수장고' 표지 + 문틈 빛(밤에도 멀리서 보이게 — 빛은 아니고 스스로 빛나는 판 · 번짐)
+  { const cv = makeCanvas(256, 80), c = cv.getContext('2d'); c.fillStyle = '#2A0806'; c.fillRect(0, 0, 256, 80); c.fillStyle = '#FF5A44'; c.font = 'bold 40px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('B1 수장고', 128, 42);
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.2), new THREE.MeshBasicMaterial({ map: t, toneMapped: false })); sign.position.set(0, 2.42, 0.06); D.add(sign);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFF3020).multiplyScalar(3), toneMapped: false })); bulb.position.set(0.42, 2.42, 0.08); D.add(bulb);
+    const gcv = makeCanvas(64, 64), gc = gcv.getContext('2d'), gr = gc.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,70,50,.9)'); gr.addColorStop(1, 'rgba(255,40,30,0)'); gc.fillStyle = gr; gc.fillRect(0, 0, 64, 64);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gcv), blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); halo.scale.set(1.1, 1.1, 1); halo.position.copy(bulb.position); D.add(halo);
+    const leak = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.012), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFF6A3A).multiplyScalar(2), toneMapped: false })); leak.position.set(0, 0.012, 0.07); D.add(leak);
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gcv), transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false })); pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.008, 0.35); D.add(pool);
+    VAULT.halo = halo; }
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.5), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(x / CM, 1.1, z / CM - 0.35); g.add(hit);
+  VAULT.doorInfo = { id: 'vault-door', type: 'placard', icon: '🚪', label: '관계자 외 출입금지', title: '관계자 외 출입금지', room: 'hall', x, z: z - 30, y: 110, onUse: () => vaultGo(true) };
   M.pickables.push(hit); M.artByMesh.set(hit, VAULT.doorInfo);
-  VAULT.door = { D, z }; VAULT.shown = true;
+  VAULT.door = { D, x, z }; VAULT.shown = true;
+  if (typeof drawMinimap === 'function') { M.mmKey = ''; try { drawMinimap(); } catch (e) { /* 다음 프레임에 */ } }
   if (!quiet) { HAUNT.doorNew = true; HAUNT.paT = Math.min(HAUNT.paT, 10); }
   return true;
 }
@@ -923,9 +936,9 @@ function vaultGo(down) {
       M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set(r.cx / CM, (M.feet + EYE) / CM, (r.z1 - 180) / CM); M.yaw = 0;
       if (!HAUNT.vaultTold) { HAUNT.vaultTold = true; setTimeout(() => toast(typeof TORCH !== 'undefined' && !TORCH.on ? '수장고 — 불이 없다. 손전등(F)' : '수장고 — 불이 없다', 3200), 900); }
     } else {
-      const r = M.roomById.hall, z = VAULT.door ? VAULT.door.z : r.cz;
+      const r = M.roomById.hall, dx = VAULT.door && VAULT.door.x != null ? VAULT.door.x : r.cx, dz = VAULT.door ? VAULT.door.z : r.z1;
       teleport(r);
-      M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set((r.x0 + 150) / CM, (M.feet + EYE) / CM, z / CM); M.yaw = -Math.PI / 2;
+      M.feet = r.y0; M.eyeFeet = M.feet; M.pos.set(dx / CM, (M.feet + EYE) / CM, (dz - 160) / CM); M.yaw = 0;   // 문 앞 1.6m · 방 안쪽을 본다
     }
     M.cam.position.copy(M.pos); M.cam.rotation.set(0, M.yaw, 0, 'YXZ');
     M.openId = null; HAUNT.vaultBusy = false;
