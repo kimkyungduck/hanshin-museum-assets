@@ -254,7 +254,7 @@ function stepScare(dt) {
     || (typeof LAKE !== 'undefined' && LAKE.under) || (typeof HAUNT !== 'undefined' && (HAUNT.ev || HAUNT.calm)) || (typeof HOR !== 'undefined' && HOR.ev)
     || (typeof CART !== 'undefined' && CART.driving)) return;
   if (Math.random() > dt / 6) return;
-  const R = M.room; if (!R || R.id === 'workshop') return;
+  const R = M.room; if (!R || R.id === 'workshop' || R.lost) return;
   const order = !R.outdoor && R.h && R.h <= 700 && Math.random() < 0.4 ? ['ceiling', 'rush'] : ['rush', 'ceiling'];
   for (const id of order) {
     const e = SCARE_EV[id]();

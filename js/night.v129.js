@@ -376,8 +376,9 @@ function stepFlicker(dt) {
   flickInit();
   const here = M.room && !M.room.outdoor ? M.room : null;
   // 정전 — 실내에서만 센다
-  if (here && !M.openId && !(typeof GOLF !== 'undefined' && GOLF.mode)) NIGHT.blackT -= dt;
-  if (!NIGHT.black && NIGHT.blackT <= 0 && here) {
+  const calmRoom = here && (here.id === 'workshop' || here.lost);   // v129 — 은은하게만인 방
+  if (here && !calmRoom && !M.openId && !(typeof GOLF !== 'undefined' && GOLF.mode)) NIGHT.blackT -= dt;
+  if (!NIGHT.black && NIGHT.blackT <= 0 && here && !calmRoom) {
     NIGHT.black = { room: here.id, t: 0, dur: 0.6 + Math.random() * 0.9, k: 1, on: false };
     NIGHT.blackT = (70 + Math.random() * 80) * (1 - 0.45 * (typeof HAUNT !== 'undefined' ? HAUNT.dread : 0));   // v101 — 밤이 깊을수록 잦게
     if (typeof sndBlack === 'function') sndBlack(false);

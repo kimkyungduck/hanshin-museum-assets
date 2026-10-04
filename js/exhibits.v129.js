@@ -156,6 +156,13 @@ const ROOMS = [
   { id: 'vault', content: 'empty', rect: { x: 0, z: 0, w: 1600, d: 1500 }, lv: -1, h: 380,
     mat: 'dark', secret: true, vault: true, name: '수장고', en: 'STORAGE', accent: '#8E4A40',
     desc: '관계자 외 출입금지. 걸리지 못한 것들이 쌓여 있다.' },
+  /* v129 — 관리자의 방 2막(lost.js). 지하(lv −1)에 따로 떨어진 복도와 분실물 보관소 — 관리자의 방 남쪽 벽 문으로만 온다 */
+  { id: 'lostway', content: 'empty', rect: { x: 4400, z: 900, w: 300, d: 1800 }, lv: -1, h: 320,
+    mat: 'oldclub', secret: true, lost: true, name: '지하 복도', en: 'CORRIDOR', accent: '#B8A27A',
+    desc: '전구 몇 개가 겨우 버틴다. 끝에 불 켜진 방이 하나 있다.' },
+  { id: 'lostfound', content: 'empty', rect: { x: 3200, z: 300, w: 1200, d: 1200 }, lv: -1, h: 380,
+    mat: 'oldclub', secret: true, lost: true, name: '분실물 보관소', en: 'LOST & FOUND', accent: '#B8A27A',
+    desc: '찾아가지 않은 것들이 꼬리표를 달고 기다린다. 아무도 버리지 않았다.' },
 ];
 
 /**
@@ -185,6 +192,7 @@ const CONNS = [
   ['gallery', 'grand', 'window'], ['gallery', 'hallW', 'window'],
   // v122 — 옛 클럽하우스: 숲길에서 로비로, 로비에서 라커룸 · 식당으로, 라커룸에서 샤워실로
   ['woods', 'oclobby', 'door'], ['oclobby', 'oclocker', 'door'], ['oclobby', 'ocdine', 'door'], ['oclocker', 'ocshower', 'door'],
+  ['lostway', 'lostfound', 'door'],                              // v129 — 지하 복도 → 분실물 보관소
 ];
 
 /** 외벽 모양 — [방, 면(n/s/e/w), 종류]. 바깥(또는 아무것도 없는 쪽)과 맞닿은 면에만 쓴다 */

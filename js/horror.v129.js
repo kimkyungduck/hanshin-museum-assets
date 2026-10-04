@@ -269,7 +269,7 @@ function stepHorror(dt) {
   for (const k in HOR.cool) HOR.cool[k] -= dt;
   if (HOR.ev) { let keep = false; try { keep = HOR.ev.step(dt); } catch (e) { keep = false; } if (!keep) HOR.ev = null; return; }
   if (M.openId || (typeof GOLF !== 'undefined' && GOLF.mode) || (typeof LAKE !== 'undefined' && LAKE.under) || (typeof HAUNT !== 'undefined' && HAUNT.ev) || (typeof DLG !== 'undefined' && DLG.open)) return;
-  const R = M.room; if (!R || R.id === 'workshop') return;
+  const R = M.room; if (!R || R.id === 'workshop' || R.lost) return;
   const PX = M.pos.x * CM, PZ = M.pos.z * CM, dr = typeof HAUNT !== 'undefined' ? HAUNT.dread : 0.3;
   const start = (id, cd) => { const e = HOR_EV[id](); if (e) { HOR.ev = e; HOR.cool[id] = cd; } else HOR.cool[id] = 5; };
   if (R.outdoor) {

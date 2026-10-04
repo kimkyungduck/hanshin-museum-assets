@@ -525,6 +525,7 @@ function officeDress(r, g) {
     OFFICE.lastAt = [dx - 0.22, 0.86, dz - 0.72];   // 조사 자리는 봉투가 놓일 때 만든다(숨은 채로 집히지 않게)
     OFFICE.room = r; OFFICE.g = g;
   }
+  if (typeof lostKeeperDoor === 'function') lostKeeperDoor(r, g);   // v129 — 남쪽 벽 문(2막으로)
   // ⚠️ 캔버스 그림(창 · 빗줄기 · 금 · 시계 · 종이 …)을 쓰는 재질은 방 배칭에 합쳐지면 그림이 사라진다 → 전부 제외
   g.traverse((o) => { const m = o.material; if (m && m.map && m.map.userData && m.map.userData.cv) m.userData.noBatch = true; });
   OFFICE.built = true;
@@ -656,7 +657,7 @@ function officeRead(id) {
       if (i >= txt.length) done();
     }, 34);
   }, 900);
-  if (id !== 'letter' && !OFFICE.read.has(id)) {
+  if (OFFICE_ORDER.includes(id) && !OFFICE.read.has(id)) {
     OFFICE.read.add(id);
     try { localStorage.setItem('museum-office-read', JSON.stringify([...OFFICE.read])); } catch (e) { /* */ }
     officePaint();
@@ -679,6 +680,7 @@ function officeRead(id) {
 }
 /** 무엇을 펼칠지 — 핵심 일곱 · 곁가지 · 책장(안 읽은 책부터) · 휴지통 · 메모장(날마다) */
 function officeEntry(id) {
+  if (id.indexOf('lost:') === 0) return typeof lostEntry === 'function' ? lostEntry(id) : null;   // v129 — 분실물 보관소
   if (id === 'last') return (OFFICE.envelope && OFFICE.envelope.visible) ? { T: OFFICE_LAST, key: null } : null;
   if (OFFICE.n2 >= 2) {
     if (OFFICE_N2[id]) return { T: OFFICE_N2[id], key: 'n2:' + id };
@@ -737,10 +739,9 @@ function officeGramo(bSide) {
 function officeStopTyping() { clearTimeout(OFFICE.delay); clearInterval(OFFICE.typer); OFFICE.finish = null; }
 function officeClose() {
   if (!OFFICE.el) return;
-  if (OFFICE.open && OFFICE.lastId === 'letter' && OFFICE.n2 === 0) {
-    OFFICE.n2 = 1; officeSave();
-    setTimeout(() => toast('편지 뒷면에 한 줄 — “다음에 올 땐, 시계 소리를 들어 봐.”', 4200), 700);
-  }
+  // v129 — 편지를 닫으면 남쪽 벽 문이 딸깍 열린다(2막 분실물 보관소) · 보관소 마지막 봉투를 닫으면 2막 끝
+  if (OFFICE.open && OFFICE.lastId === 'letter' && typeof lostUnlock === 'function') lostUnlock();
+  if (OFFICE.open && typeof lostOnClose === 'function') lostOnClose(OFFICE.lastId);
   officeStopTyping();
   OFFICE.el.classList.remove('on'); OFFICE.open = false;
   M.openId = null; M.keys = {};
@@ -795,8 +796,8 @@ function officeAmb(dt) {
 /** 매 프레임 — 느와르 · 비 · 김 · 연기 · 모래 · 타자기 */
 function stepOffice(dt) {
   if (!OFFICE.built) return;
-  const inR = !!(M.room && M.room.id === 'workshop');
-  OFFICE.noir += ((inR ? 1 : 0) - OFFICE.noir) * Math.min(1, dt * (inR ? 0.9 : 3));
+  const inR = !!(M.room && M.room.id === 'workshop'), noirR = inR || !!(M.room && M.room.lost);   // 분실물 보관소도 흑백
+  OFFICE.noir += ((noirR ? 1 : 0) - OFFICE.noir) * Math.min(1, dt * (noirR ? 0.9 : 3));
   if (M.post && M.post.uniforms && M.post.uniforms.uNoir) M.post.uniforms.uNoir.value = OFFICE.noir;
   if (OFFICE.hud) OFFICE.hud.classList.toggle('on', inR && !OFFICE.open);
   if (OFFICE.rainG && SND.ctx) OFFICE.rainG.gain.setTargetAtTime(inR && OFFICE.n2 < 2 ? 0.07 : 0, SND.ctx.currentTime, 0.4);
