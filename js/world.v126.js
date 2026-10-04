@@ -475,7 +475,7 @@ function buildRoomShell(r, g) {
     /* 천장은 아래를 본다 — 해·스포트는 닿지 않고 환경맵도 바닥(어두운 쪽)을 비춰서
        흰 천장이 올리브색으로 가라앉았다. 실제로는 벽·바닥에서 튄 빛이 천장을 밝힌다 →
        그 몫을 자체 발광으로 조금 준다 */
-    const old = /^old/.test(r.mat || '');                                  // v122 — 옛 클럽하우스: 누렇게 바랜 천장 · 줄조명 없음
+    const old = /^old/.test(r.mat || '') || r.id === 'workshop';   // v122 — 옛 클럽하우스: 누렇게 바랜 천장 · 줄조명 없음 (v126 관리자의 방도)
     const cc = new THREE.Color(CEIL_COL[r.mat] || (old ? 0x857D70 : 0xE8E3D9));
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(wM, dM),
       new THREE.MeshStandardMaterial({ color: cc, roughness: 0.95, emissive: cc.clone().multiplyScalar(r.mat === 'dark' || old ? 0.04 : 0.2) }));

@@ -514,7 +514,7 @@ function openAdmin() {
           const here = roomAt(M.pos.x * CM, M.pos.z * CM);
           return '<button class="btn btn-line" id="adGoSecret">'
             + (here && here.secret ? '\ud83d\udeaa \ub85c\ube44\ub85c \ub098\uac00\uae30'
-                                   : '\ud83d\udee0\ufe0f \uc791\uc5c5\uc2e4\ub85c \uc774\ub3d9')
+                                   : '\ud83d\udd6f \uad00\ub9ac\uc790\uc758 \ubc29\uc73c\ub85c')
             + '</button>';
         })()}
         <button class="btn btn-line" id="adReset">전부 기본값으로</button>
@@ -549,7 +549,7 @@ function openAdmin() {
       const here = roomAt(M.pos.x * CM, M.pos.z * CM);
       close();
       if (here && here.secret) teleport(M.roomById.grand, '그랜드 홀로 돌아왔습니다');
-      else teleport(w, '작업실 — 나올 때는 F2 → 로비로 나가기');
+      else teleport(w, '관리자의 방 — 나올 때는 F2 → 로비로 나가기');
     };
   }
   $('adReset').onclick = async () => {
@@ -1298,6 +1298,7 @@ function dressChampion(r, g) {
  *   · 눈높이선(165cm) — 관람객 시선이 어디에 닿는지 보여주는 가로 실
  */
 function dressWorkshop(r, g) {
+  if (typeof officeDress === 'function') { officeDress(r, g); return; }   // v126 — 관리자의 방(office.js)
   const wM = r.w / CM, dM = r.d / CM;
   const line = new THREE.MeshBasicMaterial({ color: 0x2E4A3C });
   const line5 = new THREE.MeshBasicMaterial({ color: 0x5E8A6E });
@@ -2806,7 +2807,8 @@ function loop(now) {
   guardStep('acts', () => { if (typeof stepActs === 'function') stepActs(dt); });         // v118 — 몸짓의 플래시 · 쿨다운
   guardStep('horror', () => { if (typeof stepHorror === 'function') stepHorror(dt); });
   guardStep('expand', () => { if (typeof stepExpand === 'function') stepExpand(dt); });
-  guardStep('scare', () => { if (typeof stepScare === 'function') stepScare(dt); });     // v123 — 달려드는 것 · 천장의 것   // v122 — 숲 · 클럽하우스 · 레인지   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
+  guardStep('scare', () => { if (typeof stepScare === 'function') stepScare(dt); });
+  guardStep('office', () => { if (typeof stepOffice === 'function') stepOffice(dt); });   // v126 — 관리자의 방     // v123 — 달려드는 것 · 천장의 것   // v122 — 숲 · 클럽하우스 · 레인지   // v121 — 호수의 손 · 반사 · 발자국 · 머리 · 유리창 손자국
   M.post.render(M.t);
   if (M.diag) paintDiag();
 }

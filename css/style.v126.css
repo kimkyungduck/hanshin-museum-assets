@@ -2167,3 +2167,18 @@ body.is-touch .m-dock { top: calc(100px + var(--st, 0px)); }
 /* v124 — 미니맵의 수장고 문 */
 #gal .mm-door { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #FF4A36; box-shadow: 0 0 0 2px rgba(255, 74, 54, .3), 0 0 8px rgba(255, 74, 54, .9); animation: mmDoor 1.4s ease-in-out infinite; z-index: 2; }
 @keyframes mmDoor { 50% { box-shadow: 0 0 0 5px rgba(255, 74, 54, 0), 0 0 12px rgba(255, 74, 54, .6); } }
+/* v126 — 관리자의 방: 읽기 카드(느와르) · 진행 */
+.office-read { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: radial-gradient(circle at 50% 40%, rgba(10, 10, 12, .55), rgba(0, 0, 0, .9)); opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+.office-read.on { opacity: 1; pointer-events: auto; }
+.office-read .or-card { width: min(620px, 100%); max-height: calc(100vh - 48px); overflow: auto; padding: 34px 38px 26px; color: #E9E4DA;
+  background: #121212; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), 0 40px 120px rgba(0, 0, 0, .8); border-radius: 4px; font-family: 'Noto Serif KR', serif; }
+.office-read .or-k { margin: 0 0 14px; font: 600 11px/1 'Noto Sans KR', sans-serif; letter-spacing: .28em; color: #8E8678; }
+.office-read .or-line { margin: 0 0 22px; font-size: 26px; line-height: 1.5; font-weight: 700; letter-spacing: -.01em; }
+.office-read .or-memo { margin: 0 0 22px; min-height: 7.5em; font: 400 15px/1.95 'Courier New', 'Noto Serif KR', monospace; color: #C9C2B4; white-space: pre-line; }
+.office-read .or-ask { margin: 0 0 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: 17px; font-style: italic; color: #E3C567; opacity: 0; transform: translateY(6px); transition: opacity 1.2s ease, transform 1.2s ease; }
+.office-read .or-ask.on { opacity: 1; transform: none; }
+.office-read .or-x { font: 500 12px/1 'Noto Sans KR', sans-serif; padding: 9px 14px; border-radius: 6px; border: 0; background: rgba(255, 255, 255, .08); color: #C9C2B4; cursor: pointer; }
+.office-hud { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); z-index: 20; pointer-events: none; opacity: 0; transition: opacity .8s ease;
+  font: 500 11px/1 'Noto Sans KR', sans-serif; letter-spacing: .3em; color: rgba(233, 228, 218, .55); }
+.office-hud.on { opacity: 1; }

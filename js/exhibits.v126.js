@@ -93,9 +93,10 @@ const ROOMS = [
      secret: true 인 방은 CONNS 에 통로를 만들지 않는다 → **관람객은 진입 불가**.
      로비 안내판·미니맵에 나오지 않고(관리자에게만 미니맵에 보인다) 관람객(NPC)도 없다.
      들어가는 방법은 전시 설정 패널의 '작업실로 이동' 뿐이다. */
+  /* v126 — 작업실을 '관리자의 방' 으로(office.js). 느와르 · 기록과 기억 / 사람과 관계 / 시간과 유한함 */
   { id: 'workshop', content: 'workshop', rect: { x: 3200, z: 1800, w: 1600, d: 1200 }, lv: 1, h: 500,
-    mat: 'gallery', secret: true, name: '작업실', en: 'WORKSHOP', accent: '#7FA88C',
-    desc: '아직 공개하지 않은 것들을 세워보는 곳. 바닥에 1m 격자가 깔려 있다.' },
+    mat: 'walnut', secret: true, name: '관리자의 방', en: "THE KEEPER'S ROOM", accent: '#B8A27A',
+    desc: '비가 오는 창. 스탠드 하나. 이 전시관을 지킨 사람의 생각이 물건마다 남아 있다.' },
 
   // ── 바깥 ────────────────────────────────────────────
   { id: 'deck', content: 'empty', outdoor: true, rect: { x: 1600, z: -800, w: 1600, d: 800 }, lv: 1,
@@ -512,22 +513,8 @@ const CONTENT = {
     return out.slice(0, Math.max(1, M.champion || 6));
   },
 
-  /* 작업실 — 안내 명패 하나만. 여기 무엇을 세울지는 그때그때 정한다. */
-  workshop: () => [{
-    type: 'placard', icon: '🛠️', label: '작업 안내',
-    title: '작업실',
-    body: [
-      '공개 전 시험용 공간이다. 관람 동선과 연결되어 있지 않다.',
-      '',
-      '바닥의 밝은 선은 1m 격자, 굵은 선은 5m 다.',
-      '벽 앞 눈금 기둥은 1m·2m·3m 높이를 표시한다.',
-      '',
-      '나가는 길: F2 → 「로비로 나가기」. 걸어 나갈 수는 없다.',
-      '',
-      '완성되면 exhibits.js 의 CONNS 에 통로를 한 줄 추가하고',
-      'workshop 의 secret 을 지우면 본관과 이어진다.',
-    ].join(String.fromCharCode(10)),
-  }],
+  /* 작업실 → v126 '관리자의 방'(office.js 가 직접 꾸민다) — 전시물(명패)을 두지 않는다 */
+  workshop: () => [],
 
   /* 18번 홀 — 카트길을 따라 선 **코스별 기록 표석**.
      라운드를 코스(course_name)로 묶어 코스 레코드·최다 우승·라운드 수를 새긴다.

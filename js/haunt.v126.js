@@ -14,7 +14,7 @@ const HAUNT = { t: 0, dread: 0, next: 30 + Math.random() * 20, ev: null, follow:
 const WHISPER = ['… 여기야.', '뒤에.', '돌아보지 마.', '… 이름이 뭐였더라.', '같이 있자.', '거기 아니야.', '… 찾았다.', '한 홀만 더.', '불 끄지 마.'];
 
 function hauntOK() {
-  return M.ready && M.room && !M.attract && !M.openId && !(typeof GOLF !== 'undefined' && GOLF.mode)
+  return M.ready && M.room && !M.attract && !M.openId && !(M.room.id === 'workshop') && !(typeof GOLF !== 'undefined' && GOLF.mode)
     && !(typeof CART !== 'undefined' && CART.driving) && !(typeof LAKE !== 'undefined' && LAKE.under);
 }
 const hauntFwd = () => ({ x: -Math.sin(M.yaw), z: -Math.cos(M.yaw) });       // 내가 보는 쪽(수평)

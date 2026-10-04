@@ -199,11 +199,12 @@ function createPost(renderer, scene, camera, opt = {}) {
       uAber: { value: 0.0004 },
       // 2.1 은 조명이 스포트뿐이던 시절의 값. 해·환경광이 들어오며 하얗게 날아갔다
       uExposure: { value: 1.35 },
+      uNoir: { value: 0 },                 // v126 — 관리자의 방: 흑백 · 대비(office.js)
     },
     vertexShader: VERT,
     fragmentShader: `
       uniform sampler2D tScene, tBloom, tAO;
-      uniform float uTime, uBloom, uGrain, uGrainSize, uVig, uAber, uExposure, uLift, uAO;
+      uniform float uTime, uBloom, uGrain, uGrainSize, uVig, uAber, uExposure, uLift, uAO, uNoir;
       uniform vec2 uRes;
       varying vec2 vUv;
 
@@ -234,13 +235,14 @@ function createPost(renderer, scene, camera, opt = {}) {
 
         // 채도 −12% + 따뜻한 리프트
         float l = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(l), col, 0.88);
+        col = mix(vec3(l), col, 0.88 * (1.0 - uNoir * 0.9));
+        col = mix(col, smoothstep(vec3(0.03), vec3(0.92), col), uNoir * 0.55);
         col *= vec3(1.035, 1.0, 0.952);
         col += vec3(0.015, 0.010, 0.005) * uLift * (1.0 - l);
 
         // 비네트
-        float vig = smoothstep(0.95, 0.10, r2 * uVig);
-        col *= mix(0.62, 1.0, vig);
+        float vig = smoothstep(0.95, 0.10, r2 * (uVig + uNoir * 0.6));
+        col *= mix(0.62 - uNoir * 0.3, 1.0, vig);
 
         // (!) linear -> sRGB encode. Without this the whole museum looks far darker
         //     than intended (linear 0.5 shows as ~20% perceived brightness).
