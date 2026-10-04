@@ -108,11 +108,72 @@ const OFFICE_DAILY = [
   '칭찬은 모두 앞에서, 충고는 둘이서.', '버틴 날도 하루로 친다.', '질문을 받으면 먼저 고맙다고 한다.', '불을 끄기 전에 방을 한 번 둘러본다.',
   '내가 받은 환대만큼은 돌려주고 떠난다.',
 ];
+/* ── 두 번째 밤(v128) — 편지를 읽고 나갔다 다시 오면 방이 달라져 있다 ──
+   시계가 다시 가고(실제 시각) · 비가 그치고 달 · 누군가 체스 한 수를 두었고 · 이번엔 내 쪽 잔에서 김 ·
+   보드 밖 벽에 빈 사진 한 장(실이 모두 그쪽으로) · 거울에 입김 글씨 · 축음기는 B면 · 캐비닛 맨 아랫칸에 부치지 않은 편지들 ·
+   타자기엔 날마다 질문 하나 → 서로 다른 일곱 밤을 오면 책상 위에 마지막 봉투 */
+const OFFICE_N2 = {
+  clock: { obj: '다시 가는 시계', axis: '두 번째 밤 · 시간',
+    line: '시계가 다시 간다.',
+    memo: '누군가 태엽을 감았다. 6시 47분에서 멈춰 있던 바늘이 지금을 가리킨다.\n멈춰 세워 두는 건 기록의 일이고, 다시 흐르게 하는 건 사람의 일이다.\n기억은 박제가 아니다. 다시 한 번 살아 보는 것이다.',
+    ask: '당신이 다시 흐르게 하고 싶은 시간은 언제인가?' },
+  chess: { obj: '한 수가 놓인 체스판', axis: '두 번째 밤 · 관계',
+    line: '혼자 두는 판은 없다.',
+    memo: '몇 달째 그대로이던 판에 한 수가 놓였다. 내가 두지 않은 수다.\n상대가 있다는 것 — 그게 게임이 계속되는 이유다.\n이기고 지는 것보다, 마주 앉아 줄 사람이 있다는 게 먼저다.',
+    ask: '당신의 맞은편에 앉아 주는 사람은 누구인가?' },
+  seat: { obj: '김이 오르는 잔', axis: '두 번째 밤 · 관계',
+    line: '기다리던 사람이 왔다. 당신이다.',
+    memo: '두 번째 잔은 늘 식어 있었다. 오늘은 당신 쪽 잔에서 김이 오른다.\n빈자리를 비워 두면 언젠가 누군가 앉는다.\n그날을 위해 잔을 데워 두는 것 — 그게 기다림의 예의다.',
+    ask: '당신은 누구의 잔을 데워 두고 있는가?' },
+  people: { obj: '보드 밖의 빈 사진', axis: '두 번째 밤 · 관계',
+    line: '사진이 한 장 늘었다. 아직 아무것도 찍혀 있지 않다.',
+    memo: '보드에 자리가 없어 벽에 따로 붙였다. 붉은 실이 모두 그쪽으로 이어져 있다.\n다음 사람의 자리다.\n관계는 완성되는 게 아니라 계속 늘어나는 것이다. 이 보드에는 끝이 없다.',
+    ask: '당신이 다음으로 실을 이어 줄 사람은 누구인가?' },
+  window: { obj: '비가 그친 창', axis: '두 번째 밤 · 견디기',
+    line: '비가 그쳤다. 그쳤다는 걸 알아차리는 데 한참 걸렸다.',
+    memo: '힘든 시간은 끝나는 순간을 알려 주지 않는다.\n어느 날 문득, 창밖이 조용하다는 걸 알게 될 뿐이다.\n그래서 가끔 창을 열어 본다. 이미 그쳤는지도 모르니까.',
+    ask: '당신의 비는 이미 그쳤는데, 아직 우산을 쓰고 있지는 않은가?' },
+  mirror: { obj: '입김 글씨가 남은 거울', axis: '두 번째 밤 · 흔적',
+    line: '거울에 누군가 입김으로 글씨를 썼다. “여기 있었어.”',
+    memo: '지워지기 전에 읽었다.\n사람이 남기는 흔적은 대개 이렇게 희미하다. 금방 마르고, 금방 지워진다.\n그래서 읽어 주는 사람이 필요하다. 이 방이 하는 일이 그것이다.',
+    ask: '당신은 사라지기 전에 누구의 흔적을 읽어 주었는가?' },
+  gramo: { obj: '축음기 — B면', axis: '두 번째 밤 · 다시 듣기',
+    line: '판을 뒤집었다. B면이다.',
+    memo: '사람들은 A면만 기억한다. 가장 잘된 곡, 가장 좋은 날.\n그런데 B면에 더 좋은 곡이 있을 때가 많다. 묻히고, 덜 알려진 날들.\n이 방은 B면을 위해 있다.',
+    ask: '당신 삶의 B면에는 어떤 곡이 있는가?' },
+};
+/* 캐비닛 맨 아랫칸 — 부치지 않은 편지들 */
+const OFFICE_LETTERS = [
+  { to: '떠난 사람에게', line: '인사를 제대로 못 했다.', memo: '이 편지도 부치지 못할 것이다. 그래도 쓴다.\n쓰는 동안은 당신이 여기 있으니까.\n언젠가 길에서 마주치면, 아무 일 없었던 것처럼 이름을 불러 주겠다.' },
+  { to: '십 년 전의 나에게', line: '그렇게 서두르지 않아도 된다.', memo: '네가 이기려고 애쓴 사람들이, 결국 네 곁에 남는 사람들이다.\n이겼다고 얻는 것보다, 같이 걸었다고 얻는 게 훨씬 많다.\n그리고 — 그날 먼저 사과해라. 생각보다 오래 남는다.' },
+  { to: '마지막에 올 사람에게', line: '불이 하나 켜져 있을 것이다.', memo: '그건 끄는 걸 잊은 게 아니다. 당신을 위해 남겨 둔 것이다.\n아무도 없는 방에 들어서는 게 얼마나 쓸쓸한지 나는 안다.\n그러니 당신도 나갈 때, 하나는 켜 두고 가라.' },
+  { to: '비에게', line: '덕분에 사람들이 한 우산 아래 섰다.', memo: '너 때문에 미뤄진 날이 많았다. 투덜거리기도 했다.\n그런데 돌아보면, 네가 오는 날마다 누군가 우산을 같이 썼다.\n고맙다는 말은 처음이다.' },
+  { to: '이 방에게', line: '나는 너를 지켰다고 생각했다.', memo: '돌아보니 네가 나를 지켜 주었다.\n흔들리는 날마다 여기 와서 불을 켜고, 물건들 사이에 앉아 있었다.\n다음 사람도 그렇게 지켜 주길 바란다.' },
+];
+/* 타자기 — 날마다 질문 하나(답은 쓰지 않아도 된다) */
+const OFFICE_Q = [
+  '오늘 고맙다는 말을 미룬 사람이 있는가?', '오늘 누군가의 이름을 다정하게 불렀는가?', '요즘 당신이 가장 자주 하는 변명은 무엇인가?',
+  '지금 연락하면 반가워할 사람은 누구인가?', '당신이 지키고 있는 작은 약속 하나는?', '오늘 진 것에서 배운 것은 무엇인가?',
+  '끝까지 지키고 싶은 습관 하나는?', '누군가에게 받은 친절 중 아직 갚지 못한 것은?', '오늘 서두르느라 놓친 얼굴이 있는가?',
+  '먼저 사과해야 할 일이 아직 남아 있는가?', '당신의 자리를 비워 두고 기다리는 사람은 누구인가?', '오늘 하루를 한 문장으로 기록한다면?',
+  '가장 오래 간직한 물건에는 어떤 이야기가 있는가?', '십 년 전의 당신이 지금의 당신을 본다면 무슨 말을 할까?', '모르는 척 지나친 수고는 누구의 것이었나?',
+  '오늘 누구를 웃게 했는가?', '잃었다고 생각했는데 사실 남아 있는 것은?', '당신의 좋은 날을 함께 기뻐해 줄 사람은 누구인가?',
+  '아직 늦지 않은 일은 무엇인가?', '오늘 어떤 사람으로 기억되고 싶은가?', '내일의 당신에게 남기고 싶은 한 줄은?',
+];
+/* 일곱 밤을 오면 — 책상 위 마지막 봉투 */
+const OFFICE_LAST = { obj: '책상 위 봉투', axis: '일곱 번째 밤',
+  line: '일곱 밤을 와 주었구나.',
+  memo: '이제 알 것이다. 이 방은 답을 주는 곳이 아니라, 질문을 하나씩 들고 나가는 곳이라는 걸.\n기록은 내가 했다. 기억은 당신이 해 줄 차례다.\n내일부터는 오지 않아도 된다. 다만 가끔, 불이 켜져 있는지 보러 와 달라.\n그 불은 나를 위한 게 아니라, 당신 다음에 올 사람을 위한 것이니까.\n— 첫 번째 관리자',
+  ask: '당신은 누구를 위해 불을 켜 둘 것인가?' };
+const OFFICE_N2_N = Object.keys(OFFICE_N2).length + OFFICE_LETTERS.length;
+const OFFICE_DAYS_GOAL = 7;
 const OFFICE_MORE_N = Object.keys(OFFICE_MORE).length + OFFICE_BOOKS.length + OFFICE_DRAFTS.length;
 const OFFICE_ORDER = ['record', 'names', 'people', 'seat', 'clock', 'end', 'mirror'];
-const OFFICE = { more: new Set(), cur: {}, gramoT: 0, read: new Set(), built: false, noir: 0, el: null, open: false, typer: null, steam: [], paper: null, paperText: '', typeT: 20, drawer: null, rainT: 0, notes: 0 };
+const OFFICE = { n2: 0, days: new Set(), more: new Set(), cur: {}, gramoT: 0, read: new Set(), built: false, noir: 0, el: null, open: false, typer: null, steam: [], paper: null, paperText: '', typeT: 20, drawer: null, rainT: 0, notes: 0 };
 try { (JSON.parse(localStorage.getItem('museum-office-read') || '[]') || []).forEach((k) => OFFICE.read.add(k)); } catch (e) { /* 처음부터 */ }
 try { (JSON.parse(localStorage.getItem('museum-office-more') || '[]') || []).forEach((k) => OFFICE.more.add(k)); } catch (e) { /* 처음부터 */ }
+try { OFFICE.n2 = +(localStorage.getItem('museum-office-n2') || 0) || 0; (JSON.parse(localStorage.getItem('museum-office-days') || '[]') || []).forEach((k) => OFFICE.days.add(k)); } catch (e) { /* 처음부터 */ }
+function officeSave() { try { localStorage.setItem('museum-office-n2', String(OFFICE.n2)); localStorage.setItem('museum-office-days', JSON.stringify([...OFFICE.days])); } catch (e) { /* */ } }
 
 const ofMat = (c, r = 0.6, m = 0) => { const x = new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m }); x.userData.noBatch = true; if (M.envIn) { x.envMap = M.envIn; x.envMapIntensity = 0.35; } return x; };
 /** 방 안 좌표(m) → 그룹(방 바닥 기준)에 놓기 */
@@ -121,7 +182,7 @@ function ofBlock(r, x0, x1, z0, z1, h = 120) { M.walls.push({ x0: x0 * CM, x1: x
 const ofAt = (o, x, y, z) => { o.position.set(x, y, z); return o; };
 function ofHit(g, x, y, z, w, h, d, id) {
   const hit = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(x, y, z); g.add(hit);
-  const lab = { book: '책장', draft: '휴지통 — 구겨진 종이', daily: '메모장 — 오늘의 문장' }[id] || (OFFICE_TEXT[id] || OFFICE_MORE[id]).obj;
+  const lab = { book: '책장', draft: '휴지통 — 구겨진 종이', daily: '메모장 — 오늘의 문장', last: '책상 위 봉투' }[id] || (OFFICE_TEXT[id] || OFFICE_MORE[id]).obj;
   const info = { id: 'office-' + id, type: 'placard', icon: '🕯', label: lab, title: lab, room: 'workshop', x: x * CM, z: z * CM, y: y * CM, onUse: () => officeRead(id) };
   M.pickables.push(hit); M.artByMesh.set(hit, info);
   return info;
@@ -142,15 +203,17 @@ function officeDress(r, g) {
     const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0B1018'); gr.addColorStop(1, '#1A1E26'); c.fillStyle = gr; c.fillRect(0, 0, w, h);
     for (let i = 0; i < 40; i++) { const x = Math.random() * w, y = h * 0.45 + Math.random() * h * 0.5, rr = 6 + Math.random() * 22; const b = c.createRadialGradient(x, y, 0, x, y, rr); const col = Math.random() < 0.6 ? '255,210,150' : '180,200,255'; b.addColorStop(0, 'rgba(' + col + ',.5)'); b.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = b; c.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
   });
-  const pane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: night })); pane.position.set(wx, 1.95, wz); pane.rotation.y = -Math.PI / 2; g.add(pane);
+  OFFICE.night = night; const pane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: night })); pane.position.set(wx, 1.95, wz); pane.rotation.y = -Math.PI / 2; g.add(pane);
   // 빗줄기 — 흐르는 무늬
   const rain = ofCanvasTex(256, 256, (c, w, h) => { c.clearRect(0, 0, w, h); for (let i = 0; i < 160; i++) { const x = Math.random() * w, y = Math.random() * h, L = 8 + Math.random() * 30; c.strokeStyle = 'rgba(200,215,230,' + (0.12 + Math.random() * 0.25) + ')'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 1, y + L); c.stroke(); } });
   rain.wrapS = rain.wrapT = THREE.RepeatWrapping; rain.repeat.set(2, 1.4);
-  const rainM = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: rain, transparent: true, depthWrite: false })); rainM.position.set(wx - 0.01, 1.95, wz); rainM.rotation.y = -Math.PI / 2; g.add(rainM);
+  const rainM = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: rain, transparent: true, depthWrite: false })); rainM.position.set(wx - 0.01, 1.95, wz); rainM.rotation.y = -Math.PI / 2; g.add(rainM); OFFICE.rainMesh = rainM;
   OFFICE.rain = rain;
   const slats = []; for (let i = 0; i < 14; i++) slats.push(boxAt(0.04, 0.035, 5.2, wx - 0.05, 1.1 + i * 0.125, wz));
-  const blinds = new THREE.Mesh(mergeGeos(slats), ofMat(0x6E685C, 0.7)); blinds.rotation.z = 0; g.add(blinds);
-  const frame = rbox(0.12, 2.15, 5.5, 0.01, wood); frame.position.set(wx + 0.02, 1.95, wz); g.add(frame);
+  const blinds = new THREE.Mesh(mergeGeos(slats), ofMat(0x6E685C, 0.7)); blinds.rotation.z = 0; g.add(blinds); OFFICE.blinds = blinds;
+  // 창틀 — 테두리만(통짜 상자면 창 그림을 가린다)
+  g.add(new THREE.Mesh(mergeGeos([boxAt(0.1, 0.12, 5.5, wx - 0.02, 1.95 + 1.015, wz), boxAt(0.1, 0.12, 5.5, wx - 0.02, 1.95 - 1.015, wz),
+    boxAt(0.1, 2.15, 0.12, wx - 0.02, 1.95, wz - 2.69), boxAt(0.1, 2.15, 0.12, wx - 0.02, 1.95, wz + 2.69), boxAt(0.06, 0.05, 5.3, wx - 0.02, 1.95, wz)]), wood));
   // 블라인드 줄무늬 빛 — 바닥에 비스듬히
   const stripes = ofCanvasTex(256, 256, (c, w, h) => { c.clearRect(0, 0, w, h); for (let i = 0; i < 9; i++) { c.fillStyle = 'rgba(190,205,230,.55)'; c.fillRect(0, i * 28 + 4, w, 14); } const gm = c.createLinearGradient(0, 0, w, 0); gm.addColorStop(0, 'rgba(0,0,0,0)'); gm.addColorStop(1, 'rgba(0,0,0,1)'); c.globalCompositeOperation = 'destination-in'; c.fillStyle = gm; c.fillRect(0, 0, w, h); });
   const sm = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 4.6), new THREE.MeshBasicMaterial({ map: stripes, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -189,7 +252,8 @@ function officeDress(r, g) {
   // ── 서류 캐비닛(남쪽 벽) — 맨 윗칸이 조금 열려 있다 · 위에 라디오 ──
   const kx = x0 + 3.2, kz = z1 - 0.42;
   const cab = rbox(0.6, 1.4, 0.65, 0.02, ofMat(0x5A5E58, 0.5, 0.4)); cab.position.set(kx, 0.7, kz); g.add(cab);
-  for (let i = 0; i < 4; i++) { const d = rbox(0.54, 0.3, 0.02, 0.005, ofMat(0x6A6E66, 0.45, 0.45)); d.position.set(kx, 0.2 + i * 0.33, kz - 0.33 - (i === 3 ? 0.18 : 0)); g.add(d); const h = rbox(0.12, 0.02, 0.03, 0.005, brass); h.position.set(kx, 0.28 + i * 0.33, kz - 0.35 - (i === 3 ? 0.18 : 0)); g.add(h); }
+  OFFICE.cab = { kx, kz, low: [] };
+  for (let i = 0; i < 4; i++) { const d = rbox(0.54, 0.3, 0.02, 0.005, ofMat(0x6A6E66, 0.45, 0.45)); d.position.set(kx, 0.2 + i * 0.33, kz - 0.33 - (i === 3 ? 0.18 : 0)); g.add(d); const h = rbox(0.12, 0.02, 0.03, 0.005, brass); h.position.set(kx, 0.28 + i * 0.33, kz - 0.35 - (i === 3 ? 0.18 : 0)); g.add(h); if (i === 0) OFFICE.cab.low.push(d, h); }
   for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.24, 0.012), ofMat(i % 2 ? 0xC8B488 : 0xB09A6A, 0.85)); f.position.set(kx, 1.1, kz - 0.2 - i * 0.03); g.add(f); }
   const radio = rbox(0.42, 0.26, 0.2, 0.03, woodL); radio.position.set(kx, 1.53, kz); g.add(radio);
   const grill = new THREE.Mesh(new THREE.CircleGeometry(0.08, 18), ofMat(0x2A2018, 0.8)); grill.position.set(kx - 0.08, 1.53, kz - 0.101); grill.rotation.y = Math.PI; g.add(grill);
@@ -233,6 +297,7 @@ function officeDress(r, g) {
   });
   const lp = []; for (let i = 0; i < pins.length; i++) for (const j of [i + 1, i + cols, i + cols + 1]) if (j < pins.length && Math.random() < 0.7) lp.push(pins[i], pins[j]);
   g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({ color: 0xB01818 })));
+  OFFICE.boardAt = { bx, bz, pins, pw, phH };
   ofHit(g, bx, 1.75, bz + 0.2, 3.6, 1.7, 0.3, 'people');
   // 액자등 — 보드 위 황동 막대 하나
   const pl = cyl(0.025, 0.025, 1.4, brass, 10); pl.rotation.z = Math.PI / 2; pl.position.set(bx, 2.78, bz + 0.22); g.add(pl);
@@ -253,7 +318,7 @@ function officeDress(r, g) {
   const leg = cyl(0.04, 0.12, 0.54, wood, 10); leg.position.set(sx, 0.27, sz); g.add(leg);
   const glassM = new THREE.MeshStandardMaterial({ color: 0xD8E4E8, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.35 });
   for (const s of [-1, 1]) { const gl = cyl(0.035, 0.03, 0.08, glassM, 14); gl.position.set(sx + s * 0.14, 0.61, sz + 0.05); g.add(gl); const liq = cyl(0.032, 0.03, 0.03, ofMat(0x8A4A14, 0.2), 14); liq.position.set(sx + s * 0.14, 0.59, sz + 0.05); g.add(liq); }
-  OFFICE.steamAt = new THREE.Vector3(sx + 0.14, 0.66, sz + 0.05);
+  OFFICE.steamAt = new THREE.Vector3(sx + 0.14, 0.66, sz + 0.05); OFFICE.steamMine = new THREE.Vector3(sx - 0.14, 0.66, sz + 0.05);
   ofHit(g, sx, 0.6, sz, 2.6, 1.2, 1.0, 'seat');
   // 플로어 스탠드 — 의자 곁, 갓 아래로만 빛이 떨어진다
   const fl = new THREE.Group();
@@ -263,12 +328,7 @@ function officeDress(r, g) {
   const fli = new THREE.PointLight(0xFFCF90, 8, 5.5, 1.6); fli.position.set(sx - 1.0, 1.45, sz - 0.85); g.add(fli);
 
   // ── 멈춘 시계(서쪽 벽) · 금 간 거울(서쪽 벽) ──
-  const clk = ofCanvasTex(256, 256, (c, w, h) => {
-    c.fillStyle = '#E8E0CC'; c.beginPath(); c.arc(128, 128, 124, 0, 6.28); c.fill(); c.strokeStyle = '#2A1C12'; c.lineWidth = 8; c.stroke();
-    c.fillStyle = '#1A140E'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; c.fillRect(128 + Math.sin(a) * 100 - 3, 128 - Math.cos(a) * 100 - 8, 6, 16); }
-    const hand = (a, L, wd) => { c.save(); c.translate(128, 128); c.rotate(a); c.fillRect(-wd / 2, -L, wd, L); c.restore(); };
-    hand((6 + 47 / 60) / 12 * 6.28, 60, 8); hand(47 / 60 * 6.28, 92, 5);
-  });
+  const clk = ofCanvasTex(256, 256, (c) => officeClockDraw(c, 6, 47, null)); OFFICE.clock = clk;
   const cm = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32), new THREE.MeshStandardMaterial({ map: clk, roughness: 0.6 })); cm.position.set(x0 + 0.17, 2.35, z0 + 3.0); cm.rotation.y = Math.PI / 2; g.add(cm);
   const cr = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.025, 8, 32), brass); cr.position.copy(cm.position); cr.rotation.y = Math.PI / 2; g.add(cr);
   ofHit(g, x0 + 0.3, 2.35, z0 + 3.0, 0.3, 0.8, 0.8, 'clock');
@@ -381,11 +441,11 @@ function officeDress(r, g) {
       gp.add(ofAt(new THREE.Mesh(new THREE.SphereGeometry(0.013, 10, 8), m), 0, 0.016 + tall, 0));
       if (tall > 0.05) gp.add(ofAt(rbox(0.006, 0.022, 0.006, 0.001, m), 0, 0.04 + tall, 0));
       gp.position.set(px, 0.748, pz); if (fallen) { gp.rotation.z = Math.PI / 2; gp.position.y += 0.02; gp.position.x += 0.03; }
-      g.add(gp);
+      g.add(gp); return gp;
     };
     [[1, 6], [2, 5], [4, 6], [5, 6], [6, 5]].forEach(([a, b]) => piece(a, b, wM, 0.025));
     [[2, 1], [3, 2], [5, 1], [6, 2]].forEach(([a, b]) => piece(a, b, bM, 0.025));
-    piece(4, 7, wM, 0.06); piece(3, 4, bM, 0.06); piece(6, 3, bM, 0.045); piece(0, 0, wM, 0.06, true);   // 쓰러진 왕 하나
+    piece(4, 7, wM, 0.06); OFFICE.chessMove = { p: piece(3, 4, bM, 0.06), to: at(4, 5) }; piece(6, 3, bM, 0.045); piece(0, 0, wM, 0.06, true);   // 쓰러진 왕 하나
     for (const s of [-1, 1]) {
       const ch = new THREE.Group(); ch.add(ofAt(rbox(0.45, 0.05, 0.45, 0.01, wood), 0, 0.46, 0)); ch.add(ofAt(rbox(0.45, 0.5, 0.05, 0.01, wood), 0, 0.72, -0.2));
       for (const [lx, lz] of [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]]) ch.add(ofAt(cyl(0.02, 0.02, 0.45, wood, 6), lx, 0.225, lz));
@@ -406,7 +466,7 @@ function officeDress(r, g) {
     for (const s of [-1, 1]) { const dr = rbox(0.74, 0.6, 0.02, 0.005, woodL); dr.position.set(gx + s * 0.39, 0.4, gz - 0.25); g.add(dr); }
     const base = rbox(0.38, 0.12, 0.36, 0.01, woodL); base.position.set(gx - 0.25, 0.84, gz); g.add(base);
     const disk = new THREE.Group(); disk.add(cyl(0.15, 0.15, 0.008, ofMat(0x0C0C0E, 0.25, 0.1), 28));
-    const lbl = cyl(0.045, 0.045, 0.01, ofMat(0x8A2A1E, 0.7), 18); lbl.position.y = 0.001; disk.add(lbl);
+    const lbl = cyl(0.045, 0.045, 0.01, ofMat(0x8A2A1E, 0.7), 18); OFFICE.gramoLbl = lbl; lbl.position.y = 0.001; disk.add(lbl);
     disk.position.set(gx - 0.25, 0.905, gz); g.add(disk); OFFICE.disk = disk;
     const arm = cyl(0.006, 0.006, 0.2, brass, 6); arm.rotation.z = Math.PI / 2; arm.rotation.y = 0.5; arm.position.set(gx - 0.17, 0.93, gz + 0.1); g.add(arm);
     const horn = new THREE.Mesh(new THREE.LatheGeometry([[0.012, 0], [0.02, 0.12], [0.05, 0.26], [0.13, 0.38], [0.2, 0.42]].map(([a, b]) => new THREE.Vector2(a, b)), 24), brass);
@@ -457,9 +517,101 @@ function officeDress(r, g) {
   const amb = new THREE.PointLight(0x8090A8, 2.2, 14, 1.4); amb.position.set(cx, (r.h - 60) / CM, (z0 + z1) / 2); g.add(amb);
   // 서랍이 열리면 편지를 읽는다
   OFFICE.letterInfo = ofHit(g, dx - 0.5, 0.62, dz + 0.8, 0.3, 0.3, 0.6, 'letter');
+  {
+    const env = new THREE.Group();
+    const em = ofMat(0xE6DCC2, 0.9); env.add(ofAt(rbox(0.24, 0.006, 0.16, 0.002, em), 0, 0.003, 0));
+    const seal = cyl(0.018, 0.018, 0.004, ofMat(0x8A1A14, 0.4), 14); seal.position.set(0, 0.008, 0); env.add(seal);
+    env.rotation.y = 0.35; env.position.set(dx - 0.22, 0.81, dz - 0.72); env.visible = false; g.add(env); OFFICE.envelope = env;
+    OFFICE.lastAt = [dx - 0.22, 0.86, dz - 0.72];   // 조사 자리는 봉투가 놓일 때 만든다(숨은 채로 집히지 않게)
+    OFFICE.room = r; OFFICE.g = g;
+  }
+  // ⚠️ 캔버스 그림(창 · 빗줄기 · 금 · 시계 · 종이 …)을 쓰는 재질은 방 배칭에 합쳐지면 그림이 사라진다 → 전부 제외
+  g.traverse((o) => { const m = o.material; if (m && m.map && m.map.userData && m.map.userData.cv) m.userData.noBatch = true; });
   OFFICE.built = true;
+  if (OFFICE.n2 >= 2) officeNight2();
   officePaint();
 }
+/** 시계 그림 — 멈춘 6:47 또는 지금 시각(초침까지) */
+function officeClockDraw(c, hh, mm, ss) {
+  c.clearRect(0, 0, 256, 256);
+  c.fillStyle = '#E8E0CC'; c.beginPath(); c.arc(128, 128, 124, 0, 6.28); c.fill(); c.strokeStyle = '#2A1C12'; c.lineWidth = 8; c.stroke();
+  c.fillStyle = '#1A140E'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; c.fillRect(128 + Math.sin(a) * 100 - 3, 128 - Math.cos(a) * 100 - 8, 6, 16); }
+  const hand = (a, L, wd) => { c.save(); c.translate(128, 128); c.rotate(a); c.fillRect(-wd / 2, -L, wd, L); c.restore(); };
+  hand(((hh % 12) + mm / 60) / 12 * 6.28, 60, 8); hand(mm / 60 * 6.28, 92, 5);
+  if (ss != null) { c.fillStyle = '#8A1A14'; hand(ss / 60 * 6.28, 100, 2); }
+  c.fillStyle = '#1A140E'; c.beginPath(); c.arc(128, 128, 7, 0, 6.28); c.fill();
+}
+/** 두 번째 밤 — 방을 바꾼다(한 번만) */
+function officeNight2() {
+  if (OFFICE.n2done || !OFFICE.built) return;
+  OFFICE.n2done = true;
+  const g = OFFICE.g, r = OFFICE.room, x0 = r.x0 / CM, z1 = r.z1 / CM;
+  // 비가 그치고 달
+  if (OFFICE.rainMesh) OFFICE.rainMesh.visible = false;
+  if (OFFICE.blinds) { OFFICE.blinds.scale.y = 0.25; OFFICE.blinds.position.y = 2.06; }   // 블라인드를 걷어 올렸다
+  if (OFFICE.night) {
+    const cv = OFFICE.night.userData.cv, c = cv.getContext('2d'), w = cv.width, h = cv.height;
+    const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#141C2A'); gr.addColorStop(1, '#1E2430'); c.fillStyle = gr; c.fillRect(0, 0, w, h * 0.45);
+    const mx = w * 0.7, my = h * 0.36, halo = c.createRadialGradient(mx, my, 0, mx, my, 90); halo.addColorStop(0, 'rgba(235,235,225,.55)'); halo.addColorStop(1, 'rgba(235,235,225,0)');
+    c.fillStyle = halo; c.fillRect(mx - 90, my - 90, 180, 180); c.fillStyle = '#F2EFE4'; c.beginPath(); c.arc(mx, my, 22, 0, 6.28); c.fill();
+    for (let i = 0; i < 50; i++) { c.fillStyle = 'rgba(255,255,255,' + (0.3 + Math.random() * 0.5) + ')'; c.fillRect(Math.random() * w, Math.random() * h * 0.4, 1.5, 1.5); }
+    OFFICE.night.needsUpdate = true;
+  }
+  // 누군가 체스 한 수
+  if (OFFICE.chessMove) { const [px, pz] = OFFICE.chessMove.to; OFFICE.chessMove.p.position.x = px; OFFICE.chessMove.p.position.z = pz; }
+  // 이번엔 내 쪽 잔에서 김
+  if (OFFICE.steamMine) OFFICE.steamAt = OFFICE.steamMine;
+  // 축음기 — B면(라벨 색)
+  if (OFFICE.gramoLbl) OFFICE.gramoLbl.material = ofMat(0xD8CCA8, 0.7);
+  // 캐비닛 맨 아랫칸이 열리고 편지 묶음
+  if (OFFICE.cab) {
+    for (const m of OFFICE.cab.low) m.position.z -= 0.3;
+    const bundle = new THREE.Group();
+    for (let i = 0; i < 5; i++) { const e = rbox(0.2, 0.005, 0.13, 0.002, ofMat(i % 2 ? 0xE6DCC2 : 0xD8CCAE, 0.9)); e.position.set((Math.random() - 0.5) * 0.03, i * 0.007, (Math.random() - 0.5) * 0.03); e.rotation.y = (Math.random() - 0.5) * 0.3; bundle.add(e); }
+    const tie = rbox(0.21, 0.04, 0.012, 0.002, ofMat(0x8A1A14, 0.6)); tie.position.y = 0.018; bundle.add(tie);
+    bundle.position.set(OFFICE.cab.kx, 0.36, OFFICE.cab.kz - 0.5); g.add(bundle);
+  }
+  // 보드 밖 벽에 빈 사진 한 장 — 실이 모두 그쪽으로
+  if (OFFICE.boardAt) {
+    const B = OFFICE.boardAt, px = B.bx + 2.25, py = 1.75, pz = B.bz + 0.04;
+    const blank = ofCanvasTex(170, 210, (c, w, h) => { c.fillStyle = '#ECE6D8'; c.fillRect(0, 0, w, h); c.fillStyle = '#1C1A18'; c.fillRect(12, 12, w - 24, h - 60); c.fillStyle = '#4A4440'; c.font = 'bold 48px serif'; c.textAlign = 'center'; c.fillText('?', w / 2, (h - 48) / 2 + 16); c.fillStyle = '#2A2018'; c.font = '16px "Courier New", serif'; c.fillText('다음 사람', w / 2, h - 18); });
+    const bm = new THREE.MeshStandardMaterial({ map: blank, roughness: 0.9 }); bm.userData.noBatch = true;
+    const ph = new THREE.Mesh(new THREE.PlaneGeometry(B.pw, B.phH), bm); ph.position.set(px, py, pz); ph.rotation.z = 0.05; g.add(ph);
+    const pinP = new THREE.Vector3(px, py + B.phH / 2 - 0.03, pz + 0.02);
+    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 6), ofMat(0xB01818, 0.4)); pin.position.copy(pinP); g.add(pin);
+    const lp = []; for (const q of B.pins) lp.push(q, pinP);
+    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({ color: 0xB01818 })));
+    ofHit(g, px, py, pz + 0.15, B.pw + 0.1, B.phH + 0.1, 0.3, 'people');
+  }
+  // 거울에 입김 글씨
+  {
+    const fog = ofCanvasTex(256, 384, (c, w, h) => {
+      c.clearRect(0, 0, w, h); c.fillStyle = 'rgba(235,240,245,.5)'; c.font = 'italic 34px "Noto Serif KR", serif'; c.textAlign = 'center';
+      c.save(); c.translate(w * 0.45, h * 0.62); c.rotate(-0.08); c.fillText('여기 있었어', 0, 0); c.restore();
+      for (let i = 0; i < 6; i++) { c.fillStyle = 'rgba(235,240,245,.18)'; c.fillRect(w * 0.3 + i * 22, h * 0.64, 2, 18 + Math.random() * 26); }
+    });
+    const fm = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.5), new THREE.MeshBasicMaterial({ map: fog, transparent: true, depthWrite: false, opacity: 0.85 }));
+    fm.position.set(x0 + 0.18, 1.6, z1 - 6.2); fm.rotation.y = Math.PI / 2; g.add(fm);
+  }
+  officeTickClock(true);
+  officeLastCheck();
+}
+/** 시계 — 지금 시각으로(초가 바뀔 때만 다시 그린다) */
+function officeTickClock(force) {
+  if (!OFFICE.clock || OFFICE.n2 < 2) return false;
+  const d = new Date(), s = d.getSeconds();
+  if (!force && s === OFFICE.lastSec) return false;
+  OFFICE.lastSec = s;
+  officeClockDraw(OFFICE.clock.userData.cv.getContext('2d'), d.getHours(), d.getMinutes() + s / 60, s); OFFICE.clock.needsUpdate = true;
+  return true;
+}
+/** 일곱 밤 — 봉투가 놓인다 */
+function officeLastCheck() {
+  if (!OFFICE.envelope) return;
+  OFFICE.envelope.visible = OFFICE.n2 >= 2 && OFFICE.days.size >= OFFICE_DAYS_GOAL;
+  if (OFFICE.envelope.visible && !OFFICE.lastInfo && OFFICE.g) { const a = OFFICE.lastAt; OFFICE.lastInfo = ofHit(OFFICE.g, a[0], a[1], a[2], 0.3, 0.12, 0.25, 'last'); }
+}
+function officeToday() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
 
 /* ── 읽기 — 한 줄 → 메모(타자기) → 질문 ── */
 function officeRead(id) {
@@ -469,6 +621,7 @@ function officeRead(id) {
     return;
   }
   const E = officeEntry(id); if (!E) return;
+  OFFICE.lastId = id;
   const T = E.T;
   if (M.locked) { OFFICE.relock = true; document.exitPointerLock(); }
   M.openId = 'office';
@@ -510,16 +663,40 @@ function officeRead(id) {
     if (OFFICE_ORDER.every((k) => OFFICE.read.has(k))) setTimeout(() => { toast('어디선가 딸깍 — 책상 서랍의 잠금이 풀렸다', 3200); if (typeof torchClick === 'function') torchClick(); }, 1500);
   }
   if (id === 'letter' && typeof hauntRec === 'function') hauntRec('keeper');
-  if (E.key && !OFFICE.more.has(E.key)) {
+  if (E.key && E.key.indexOf('n2:') !== 0 && !OFFICE.more.has(E.key)) {
     OFFICE.more.add(E.key);
     try { localStorage.setItem('museum-office-more', JSON.stringify([...OFFICE.more])); } catch (e) { /* */ }
     officePaint();
-    if (OFFICE.more.size >= OFFICE_MORE_N) setTimeout(() => { toast('이 방의 문장을 모두 읽었다 — 이제 당신의 문장을 쓸 차례다', 3600); OFFICE.paperText = ''; OFFICE.paperMsg = '당신의 차례. '; }, 1500);
+    if (officeMoreCount() >= OFFICE_MORE_N) setTimeout(() => { toast('이 방의 문장을 모두 읽었다 — 이제 당신의 문장을 쓸 차례다', 3600); OFFICE.paperText = ''; OFFICE.paperMsg = '당신의 차례. '; }, 1500);
   }
-  if (id === 'gramo') officeGramo();
+  if (E.key && E.key.indexOf('n2:') === 0 && !OFFICE.more.has(E.key)) {
+    OFFICE.more.add(E.key);
+    try { localStorage.setItem('museum-office-more', JSON.stringify([...OFFICE.more])); } catch (e) { /* */ }
+    officePaint();
+  }
+  if (id === 'last') { OFFICE.paperText = ''; OFFICE.paperMsg = '다녀가세요. '; }
+  if (id === 'gramo') officeGramo(OFFICE.n2 >= 2);
 }
 /** 무엇을 펼칠지 — 핵심 일곱 · 곁가지 · 책장(안 읽은 책부터) · 휴지통 · 메모장(날마다) */
 function officeEntry(id) {
+  if (id === 'last') return (OFFICE.envelope && OFFICE.envelope.visible) ? { T: OFFICE_LAST, key: null } : null;
+  if (OFFICE.n2 >= 2) {
+    if (OFFICE_N2[id]) return { T: OFFICE_N2[id], key: 'n2:' + id };
+    if (id === 'names') {
+      let j = OFFICE.cur.n2l == null ? -1 : OFFICE.cur.n2l, n = OFFICE_LETTERS.length;
+      for (let k = 0; k < n; k++) { j = (j + 1) % n; if (!OFFICE.more.has('n2:letter' + j)) break; }
+      OFFICE.cur.n2l = j; const L = OFFICE_LETTERS[j];
+      return { T: { obj: '부치지 않은 편지 — ' + L.to, axis: '캐비닛 맨 아랫칸 · ' + (j + 1) + ' / ' + n, line: L.line, memo: L.memo, ask: '' }, key: 'n2:letter' + j };
+    }
+    if (id === 'record') {
+      const d = new Date(), k = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % OFFICE_Q.length, today = officeToday();
+      const first = !OFFICE.days.has(today); OFFICE.days.add(today); officeSave();
+      const n = OFFICE.days.size;
+      if (first && n === OFFICE_DAYS_GOAL) setTimeout(() => { officeLastCheck(); toast('책상 위에 봉투 하나가 놓여 있다', 3200); if (typeof torchClick === 'function') torchClick(); }, 1800);
+      return { T: { obj: '타자기 — 오늘의 질문', axis: d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '. · ' + Math.min(n, OFFICE_DAYS_GOAL) + '번째 밤',
+        line: OFFICE_Q[k], memo: '종이에 질문 하나가 쳐져 있다. 내가 친 게 아니다.\n답은 쓰지 않아도 된다. 하루 동안 주머니에 넣고 다니면 된다.\n내일 밤에는 다른 질문이 쳐져 있을 것이다.', ask: '' }, key: null };
+    }
+  }
   if (OFFICE_TEXT[id]) return { T: OFFICE_TEXT[id], key: null };
   if (OFFICE_MORE[id]) return { T: OFFICE_MORE[id], key: id };
   const next = (pre, n) => {
@@ -536,11 +713,13 @@ function officeEntry(id) {
   return null;
 }
 /** 축음기 — 판이 돌고, 낡은 왈츠 한 소절(지직거림 섞어) */
-function officeGramo() {
+function officeGramo(bSide) {
   OFFICE.gramoT = 26;
   const c = typeof SND !== 'undefined' && SND.ctx; if (!c || !SND.on) return;
   const t0 = c.currentTime + 0.3, beat = 0.62;
-  const mel = [[440, 2], [523.3, 1], [493.9, 2], [440, 1], [392, 2], [349.2, 1], [329.6, 3], [349.2, 2], [392, 1], [440, 2], [392, 1], [349.2, 2], [329.6, 1], [293.7, 3],
+  const melB = [[261.6, 2], [329.6, 1], [392, 3], [440, 2], [392, 1], [329.6, 3], [349.2, 2], [440, 1], [523.3, 3], [493.9, 2], [440, 1], [392, 3],
+    [329.6, 2], [392, 1], [440, 2], [392, 1], [349.2, 2], [329.6, 1], [293.7, 3], [329.6, 2], [349.2, 1], [392, 2], [329.6, 1], [261.6, 3]];
+  const mel = bSide ? melB : [[440, 2], [523.3, 1], [493.9, 2], [440, 1], [392, 2], [349.2, 1], [329.6, 3], [349.2, 2], [392, 1], [440, 2], [392, 1], [349.2, 2], [329.6, 1], [293.7, 3],
     [329.6, 2], [349.2, 1], [392, 2], [440, 1], [523.3, 2], [493.9, 1], [440, 3], [392, 2], [349.2, 1], [329.6, 2], [293.7, 1], [261.6, 2], [293.7, 1], [220, 3]];
   let t = t0;
   for (const [f, n] of mel) {
@@ -558,6 +737,10 @@ function officeGramo() {
 function officeStopTyping() { clearTimeout(OFFICE.delay); clearInterval(OFFICE.typer); OFFICE.finish = null; }
 function officeClose() {
   if (!OFFICE.el) return;
+  if (OFFICE.open && OFFICE.lastId === 'letter' && OFFICE.n2 === 0) {
+    OFFICE.n2 = 1; officeSave();
+    setTimeout(() => toast('편지 뒷면에 한 줄 — “다음에 올 땐, 시계 소리를 들어 봐.”', 4200), 700);
+  }
   officeStopTyping();
   OFFICE.el.classList.remove('on'); OFFICE.open = false;
   M.openId = null; M.keys = {};
@@ -568,7 +751,19 @@ function officePaint() {
   let h = OFFICE.hud;
   if (!h) { h = OFFICE.hud = document.createElement('div'); h.className = 'office-hud'; (document.getElementById('gal') || document.body).appendChild(h); }
   const n = OFFICE_ORDER.filter((k) => OFFICE.read.has(k)).length;
-  h.textContent = (n < 7 ? '생각 ' + n + ' / 7' : '서랍이 열렸다') + '   ·   문장 ' + OFFICE.more.size + ' / ' + OFFICE_MORE_N;
+  if (OFFICE.n2 >= 2) {
+    const m2 = [...OFFICE.more].filter((k) => k.indexOf('n2:') === 0).length;
+    h.textContent = '두 번째 밤   ·   달라진 것 ' + m2 + ' / ' + OFFICE_N2_N + '   ·   질문 ' + Math.min(OFFICE.days.size, OFFICE_DAYS_GOAL) + ' / ' + OFFICE_DAYS_GOAL + '밤';
+  } else h.textContent = (n < 7 ? '생각 ' + n + ' / 7' : '서랍이 열렸다') + '   ·   문장 ' + officeMoreCount() + ' / ' + OFFICE_MORE_N;
+}
+function officeMoreCount() { return [...OFFICE.more].filter((k) => k.indexOf('n2:') !== 0).length; }
+/** 초침 — 두 번째 밤의 시계 */
+function officeTick() {
+  const c = typeof SND !== 'undefined' && SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime + 0.005, N = Math.floor(c.sampleRate * 0.02), b = c.createBuffer(1, N, c.sampleRate), ch = b.getChannelData(0);
+  for (let i = 0; i < N; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / N, 12);
+  const s = c.createBufferSource(); s.buffer = b; const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = (OFFICE.tock = !OFFICE.tock) ? 3200 : 2700; bp.Q.value = 4;
+  const g = c.createGain(); g.gain.value = 0.12; s.connect(bp); bp.connect(g); sndPanned(g, -0.6, 0.5); s.start(t0);
 }
 /** 타자기 한 글자 소리 */
 function officeKey(vol = 1) {
@@ -604,8 +799,15 @@ function stepOffice(dt) {
   OFFICE.noir += ((inR ? 1 : 0) - OFFICE.noir) * Math.min(1, dt * (inR ? 0.9 : 3));
   if (M.post && M.post.uniforms && M.post.uniforms.uNoir) M.post.uniforms.uNoir.value = OFFICE.noir;
   if (OFFICE.hud) OFFICE.hud.classList.toggle('on', inR && !OFFICE.open);
-  if (OFFICE.rainG && SND.ctx) OFFICE.rainG.gain.setTargetAtTime(inR ? 0.07 : 0, SND.ctx.currentTime, 0.4);
+  if (OFFICE.rainG && SND.ctx) OFFICE.rainG.gain.setTargetAtTime(inR && OFFICE.n2 < 2 ? 0.07 : 0, SND.ctx.currentTime, 0.4);
+  // 편지를 읽고 나갔다가 다시 들어서면 — 두 번째 밤
+  if (inR && !OFFICE.wasIn && OFFICE.n2 === 1) {
+    OFFICE.n2 = 2; officeSave(); officeNight2(); officePaint();
+    setTimeout(() => toast('무언가 달라졌다 — 어디선가 초침 소리가 들린다', 3800), 1600);
+  }
+  OFFICE.wasIn = inR;
   if (!inR) return;
+  if (officeTickClock(false)) officeTick();
   officeAmb(dt);
   OFFICE.t = (OFFICE.t || 0) + dt;
   if (OFFICE.gramoT > 0) { OFFICE.gramoT -= dt; if (OFFICE.disk) OFFICE.disk.rotation.y -= dt * 3.5; }
@@ -632,7 +834,7 @@ function stepOffice(dt) {
     const dx = OFFICE.drawer.x, dz = OFFICE.drawer.z - 0.95;
     if (typeof hauntView !== 'function' || !hauntView(dx, (M.roomById.workshop.y0) / CM + 1.0, dz).on) {
       OFFICE.typeT = 9 + Math.random() * 12;
-      const msg = OFFICE.paperMsg || '기억해 줘서 고마워. ';
+      const msg = OFFICE.paperMsg || (OFFICE.n2 >= 2 ? OFFICE_Q[(new Date().getFullYear() * 372 + new Date().getMonth() * 31 + new Date().getDate()) % OFFICE_Q.length] + ' ' : '기억해 줘서 고마워. ');
       OFFICE.paperText = msg.slice(0, (OFFICE.paperText.length % msg.length) + 1);
       const cv = OFFICE.paper.userData.cv, c = cv.getContext('2d');
       c.fillStyle = '#EEE8DA'; c.fillRect(0, 0, cv.width, cv.height); c.fillStyle = '#1A1612'; c.font = '20px "Courier New", monospace';
