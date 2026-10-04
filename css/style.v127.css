@@ -2178,6 +2178,7 @@ body.is-touch .m-dock { top: calc(100px + var(--st, 0px)); }
 .office-read .or-memo { margin: 0 0 22px; min-height: 7.5em; font: 400 15px/1.95 'Courier New', 'Noto Serif KR', monospace; color: #C9C2B4; white-space: pre-line; }
 .office-read .or-ask { margin: 0 0 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: 17px; font-style: italic; color: #E3C567; opacity: 0; transform: translateY(6px); transition: opacity 1.2s ease, transform 1.2s ease; }
 .office-read .or-ask.on { opacity: 1; transform: none; }
+.office-read .or-line.strike { text-decoration: line-through; text-decoration-color: rgba(176, 24, 24, .85); text-decoration-thickness: 2px; color: #A8A090; }
 .office-read .or-x { font: 500 12px/1 'Noto Sans KR', sans-serif; padding: 9px 14px; border-radius: 6px; border: 0; background: rgba(255, 255, 255, .08); color: #C9C2B4; cursor: pointer; }
 .office-hud { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); z-index: 20; pointer-events: none; opacity: 0; transition: opacity .8s ease;
   font: 500 11px/1 'Noto Sans KR', sans-serif; letter-spacing: .3em; color: rgba(233, 228, 218, .55); }

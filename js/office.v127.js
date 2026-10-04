@@ -1,0 +1,643 @@
+/* ══════════════════════════════════════════════════════════
+   관리자의 방(v126) — 옛 작업실 자리 · 2층 동쪽 · 관리자만(F2)
+   ══════════════════════════════════════════════════════════
+   사용자: "느와르, 철학이 주 베이스고 교훈을 얻고 관리자의 마인드를 이해할 수 있는 방.
+            나중에 누군가 들어오면 내가 어떤 생각을 했고 어떤 가치관을 가졌는지 알 수 있도록."
+   정한 것: 글은 초안을 내가 쓰고 사용자가 고친다 · 축은 셋 — 기록과 기억 / 사람과 관계 / 시간과 유한함 · 관리자만 · 공포는 은은하게만.
+     · 들어서면 화면이 흑백으로 바래고(post uNoir) 창밖엔 비. 블라인드 줄무늬 빛 · 책상 스탠드 하나
+     · 물건 일곱 = 생각 일곱. 조사하면 [한 줄 → 메모(타자기처럼) → 되묻는 질문] 세 겹으로 읽힌다
+     · 일곱을 다 읽으면 책상 서랍이 열린다 — 「다음 관리자에게」
+     · 은은하게: 두 번째 잔에서만 김이 오른다 · 눈을 돌린 사이 타자기가 한 글자 찍는다
+   ✎ 글을 고칠 곳은 OFFICE_TEXT 한 군데다. */
+const OFFICE_TEXT = {
+  record: { obj: '타자기', axis: '기록과 기억',
+    line: '기록은 편을 들지 않는다.',
+    memo: '좋은 날만 골라 남기면 그건 기록이 아니라 광고다.\n나는 이 방을 지키면서 하나만 지켰다. 고르지 않는 것.\n자랑스러운 날도, 부끄러운 날도 같은 크기의 종이에 같은 글씨로 쓴다.\n공정함은 거창한 게 아니다. 같은 자리에, 같은 무게로 놓아 주는 것이다.',
+    ask: '당신이 지우고 싶은 날도, 당신의 일부인가?' },
+  names: { obj: '서류 캐비닛', axis: '기록과 기억',
+    line: '사람은 두 번 잊힌다. 떠날 때, 그리고 아무도 이름을 부르지 않을 때.',
+    memo: '서랍마다 이름이 하나씩 들어 있다. 서류는 얇은데 서랍은 무겁다.\n대단한 사람을 기리려던 게 아니다. 언젠가 우리가 흩어져도, 누군가 이 방을 걷다가 이름 하나를 소리 내어 읽어 주길 바랐다.\n기억은 저장하는 게 아니라, 다시 부르는 것이다.',
+    ask: '당신이 마지막으로 소리 내어 불러 본 오래된 이름은 누구인가?' },
+  people: { obj: '코르크 보드', axis: '사람과 관계',
+    line: '모든 일은 사람 사이에서 일어난다.',
+    memo: '형사들은 벽에 사진을 붙이고 붉은 실로 잇는다. 범인을 찾으려고.\n나도 같은 걸 했다. 다만 찾은 건 범인이 아니라 이유였다.\n왜 그날 웃었는지, 왜 그 길이 덜 멀었는지 — 실을 따라가면 늘 사람이 있었다.\n혼자 이룬 줄 알았던 것들도, 실을 당겨 보면 누군가에게 묶여 있다.',
+    ask: '당신의 실은 누구에게 묶여 있는가?' },
+  seat: { obj: '마주 놓인 의자 둘', axis: '사람과 관계',
+    line: '빈자리도 자리다.',
+    memo: '의자를 하나 더 놓는 데는 돈이 들지 않는다. 그런데 그 의자가 사람을 기다리게 한다.\n쉬고 있는 사람의 이름 옆에 💤를 붙였다. 지우지 않았다.\n떠난 것과 잠시 멈춘 것은 다르다. 문을 잠그는 건 쉽다. 불을 켜 두는 게 어렵다.',
+    ask: '당신은 누구를 위해 자리를 비워 두고 있는가?' },
+  clock: { obj: '멈춘 시계', axis: '시간과 유한함',
+    line: '시간은 기록되는 순간 멈춘다. 그래서 기록한다.',
+    memo: '이 시계는 6시 47분에 멈췄다. 고치지 않았다.\n멈춘 시계도 하루에 두 번은 맞는다. 맞는 순간을 기다려 주는 일 — 그게 기억이다.\n지나간 것은 붙잡을 수 없다. 다만 멈춰 세워 둘 수는 있다. 사진 한 장, 이름 하나, 문장 하나로.',
+    ask: '당신이 멈춰 세워 두고 싶은 한 시각은 언제인가?' },
+  end: { obj: '모래시계', axis: '시간과 유한함',
+    line: '끝이 있어서, 지금이 의미가 있다.',
+    memo: '모래시계를 뒤집을 때마다 생각한다. 위의 모래는 줄고, 아래의 모래는 쌓인다.\n잃는 것과 남는 것은 같은 모래다.\n이 모임도, 이 방도 언젠가 끝난다. 그걸 알기에 오늘을 대충 보내지 않는다. 끝을 아는 사람만 정성을 들인다.',
+    ask: '끝이 정해져 있다면, 당신은 오늘 무엇을 다르게 하겠는가?' },
+  mirror: { obj: '금 간 거울', axis: '시간과 유한함',
+    line: '무너진 날은 기록에서 빼지 않는다.',
+    memo: '거울에 금이 갔을 때 바꾸려다 그만두었다.\n금 간 거울에도 얼굴은 비친다. 오히려 더 정직하게.\n사람은 잘한 날보다 무너진 날에 더 정확하게 보인다. 무너진 날 무엇을 했는지 — 그게 그 사람이다.',
+    ask: '당신의 가장 정확한 초상은 어느 날의 얼굴인가?' },
+  letter: { obj: '서랍 속 편지', axis: '다음 관리자에게',
+    line: '다음 관리자에게.',
+    memo: '이 서랍을 열었다면, 이제 당신이 이 방의 불을 켜고 끄는 사람이다.\n부탁이 셋 있다.\n하나, 기록을 고르지 말 것. 둘, 점수보다 사람을 먼저 볼 것. 셋, 불은 하나쯤 켜 둘 것.\n나머지는 당신이 정하면 된다. 수칙은 낡고 사람은 바뀐다. 그래도 되는 것이다.\n전시관은 건물이 아니다. 누군가 기억해 주는 동안만 존재한다.\n— 첫 번째 관리자',
+    ask: '당신은 이곳에 무엇을 남기고 갈 것인가?' },
+};
+/* 곁가지 — 서랍과 상관없이 읽는 물건들(가치관 · 태도) */
+const OFFICE_MORE = {
+  rules: { obj: '액자 — 관리자의 수칙', axis: '태도',
+    line: '관리자의 수칙',
+    memo: '하나. 기록은 고르지 않는다.\n둘. 이름은 지우지 않는다. 쉬는 사람도.\n셋. 점수보다 사람을 먼저 본다.\n넷. 좋은 날은 나누고, 나쁜 날은 함께 남긴다.\n다섯. 처음 온 사람에게 먼저 말을 건다.\n여섯. 규칙은 사람을 지키려고 있다. 거꾸로 되면 규칙을 고친다.\n일곱. 화가 난 날에는 아무것도 기록하지 않는다.\n여덟. 고맙다는 말은 미루지 않는다.\n아홉. 불은 하나쯤 켜 둔다.\n열. 이 수칙도 언젠가 낡는다. 그땐 다음 사람이 고쳐 쓴다.',
+    ask: '당신의 수칙 첫 줄은 무엇인가?' },
+  window: { obj: '비 오는 창', axis: '바라보기',
+    line: '창밖의 불빛 하나하나에 저마다의 밤이 있다.',
+    memo: '비 오는 밤이면 창가에 선다. 저 불빛 아래에서도 누군가 늦게까지 무언가를 지키고 있겠지.\n내 밤만 길다고 생각했던 때가 있었다.\n남의 창을 보는 법을 배우고 나서야, 내 창도 누군가에겐 불빛이라는 걸 알았다.',
+    ask: '오늘 밤, 당신의 창을 바라보는 사람은 누구일까?' },
+  chess: { obj: '두다 만 체스판', axis: '선택과 책임',
+    line: '지는 법을 아는 사람이 끝까지 둔다.',
+    memo: '이 판은 몇 달째 이대로다. 다음 수를 알지만 두지 않았다.\n이기는 법은 책에 있다. 지는 법은 어디에도 없다. 그래서 직접 배워야 한다.\n졌을 때 판을 엎지 않는 것, 상대의 좋은 수에 고개를 끄덕이는 것. 그걸 배우는 데 가장 오래 걸렸다.',
+    ask: '당신은 마지막으로 진 판을 어떻게 접었는가?' },
+  gramo: { obj: '축음기', axis: '다시 듣기',
+    line: '같은 곡도 다시 들으면 다른 곡이다.',
+    memo: '판은 그대로인데 듣는 내가 달라져 있다.\n그래서 옛 기록을 다시 꺼내는 일은 과거를 보는 게 아니라 지금의 나를 보는 일이다.\n이 방의 물건들도 그렇다. 당신이 다시 올 때마다 다른 말을 할 것이다.',
+    ask: '다시 들었을 때 다르게 들린 노래가 있는가?' },
+  umbrella: { obj: '젖은 우산', axis: '견디기',
+    line: '비는 피하는 게 아니라 지나가는 것이다.',
+    memo: '우산은 비를 멈추지 못한다. 비 사이를 걸어가게 해 줄 뿐이다.\n힘든 시기도 그렇다. 해결하려 들면 지치고, 지나가려 하면 걸을 수 있다.\n문 앞에 우산을 하나 더 꽂아 둔다. 누가 빈손으로 올지 모르니까.',
+    ask: '당신이 누군가에게 건넨 마지막 우산은 언제였나?' },
+  calendar: { obj: '동그라미 친 달력', axis: '평범함',
+    line: '아무 일도 없었던 날에 동그라미를 쳤다.',
+    memo: '기념일엔 다들 동그라미를 친다. 나는 아무 일도 없던 날에 쳤다.\n그날 우리는 별일 없이 만나서, 별일 없이 웃고, 별일 없이 헤어졌다.\n돌아보니 그게 가장 큰 일이었다. 평범한 날이 계속된다는 것.',
+    ask: '당신의 달력에서 동그라미가 필요한 평범한 날은 언제인가?' },
+  coat: { obj: '외투와 중절모', axis: '떠남',
+    line: '떠날 때 들고 갈 수 있는 건 외투 한 벌뿐이다.',
+    memo: '직함도, 열쇠도, 이 방도 두고 간다.\n가져갈 수 있는 건 함께 걸은 기억과, 내가 어떤 사람이었는지에 대한 남들의 이야기뿐이다.\n그래서 매일 외투를 걸 때 묻는다. 오늘 나는 어떤 이야기로 남았나.',
+    ask: '당신이 떠난 뒤, 사람들은 당신을 어떤 문장으로 기억할까?' },
+};
+/* 책장 — 책마다 여백에 적어 둔 메모(제목은 지어낸 것) */
+const OFFICE_BOOKS = [
+  { t: '늦게 도착한 사람', line: '늦게 온 사람에게 먼저 자리를 내어 준다.', memo: '처음엔 몰랐다. 늦게 오는 사람은 대개 오는 길이 더 멀었던 사람이다.\n먼저 온 사람의 자리는 먼저 온 덕이 아니라, 길이 가까웠던 덕일 때가 많다.' },
+  { t: '빈 페이지', line: '쓰지 않은 페이지도 책의 일부다.', memo: '쉬어 간 시간, 하지 않은 말.\n그것들이 다음 문장을 무겁게 만든다. 빈칸을 서둘러 채우지 않는다.' },
+  { t: '두 번째 기회', line: '두 번째 기회는 주는 사람에게도 용기가 필요하다.', memo: '다시 믿는다는 건 다시 다칠 수 있다는 뜻이다.\n그래도 준다. 나도 누군가에게 두 번째 기회를 받아 여기까지 왔으니까.' },
+  { t: '작은 약속들', line: '신뢰는 큰 약속이 아니라, 지킨 작은 약속의 횟수로 쌓인다.', memo: '제시간에 도착하는 것. 빌린 걸 돌려주는 것. 지나가듯 한 말을 기억해 두는 것.\n사람들은 그런 것으로 서로를 믿는다.' },
+  { t: '말하지 않은 칭찬', line: '마음속으로만 한 칭찬은 아무도 듣지 못한다.', memo: '좋은 걸 보면 그 자리에서 말한다. 나중엔 어색해지고, 더 나중엔 늦는다.\n칭찬은 아끼면 상하는 음식이다.' },
+  { t: '오래된 공', line: '닳은 것은 쓰였다는 뜻이다.', memo: '흠집 난 공을 버리지 못한다. 흠집마다 하루가 있다.\n새것은 깨끗하지만 이야기가 없다. 사람도 그렇다.' },
+  { t: '혼자 남은 저녁', line: '외로움은 혼자일 때가 아니라, 아무도 내 이름을 모를 때 온다.', memo: '그래서 이름을 부른다. 처음 온 사람에게도, 오래 안 보인 사람에게도.\n이름을 불러 주는 것만으로 저녁 하나가 덜 외로워진다.' },
+  { t: '지는 해', line: '끝나 가는 것은 가장 따뜻한 빛을 낸다.', memo: '마지막 홀의 해는 늘 길게 눕는다. 그림자가 길어지는 시간이 하루 중 가장 아름답다.\n끝을 두려워하지 않기로 했다. 끝도 하루의 일부다.' },
+  { t: '질문하는 법', line: '좋은 질문은 답보다 오래 남는다.', memo: '답은 그날 쓰고 버리지만, 질문은 주머니에 넣고 다닌다.\n이 방의 물건들이 답 대신 질문을 남기는 이유다.' },
+  { t: '거리', line: '가까운 사람일수록 거리를 지킨다.', memo: '친하다는 이유로 함부로 하지 않는다.\n존중은 한 걸음 물러설 줄 아는 데서 시작한다. 그 한 걸음이 관계를 오래 가게 한다.' },
+];
+/* 휴지통 — 버린 문장들(줄 그은 문장 · 버린 까닭) */
+const OFFICE_DRAFTS = [
+  { s: '이기는 사람이 기억된다.', why: '틀렸다. 기억되는 건 곁에 있던 사람이다.' },
+  { s: '기록은 곧 숫자다.', why: '숫자는 기록의 뼈일 뿐이다. 살은 이야기다.' },
+  { s: '관리자는 모든 걸 알고 있어야 한다.', why: '모르는 걸 모른다고 말하는 것 — 그게 관리자의 일이었다.' },
+  { s: '떠난 사람의 자리는 정리한다.', why: '정리하지 않기로 했다. 대신 💤를 붙였다.' },
+  { s: '완벽한 하루를 남기자.', why: '완벽한 하루에는 기록할 게 별로 없다.' },
+  { s: '규칙에는 예외가 없다.', why: '사람에게는 예외가 필요한 날이 있다.' },
+  { s: '잊는 것도 능력이다.', why: '맞는 말이라서 버렸다. 잊는 건 각자 하고, 이 방은 기억하기로 했다.' },
+  { s: '나는 이 방의 주인이다.', why: '주인이 아니라 잠시 맡아 둔 사람이다.' },
+];
+/* 메모장 — 오늘의 문장(날짜마다 한 장) */
+const OFFICE_DAILY = [
+  '오늘 할 수 있는 친절을 내일로 미루지 말 것.', '이긴 날엔 말을 줄이고, 진 날엔 인사를 늘린다.', '사람을 점수로 부르지 않는다.',
+  '모르는 사람에게도 이름이 있다.', '좋은 하루는 대개 조용히 지나간다.', '고마운 일은 그날 말한다.', '기다려 주는 것도 실력이다.',
+  '처음의 마음은 적어 두지 않으면 사라진다.', '다툰 날일수록 마지막 인사는 먼저 한다.', '잘한 사람보다 꾸준한 사람을 기억한다.',
+  '남의 실수는 작게, 남의 수고는 크게.', '빈손으로 온 사람을 빈손으로 보내지 않는다.', '오늘도 누군가의 기억에 한 줄 쓰인다.',
+  '서두르면 놓치는 얼굴이 있다.', '약속 시간보다 조금 일찍. 마음도 그렇게.', '끝난 판은 접고, 남은 사람은 챙긴다.',
+  '칭찬은 모두 앞에서, 충고는 둘이서.', '버틴 날도 하루로 친다.', '질문을 받으면 먼저 고맙다고 한다.', '불을 끄기 전에 방을 한 번 둘러본다.',
+  '내가 받은 환대만큼은 돌려주고 떠난다.',
+];
+const OFFICE_MORE_N = Object.keys(OFFICE_MORE).length + OFFICE_BOOKS.length + OFFICE_DRAFTS.length;
+const OFFICE_ORDER = ['record', 'names', 'people', 'seat', 'clock', 'end', 'mirror'];
+const OFFICE = { more: new Set(), cur: {}, gramoT: 0, read: new Set(), built: false, noir: 0, el: null, open: false, typer: null, steam: [], paper: null, paperText: '', typeT: 20, drawer: null, rainT: 0, notes: 0 };
+try { (JSON.parse(localStorage.getItem('museum-office-read') || '[]') || []).forEach((k) => OFFICE.read.add(k)); } catch (e) { /* 처음부터 */ }
+try { (JSON.parse(localStorage.getItem('museum-office-more') || '[]') || []).forEach((k) => OFFICE.more.add(k)); } catch (e) { /* 처음부터 */ }
+
+const ofMat = (c, r = 0.6, m = 0) => { const x = new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m }); x.userData.noBatch = true; if (M.envIn) { x.envMap = M.envIn; x.envMapIntensity = 0.35; } return x; };
+/** 방 안 좌표(m) → 그룹(방 바닥 기준)에 놓기 */
+function ofPut(g, obj, x, y, z, ry = 0) { obj.position.set(x, y, z); obj.rotation.y = ry; obj.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); g.add(obj); return obj; }
+function ofBlock(r, x0, x1, z0, z1, h = 120) { M.walls.push({ x0: x0 * CM, x1: x1 * CM, z0: z0 * CM, z1: z1 * CM, y0: r.y0, y1: r.y0 + h }); }
+const ofAt = (o, x, y, z) => { o.position.set(x, y, z); return o; };
+function ofHit(g, x, y, z, w, h, d, id) {
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(x, y, z); g.add(hit);
+  const lab = { book: '책장', draft: '휴지통 — 구겨진 종이', daily: '메모장 — 오늘의 문장' }[id] || (OFFICE_TEXT[id] || OFFICE_MORE[id]).obj;
+  const info = { id: 'office-' + id, type: 'placard', icon: '🕯', label: lab, title: lab, room: 'workshop', x: x * CM, z: z * CM, y: y * CM, onUse: () => officeRead(id) };
+  M.pickables.push(hit); M.artByMesh.set(hit, info);
+  return info;
+}
+function ofCanvasTex(w, h, draw) { const cv = makeCanvas(w, h), c = cv.getContext('2d'); draw(c, w, h); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.userData = { cv }; return t; }
+
+/** 꾸미기 — museum3d dressWorkshop 이 부른다(r: 방, g: 방 그룹 · 바닥 = 0) */
+function officeDress(r, g) {
+  const O = objMat(), x0 = r.x0 / CM, x1 = r.x1 / CM, z0 = r.z0 / CM, z1 = r.z1 / CM, cx = (x0 + x1) / 2;
+  const wood = ofMat(0x2A1C12, 0.45), woodL = ofMat(0x4A3424, 0.5), brass = O.brass, black = ofMat(0x0E0E10, 0.4, 0.3);
+  // 바닥 깔개 — 짙은 버건디
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 5.2), ofMat(0x3A1216, 0.95)); rug.rotation.x = -Math.PI / 2; rug.position.set(x1 - 5.0, 0.006, (z0 + z1) / 2); g.add(rug);
+  const rug2 = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.4), ofMat(0x2A1A12, 0.95)); rug2.rotation.x = -Math.PI / 2; rug2.position.set(x0 + 4.5, 0.006, z1 - 4.0); g.add(rug2);
+
+  // ── 창(동쪽 벽) — 비 오는 밤 · 블라인드 ──
+  const wx = x1 - 0.13, wz = (z0 + z1) / 2;
+  const night = ofCanvasTex(512, 384, (c, w, h) => {
+    const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0B1018'); gr.addColorStop(1, '#1A1E26'); c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) { const x = Math.random() * w, y = h * 0.45 + Math.random() * h * 0.5, rr = 6 + Math.random() * 22; const b = c.createRadialGradient(x, y, 0, x, y, rr); const col = Math.random() < 0.6 ? '255,210,150' : '180,200,255'; b.addColorStop(0, 'rgba(' + col + ',.5)'); b.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = b; c.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+  });
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: night })); pane.position.set(wx, 1.95, wz); pane.rotation.y = -Math.PI / 2; g.add(pane);
+  // 빗줄기 — 흐르는 무늬
+  const rain = ofCanvasTex(256, 256, (c, w, h) => { c.clearRect(0, 0, w, h); for (let i = 0; i < 160; i++) { const x = Math.random() * w, y = Math.random() * h, L = 8 + Math.random() * 30; c.strokeStyle = 'rgba(200,215,230,' + (0.12 + Math.random() * 0.25) + ')'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 1, y + L); c.stroke(); } });
+  rain.wrapS = rain.wrapT = THREE.RepeatWrapping; rain.repeat.set(2, 1.4);
+  const rainM = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.9), new THREE.MeshBasicMaterial({ map: rain, transparent: true, depthWrite: false })); rainM.position.set(wx - 0.01, 1.95, wz); rainM.rotation.y = -Math.PI / 2; g.add(rainM);
+  OFFICE.rain = rain;
+  const slats = []; for (let i = 0; i < 14; i++) slats.push(boxAt(0.04, 0.035, 5.2, wx - 0.05, 1.1 + i * 0.125, wz));
+  const blinds = new THREE.Mesh(mergeGeos(slats), ofMat(0x6E685C, 0.7)); blinds.rotation.z = 0; g.add(blinds);
+  const frame = rbox(0.12, 2.15, 5.5, 0.01, wood); frame.position.set(wx + 0.02, 1.95, wz); g.add(frame);
+  // 블라인드 줄무늬 빛 — 바닥에 비스듬히
+  const stripes = ofCanvasTex(256, 256, (c, w, h) => { c.clearRect(0, 0, w, h); for (let i = 0; i < 9; i++) { c.fillStyle = 'rgba(190,205,230,.55)'; c.fillRect(0, i * 28 + 4, w, 14); } const gm = c.createLinearGradient(0, 0, w, 0); gm.addColorStop(0, 'rgba(0,0,0,0)'); gm.addColorStop(1, 'rgba(0,0,0,1)'); c.globalCompositeOperation = 'destination-in'; c.fillStyle = gm; c.fillRect(0, 0, w, h); });
+  const sm = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 4.6), new THREE.MeshBasicMaterial({ map: stripes, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sm.rotation.x = -Math.PI / 2; sm.rotation.z = 0.32; sm.position.set(x1 - 3.6, 0.012, wz + 0.4); g.add(sm);
+
+  // ── 책상 · 타자기 · 스탠드 · 재떨이 · 서랍 ──
+  const dx = x1 - 3.0, dz = wz;
+  const top = rbox(1.0, 0.06, 2.2, 0.01, wood); top.position.set(dx, 0.78, dz); g.add(top);
+  for (const sz of [-1, 1]) { const ped = rbox(0.9, 0.75, 0.5, 0.01, woodL); ped.position.set(dx, 0.375, dz + sz * 0.8); g.add(ped); }
+  const drawer = rbox(0.02, 0.16, 0.42, 0.005, wood); drawer.position.set(dx - 0.46, 0.62, dz + 0.8); g.add(drawer);
+  const lock = cyl(0.018, 0.018, 0.01, brass, 12); lock.rotation.z = Math.PI / 2; lock.position.set(dx - 0.475, 0.62, dz + 0.8); g.add(lock);
+  OFFICE.drawer = { mesh: drawer, lock, x: dx, z: dz + 0.8, open: 0 };
+  ofBlock(r, dx - 0.55, dx + 0.55, dz - 1.15, dz + 1.15, 90);
+  const chair = rbox(0.55, 0.9, 0.55, 0.06, ofMat(0x1A100C, 0.5)); chair.position.set(dx + 0.85, 0.45, dz); g.add(chair);
+  // 타자기
+  const tw = new THREE.Group();
+  tw.add(ofAt(rbox(0.36, 0.11, 0.3, 0.03, black), 0, 0.055, 0));
+  const keysM = ofMat(0xE8E0CC, 0.4); for (let row = 0; row < 3; row++) for (let k = 0; k < 9; k++) { const kk = cyl(0.009, 0.009, 0.012, keysM, 8); kk.position.set(-0.13 + k * 0.032 + row * 0.01, 0.115 + row * 0.012, 0.1 - row * 0.035); tw.add(kk); }
+  const roller = cyl(0.025, 0.025, 0.42, black, 12); roller.rotation.z = Math.PI / 2; roller.position.set(0, 0.13, -0.11); tw.add(roller);
+  OFFICE.paper = ofCanvasTex(256, 320, (c, w, h) => { c.fillStyle = '#EEE8DA'; c.fillRect(0, 0, w, h); });
+  const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.21, 0.26), new THREE.MeshStandardMaterial({ map: OFFICE.paper, roughness: 0.9 })); paper.position.set(0, 0.25, -0.12); paper.rotation.x = -0.18; tw.add(paper);
+  ofPut(g, tw, dx, 0.81, dz - 0.15, Math.PI / 2);
+  ofHit(g, dx, 0.95, dz - 0.15, 0.6, 0.4, 0.6, 'record');
+  // 스탠드(초록 갓) — 방에서 가장 밝은 빛
+  const lamp = new THREE.Group();
+  lamp.add(ofAt(cyl(0.09, 0.1, 0.03, brass, 18), 0, 0.015, 0));
+  lamp.add(ofAt(cyl(0.012, 0.012, 0.32, brass, 8), 0, 0.18, 0));
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.1, 18, 1, true, 0, Math.PI * 2), ofMat(0x1E5A3A, 0.3, 0.2)); shade.material.side = THREE.DoubleSide; shade.position.y = 0.36; lamp.add(shade);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFE2B0).multiplyScalar(3), toneMapped: false })); bulb.position.y = 0.33; lamp.add(bulb);
+  ofPut(g, lamp, dx - 0.15, 0.81, dz + 0.75);
+  const li = new THREE.PointLight(0xFFD49A, 11, 7, 1.6); li.position.set(dx - 0.15, 1.1, dz + 0.75); g.add(li);
+  // 재떨이 · 연기
+  const ash = cyl(0.07, 0.06, 0.03, ofMat(0x6A6A70, 0.3, 0.6), 16); ash.position.set(dx + 0.2, 0.825, dz + 0.55); g.add(ash);
+  OFFICE.smokeAt = new THREE.Vector3(dx + 0.2, 0.85, dz + 0.55);
+
+  // ── 서류 캐비닛(남쪽 벽) — 맨 윗칸이 조금 열려 있다 · 위에 라디오 ──
+  const kx = x0 + 3.2, kz = z1 - 0.42;
+  const cab = rbox(0.6, 1.4, 0.65, 0.02, ofMat(0x5A5E58, 0.5, 0.4)); cab.position.set(kx, 0.7, kz); g.add(cab);
+  for (let i = 0; i < 4; i++) { const d = rbox(0.54, 0.3, 0.02, 0.005, ofMat(0x6A6E66, 0.45, 0.45)); d.position.set(kx, 0.2 + i * 0.33, kz - 0.33 - (i === 3 ? 0.18 : 0)); g.add(d); const h = rbox(0.12, 0.02, 0.03, 0.005, brass); h.position.set(kx, 0.28 + i * 0.33, kz - 0.35 - (i === 3 ? 0.18 : 0)); g.add(h); }
+  for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.24, 0.012), ofMat(i % 2 ? 0xC8B488 : 0xB09A6A, 0.85)); f.position.set(kx, 1.1, kz - 0.2 - i * 0.03); g.add(f); }
+  const radio = rbox(0.42, 0.26, 0.2, 0.03, woodL); radio.position.set(kx, 1.53, kz); g.add(radio);
+  const grill = new THREE.Mesh(new THREE.CircleGeometry(0.08, 18), ofMat(0x2A2018, 0.8)); grill.position.set(kx - 0.08, 1.53, kz - 0.101); grill.rotation.y = Math.PI; g.add(grill);
+  ofBlock(r, kx - 0.35, kx + 0.35, kz - 0.4, kz + 0.35, 160);
+  ofHit(g, kx, 1.0, kz - 0.3, 0.8, 1.8, 0.6, 'names');
+
+  // ── 코르크 보드(북쪽 벽) — 회원 사진 · 붉은 실 ──
+  const bx = x0 + 6.0, bz = z0 + 0.16;   // 벽 안쪽 면 = 경계 + 12cm
+  const board = rbox(3.6, 1.7, 0.04, 0.01, ofMat(0x8A6A44, 0.95)); board.position.set(bx, 1.75, bz + 0.02); g.add(board);
+  const fr = rbox(3.75, 1.85, 0.03, 0.01, wood); fr.position.set(bx, 1.75, bz); g.add(fr);
+  // 회원 전체 — 사진(없으면 이름을 타자로 친 카드) · 아래 이름표(쉬는 사람은 💤)
+  // ⚠️ 사진 재질은 noBatch — 방 배칭이 사진이 오기 전에 같은 재질끼리 합쳐서 한 사람으로 도배됐다(v126)
+  const folks = (M.players || []).map((p) => p.name).filter(Boolean), pins = [];
+  const resting = new Set(((M.archive || {}).resting || []).map((x) => x && x.name));
+  const loader = new THREE.TextureLoader();
+  const card = (name) => ofCanvasTex(170, 210, (c, w, h) => {
+    c.fillStyle = '#E4DCC8'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(160,40,40,.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 46); c.lineTo(w, 46); c.stroke();
+    c.strokeStyle = 'rgba(90,120,170,.28)'; for (let y = 70; y < h; y += 22) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+    c.fillStyle = '#1A1612'; c.font = 'bold 26px "Courier New", serif'; c.textAlign = 'center'; c.fillText(name || '—', w / 2, 34);
+    c.font = '15px "Courier New", serif'; c.fillStyle = 'rgba(26,22,18,.7)'; c.fillText('— 기억할 것 —', w / 2, 96);
+  });
+  const tag = (name) => ofCanvasTex(200, 52, (c, w, h) => {
+    c.fillStyle = '#EDE6D2'; c.fillRect(0, 0, w, h); c.fillStyle = '#16120E'; c.font = 'bold 26px "Courier New", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(name + (resting.has(name) ? ' 💤' : ''), w / 2, h / 2 + 1);
+  });
+  const nF = Math.max(1, folks.length), rows = nF <= 10 ? 2 : 3, cols = Math.ceil(nF / rows);
+  const cw = 3.3 / cols, pw = Math.min(0.34, cw * 0.74), phH = pw * 1.24, gap = 1.46 / rows, top0 = 2.6 - 0.1 - phH / 2;
+  folks.forEach((name, i) => {
+    const row = Math.floor(i / cols), col = i % cols, inRow = Math.min(cols, nF - row * cols);
+    const px = bx - (inRow - 1) * cw / 2 + col * cw + (Math.random() - 0.5) * cw * 0.12, py = top0 - row * gap + (Math.random() - 0.5) * 0.05;
+    const pm = new THREE.MeshStandardMaterial({ color: 0xD8D2C4, roughness: 0.9 }); pm.userData.noBatch = true;
+    const url = (M.faces || {})[name];
+    if (url) loader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; pm.map = t; pm.needsUpdate = true; });
+    else pm.map = card(name);
+    const rz = (Math.random() - 0.5) * 0.14;
+    const ph = new THREE.Mesh(new THREE.PlaneGeometry(pw, phH), pm); ph.position.set(px, py, bz + 0.05); ph.rotation.z = rz; g.add(ph);
+    const tm = new THREE.MeshStandardMaterial({ map: tag(name), roughness: 0.9 }); tm.userData.noBatch = true;
+    const tg = new THREE.Mesh(new THREE.PlaneGeometry(pw * 0.9, pw * 0.23), tm); tg.position.set(px, py - phH / 2 - pw * 0.1, bz + 0.055); tg.rotation.z = -rz * 0.5; g.add(tg);
+    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 6), ofMat(0xB01818, 0.4)); pin.position.set(px, py + phH / 2 - 0.03, bz + 0.07); g.add(pin); pins.push(pin.position.clone());
+  });
+  const lp = []; for (let i = 0; i < pins.length; i++) for (const j of [i + 1, i + cols, i + cols + 1]) if (j < pins.length && Math.random() < 0.7) lp.push(pins[i], pins[j]);
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({ color: 0xB01818 })));
+  ofHit(g, bx, 1.75, bz + 0.2, 3.6, 1.7, 0.3, 'people');
+  // 액자등 — 보드 위 황동 막대 하나
+  const pl = cyl(0.025, 0.025, 1.4, brass, 10); pl.rotation.z = Math.PI / 2; pl.position.set(bx, 2.78, bz + 0.22); g.add(pl);
+  const pli = new THREE.PointLight(0xFFD49A, 8, 4.5, 1.6); pli.position.set(bx, 2.7, bz + 0.6); g.add(pli);
+
+  // ── 마주 놓인 의자 둘 · 작은 탁자 · 잔 둘(하나에서만 김) ──
+  const sx = x0 + 5.5, sz = z1 - 3.4;
+  for (const s of [-1, 1]) {
+    const arm = new THREE.Group();
+    arm.add(ofAt(rbox(0.8, 0.42, 0.8, 0.08, ofMat(0x3A1A14, 0.7)), 0, 0.3, 0));
+    arm.add(ofAt(rbox(0.8, 0.6, 0.18, 0.08, ofMat(0x3A1A14, 0.7)), 0, 0.75, -0.32));
+    for (const ax of [-0.36, 0.36]) arm.add(ofAt(rbox(0.14, 0.3, 0.75, 0.05, ofMat(0x3A1A14, 0.7)), ax, 0.62, 0));
+    ofPut(g, arm, sx + s * 1.0, 0, sz, s > 0 ? -Math.PI / 2 : Math.PI / 2);
+    ofBlock(r, sx + s * 1.0 - 0.45, sx + s * 1.0 + 0.45, sz - 0.45, sz + 0.45, 100);
+    if (s > 0) OFFICE.chair2 = arm;
+  }
+  const tbl = cyl(0.32, 0.32, 0.04, wood, 22); tbl.position.set(sx, 0.55, sz); g.add(tbl);
+  const leg = cyl(0.04, 0.12, 0.54, wood, 10); leg.position.set(sx, 0.27, sz); g.add(leg);
+  const glassM = new THREE.MeshStandardMaterial({ color: 0xD8E4E8, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.35 });
+  for (const s of [-1, 1]) { const gl = cyl(0.035, 0.03, 0.08, glassM, 14); gl.position.set(sx + s * 0.14, 0.61, sz + 0.05); g.add(gl); const liq = cyl(0.032, 0.03, 0.03, ofMat(0x8A4A14, 0.2), 14); liq.position.set(sx + s * 0.14, 0.59, sz + 0.05); g.add(liq); }
+  OFFICE.steamAt = new THREE.Vector3(sx + 0.14, 0.66, sz + 0.05);
+  ofHit(g, sx, 0.6, sz, 2.6, 1.2, 1.0, 'seat');
+  // 플로어 스탠드 — 의자 곁, 갓 아래로만 빛이 떨어진다
+  const fl = new THREE.Group();
+  fl.add(ofAt(cyl(0.16, 0.18, 0.03, brass, 16), 0, 0.015, 0)); fl.add(ofAt(cyl(0.014, 0.014, 1.5, brass, 8), 0, 0.77, 0));
+  const fsh = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.26, 18, 1, true), ofMat(0xD8C8A0, 0.8)); fsh.material.side = THREE.DoubleSide; fsh.position.y = 1.55; fl.add(fsh);
+  ofPut(g, fl, sx - 1.0, 0, sz - 0.85);
+  const fli = new THREE.PointLight(0xFFCF90, 8, 5.5, 1.6); fli.position.set(sx - 1.0, 1.45, sz - 0.85); g.add(fli);
+
+  // ── 멈춘 시계(서쪽 벽) · 금 간 거울(서쪽 벽) ──
+  const clk = ofCanvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = '#E8E0CC'; c.beginPath(); c.arc(128, 128, 124, 0, 6.28); c.fill(); c.strokeStyle = '#2A1C12'; c.lineWidth = 8; c.stroke();
+    c.fillStyle = '#1A140E'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; c.fillRect(128 + Math.sin(a) * 100 - 3, 128 - Math.cos(a) * 100 - 8, 6, 16); }
+    const hand = (a, L, wd) => { c.save(); c.translate(128, 128); c.rotate(a); c.fillRect(-wd / 2, -L, wd, L); c.restore(); };
+    hand((6 + 47 / 60) / 12 * 6.28, 60, 8); hand(47 / 60 * 6.28, 92, 5);
+  });
+  const cm = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32), new THREE.MeshStandardMaterial({ map: clk, roughness: 0.6 })); cm.position.set(x0 + 0.17, 2.35, z0 + 3.0); cm.rotation.y = Math.PI / 2; g.add(cm);
+  const cr = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.025, 8, 32), brass); cr.position.copy(cm.position); cr.rotation.y = Math.PI / 2; g.add(cr);
+  ofHit(g, x0 + 0.3, 2.35, z0 + 3.0, 0.3, 0.8, 0.8, 'clock');
+  const crack = ofCanvasTex(256, 384, (c, w, h) => {
+    c.clearRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.4;
+    const cxp = w * 0.62, cyp = h * 0.38; for (let i = 0; i < 9; i++) { let x = cxp, y = cyp; const a = i / 9 * 6.28 + Math.random() * 0.4; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 8; j++) { x += Math.cos(a + (Math.random() - 0.5) * 0.6) * 22; y += Math.sin(a + (Math.random() - 0.5) * 0.6) * 22; c.lineTo(x, y); } c.stroke(); }
+    c.beginPath(); c.arc(cxp, cyp, 14, 0, 6.28); c.stroke();
+  });
+  const mir = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.5), new THREE.MeshStandardMaterial({ color: 0x9AA2A6, roughness: 0.04, metalness: 1, envMap: M.envIn || null, envMapIntensity: 1.2 }));
+  mir.position.set(x0 + 0.17, 1.6, z1 - 6.2); mir.rotation.y = Math.PI / 2; g.add(mir);
+  const mc = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.5), new THREE.MeshBasicMaterial({ map: crack, transparent: true, depthWrite: false })); mc.position.set(x0 + 0.175, 1.6, z1 - 6.2); mc.rotation.y = Math.PI / 2; g.add(mc);
+  const mf = rbox(0.05, 1.62, 1.07, 0.01, brass); mf.position.set(x0 + 0.15, 1.6, z1 - 6.2); g.add(mf);
+  ofHit(g, x0 + 0.35, 1.6, z1 - 6.2, 0.4, 1.6, 1.0, 'mirror');
+  // 벽등 — 시계와 거울 사이, 흐리게
+  const scz = (z0 + 3.0 + z1 - 6.2) / 2;
+  const sc = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFE2B0).multiplyScalar(1.6) })); sc.rotation.x = Math.PI; sc.position.set(x0 + 0.2, 2.2, scz); g.add(sc);
+  const sci = new THREE.PointLight(0xFFD49A, 6, 4.5, 1.6); sci.position.set(x0 + 0.35, 2.1, scz); g.add(sci);
+
+  // ── 모래시계 — 작은 탁자 위(북서쪽) ──
+  const hx = x0 + 2.0, hz = z0 + 2.2;
+  const st = cyl(0.25, 0.25, 0.04, wood, 18); st.position.set(hx, 0.7, hz); g.add(st);
+  const sl = cyl(0.035, 0.1, 0.68, wood, 10); sl.position.set(hx, 0.34, hz); g.add(sl);
+  const hg = new THREE.Group();
+  for (const y of [0, 0.34]) hg.add(ofAt(cyl(0.09, 0.09, 0.02, wood, 16), 0, y, 0));
+  for (const a of [0, 2.1, 4.2]) hg.add(ofAt(cyl(0.008, 0.008, 0.34, wood, 6), Math.cos(a) * 0.075, 0.17, Math.sin(a) * 0.075));
+  const gb = new THREE.Mesh(new THREE.LatheGeometry([[0.0, 0.0], [0.06, 0.01], [0.065, 0.06], [0.04, 0.12], [0.008, 0.16], [0.04, 0.2], [0.065, 0.26], [0.06, 0.31], [0.0, 0.32]].map(([a, b]) => new THREE.Vector2(a, b)), 20), glassM); gb.position.y = 0.01; hg.add(gb);
+  const sandM = ofMat(0xC8A060, 0.9); const sTop = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.06, 14), sandM); sTop.rotation.x = Math.PI; sTop.position.y = 0.22; hg.add(sTop);
+  const sBot = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.05, 14), sandM); sBot.position.y = 0.04; hg.add(sBot);
+  const stream = cyl(0.002, 0.002, 0.13, sandM, 4); stream.position.y = 0.1; hg.add(stream);
+  ofPut(g, hg, hx, 0.72, hz); OFFICE.sand = { sTop, sBot };
+  ofHit(g, hx, 0.9, hz, 0.6, 0.6, 0.6, 'end');
+
+  // ── 외투 걸이(트렌치코트 · 중절모) ──
+  const rk = new THREE.Group(); rk.add(ofAt(cyl(0.02, 0.02, 1.8, wood, 8), 0, 0.9, 0));
+  rk.add(ofAt(cyl(0.18, 0.2, 0.03, wood, 14), 0, 0.015, 0));
+  const coat = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.1, 10, 1, true), ofMat(0x6A5A44, 0.85)); coat.material.side = THREE.DoubleSide; coat.position.set(0.05, 1.15, 0); rk.add(coat);
+  const hat = new THREE.Group(); hat.add(ofAt(cyl(0.17, 0.17, 0.012, ofMat(0x1A1A1C, 0.7), 20), 0, 0, 0)); hat.add(ofAt(cyl(0.09, 0.11, 0.12, ofMat(0x1A1A1C, 0.7), 16), 0, 0.06, 0)); hat.position.set(0, 1.83, 0); rk.add(hat);
+  ofPut(g, rk, x1 - 1.0, 0, z0 + 1.0);
+
+  ofHit(g, x1 - 1.0, 1.25, z0 + 1.0, 0.6, 1.7, 0.6, 'coat');
+
+  // ── 책장(서쪽 벽 남쪽) — 책마다 여백의 메모 ──
+  {
+    const bxx = x0 + 0.12 + 0.2, bzc = z1 - 3.2, W = 3.4, H = 2.3, shelfM = ofMat(0x24170F, 0.55);
+    const parts = [boxAt(0.4, H, 0.05, bxx, H / 2, bzc - W / 2), boxAt(0.4, H, 0.05, bxx, H / 2, bzc + W / 2), boxAt(0.03, H, W, bxx - 0.19, H / 2, bzc)];
+    for (let k = 0; k < 6; k++) parts.push(boxAt(0.4, 0.035, W, bxx, 0.04 + k * 0.45, bzc));
+    g.add(new THREE.Mesh(mergeGeos(parts), shelfM));
+    const pal = [0x5A1E1A, 0x1E2E3E, 0x2E3A22, 0x6A5236, 0x3A2A3E, 0xB8A88A], byC = pal.map(() => []);
+    let rnd2 = 7; const R = () => { rnd2 = (rnd2 * 9301 + 49297) % 233280; return rnd2 / 233280; };
+    for (let k = 0; k < 5; k++) {
+      let z = bzc - W / 2 + 0.06; const y = 0.06 + k * 0.45;
+      while (z < bzc + W / 2 - 0.08) {
+        if (R() < 0.08) { z += 0.12 + R() * 0.2; continue; }            // 빈칸
+        const t = 0.025 + R() * 0.045, h = 0.26 + R() * 0.13, d = 0.22 + R() * 0.1;
+        byC[Math.floor(R() * pal.length)].push(boxAt(d, h, t, bxx + 0.02, y + h / 2, z + t / 2)); z += t + 0.003;
+      }
+    }
+    pal.forEach((c, k) => { if (byC[k].length) g.add(new THREE.Mesh(mergeGeos(byC[k]), ofMat(c, 0.75))); });
+    // 눕혀 둔 책 한 권 · 그 위 안경
+    const lay = rbox(0.24, 0.05, 0.32, 0.005, ofMat(0x5A1E1A, 0.7)); lay.position.set(bxx + 0.02, 2.31 + 0.05, bzc + 0.6); g.add(lay);
+    ofBlock(r, x0, x0 + 0.6, bzc - W / 2 - 0.05, bzc + W / 2 + 0.05, 230);
+    ofHit(g, bxx + 0.25, 1.2, bzc, 0.3, 2.3, W, 'book');
+  }
+
+  // ── 휴지통 · 구겨진 종이(책상 곁) ──
+  {
+    const wbx = dx - 0.1, wbz = dz - 1.55;
+    const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.13, 0.34, 18, 1, true), ofMat(0x2A2A2C, 0.5, 0.5)); bin.material.side = THREE.DoubleSide; bin.position.set(wbx, 0.17, wbz); g.add(bin);
+    const paperM = ofMat(0xE6E0D2, 0.95);
+    for (const [ox, oy, oz, sc] of [[0, 0.33, 0, 1], [0.06, 0.36, 0.04, 0.8], [-0.05, 0.34, -0.05, 0.9], [0.32, 0.04, 0.12, 0.85], [-0.28, 0.04, 0.3, 0.75], [0.1, 0.04, -0.34, 0.9]]) {
+      const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.055 * sc, 0), paperM); b.position.set(wbx + ox, oy, wbz + oz); b.rotation.set(ox * 9, oz * 7, oy * 5); g.add(b);
+    }
+    ofHit(g, wbx, 0.25, wbz, 0.6, 0.5, 0.6, 'draft');
+  }
+
+  // ── 메모장(책상 위) — 오늘의 문장 ──
+  {
+    const np = ofCanvasTex(160, 210, (c, w, h) => { c.fillStyle = '#EDE6D2'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(80,100,140,.3)'; for (let y = 40; y < h; y += 18) { c.beginPath(); c.moveTo(8, y); c.lineTo(w - 8, y); c.stroke(); } c.fillStyle = '#2A2018'; c.font = '16px "Courier New", serif'; c.fillText('오늘의 문장 —', 14, 32); for (let k = 0; k < 4; k++) c.fillRect(16, 52 + k * 18, 60 + ((k * 37) % 70), 2); });
+    const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.2), new THREE.MeshStandardMaterial({ map: np, roughness: 0.9 })); pad.material.userData.noBatch = true;
+    pad.rotation.x = -Math.PI / 2; pad.rotation.z = 0.25; pad.position.set(dx - 0.22, 0.812, dz + 0.32); g.add(pad);
+    const pen = cyl(0.005, 0.005, 0.16, ofMat(0xC8A040, 0.5), 6); pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.6; pen.position.set(dx - 0.12, 0.818, dz + 0.36); g.add(pen);
+    ofHit(g, dx - 0.22, 0.85, dz + 0.32, 0.26, 0.12, 0.26, 'daily');
+  }
+
+  // ── 액자 — 관리자의 수칙(북쪽 벽 동편) ──
+  {
+    const fx = x1 - 4.2, fz = z0 + 0.16;
+    const tex = ofCanvasTex(520, 700, (c, w, h) => {
+      c.fillStyle = '#E9E2CE'; c.fillRect(0, 0, w, h); c.strokeStyle = '#2A2018'; c.lineWidth = 2; c.strokeRect(22, 22, w - 44, h - 44);
+      c.fillStyle = '#1A140E'; c.textAlign = 'center'; c.font = 'bold 34px "Noto Serif KR", serif'; c.fillText('관리자의 수칙', w / 2, 86);
+      c.textAlign = 'left'; c.font = '19px "Noto Serif KR", serif';
+      OFFICE_MORE.rules.memo.split('\n').forEach((L, k) => { const t = L.length > 24 ? L.slice(0, 23) + '…' : L; c.fillText(t, 50, 150 + k * 50); });
+    });
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.05), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 })); pic.material.userData.noBatch = true; pic.position.set(fx, 1.7, fz + 0.03); g.add(pic);
+    const frm = rbox(0.9, 1.17, 0.04, 0.005, wood); frm.position.set(fx, 1.7, fz + 0.005); g.add(frm);
+    ofHit(g, fx, 1.7, fz + 0.2, 0.95, 1.2, 0.3, 'rules');
+  }
+
+  // ── 두다 만 체스판 · 의자 둘 · 위에 낮게 걸린 등 ──
+  {
+    const chx = cx + 1.4, chz = z0 + 3.4;
+    const board = ofCanvasTex(256, 256, (c, w) => { const q = w / 8; for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) { c.fillStyle = (a + b) % 2 ? '#2A2018' : '#D8CCB0'; c.fillRect(a * q, b * q, q, q); } });
+    const tb = rbox(0.72, 0.05, 0.72, 0.01, wood); tb.position.set(chx, 0.72, chz); g.add(tb);
+    const lg = cyl(0.04, 0.14, 0.7, wood, 10); lg.position.set(chx, 0.35, chz); g.add(lg);
+    const bd = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshStandardMaterial({ map: board, roughness: 0.4 })); bd.material.userData.noBatch = true; bd.rotation.x = -Math.PI / 2; bd.position.set(chx, 0.747, chz); g.add(bd);
+    const wM = ofMat(0xE8E0CC, 0.35), bM = ofMat(0x111114, 0.3, 0.2), q = 0.5 / 8, at = (a, b) => [chx - 0.25 + q * (a + 0.5), chz - 0.25 + q * (b + 0.5)];
+    const piece = (a, b, m, tall, fallen) => {
+      const [px, pz] = at(a, b), gp = new THREE.Group();
+      gp.add(ofAt(cyl(0.017, 0.021, 0.012, m, 12), 0, 0.006, 0)); gp.add(ofAt(cyl(0.008, 0.014, tall, m, 10), 0, 0.012 + tall / 2, 0));
+      gp.add(ofAt(new THREE.Mesh(new THREE.SphereGeometry(0.013, 10, 8), m), 0, 0.016 + tall, 0));
+      if (tall > 0.05) gp.add(ofAt(rbox(0.006, 0.022, 0.006, 0.001, m), 0, 0.04 + tall, 0));
+      gp.position.set(px, 0.748, pz); if (fallen) { gp.rotation.z = Math.PI / 2; gp.position.y += 0.02; gp.position.x += 0.03; }
+      g.add(gp);
+    };
+    [[1, 6], [2, 5], [4, 6], [5, 6], [6, 5]].forEach(([a, b]) => piece(a, b, wM, 0.025));
+    [[2, 1], [3, 2], [5, 1], [6, 2]].forEach(([a, b]) => piece(a, b, bM, 0.025));
+    piece(4, 7, wM, 0.06); piece(3, 4, bM, 0.06); piece(6, 3, bM, 0.045); piece(0, 0, wM, 0.06, true);   // 쓰러진 왕 하나
+    for (const s of [-1, 1]) {
+      const ch = new THREE.Group(); ch.add(ofAt(rbox(0.45, 0.05, 0.45, 0.01, wood), 0, 0.46, 0)); ch.add(ofAt(rbox(0.45, 0.5, 0.05, 0.01, wood), 0, 0.72, -0.2));
+      for (const [lx, lz] of [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]]) ch.add(ofAt(cyl(0.02, 0.02, 0.45, wood, 6), lx, 0.225, lz));
+      ofPut(g, ch, chx, 0, chz + s * 0.62, s > 0 ? Math.PI : 0);
+    }
+    ofBlock(r, chx - 0.45, chx + 0.45, chz - 0.9, chz + 0.9, 90);
+    const cord = cyl(0.004, 0.004, (r.h / CM) - 2.45, black, 4); cord.position.set(chx, ((r.h / CM) + 2.45) / 2, chz); g.add(cord);
+    const psh = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.16, 18, 1, true), ofMat(0x1E1E20, 0.4, 0.4)); psh.material.side = THREE.DoubleSide; psh.position.set(chx, 2.4, chz); g.add(psh);
+    const pbulb = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xFFE2B0).multiplyScalar(2.5), toneMapped: false })); pbulb.position.set(chx, 2.35, chz); g.add(pbulb);
+    const pli2 = new THREE.PointLight(0xFFD49A, 7, 4.5, 1.6); pli2.position.set(chx, 2.2, chz); g.add(pli2);
+    ofHit(g, chx, 0.85, chz, 0.75, 0.3, 0.75, 'chess');
+  }
+
+  // ── 축음기(남쪽 벽 · 낮은 장 위) ──
+  {
+    const gx = cx + 1.8, gz = z1 - 0.12 - 0.26;
+    const sb = rbox(1.6, 0.78, 0.48, 0.01, wood); sb.position.set(gx, 0.39, gz); g.add(sb);
+    for (const s of [-1, 1]) { const dr = rbox(0.74, 0.6, 0.02, 0.005, woodL); dr.position.set(gx + s * 0.39, 0.4, gz - 0.25); g.add(dr); }
+    const base = rbox(0.38, 0.12, 0.36, 0.01, woodL); base.position.set(gx - 0.25, 0.84, gz); g.add(base);
+    const disk = new THREE.Group(); disk.add(cyl(0.15, 0.15, 0.008, ofMat(0x0C0C0E, 0.25, 0.1), 28));
+    const lbl = cyl(0.045, 0.045, 0.01, ofMat(0x8A2A1E, 0.7), 18); lbl.position.y = 0.001; disk.add(lbl);
+    disk.position.set(gx - 0.25, 0.905, gz); g.add(disk); OFFICE.disk = disk;
+    const arm = cyl(0.006, 0.006, 0.2, brass, 6); arm.rotation.z = Math.PI / 2; arm.rotation.y = 0.5; arm.position.set(gx - 0.17, 0.93, gz + 0.1); g.add(arm);
+    const horn = new THREE.Mesh(new THREE.LatheGeometry([[0.012, 0], [0.02, 0.12], [0.05, 0.26], [0.13, 0.38], [0.2, 0.42]].map(([a, b]) => new THREE.Vector2(a, b)), 24), brass);
+    horn.material = brass.clone(); horn.material.side = THREE.DoubleSide; horn.material.userData.noBatch = true;
+    horn.scale.setScalar(0.8); horn.rotation.set(-0.75, 0, -0.35); horn.position.set(gx - 0.12, 0.9, gz + 0.15); g.add(horn);   // 뒤쪽에서 솟아 판이 보이게
+    // 레코드 몇 장(세워서)
+    for (let k = 0; k < 5; k++) { const rec = rbox(0.012, 0.3, 0.3, 0.003, ofMat([0x2A1E16, 0x6A5236, 0x1E2E3E, 0x5A1E1A, 0x3A3A3A][k], 0.8)); rec.position.set(gx + 0.25 + k * 0.03, 0.93, gz); rec.rotation.z = 0.06 * k; g.add(rec); }
+    ofBlock(r, gx - 0.82, gx + 0.82, gz - 0.26, gz + 0.26, 90);
+    ofHit(g, gx - 0.2, 1.0, gz - 0.05, 0.7, 0.5, 0.5, 'gramo');
+  }
+
+  // ── 우산꽂이 · 젖은 우산 · 물웅덩이(외투 걸이 곁) ──
+  {
+    const ux = x1 - 1.65, uz = z0 + 0.62;
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.46, 16, 1, true), ofMat(0x3A3A3C, 0.4, 0.6)); st.material.side = THREE.DoubleSide; st.position.set(ux, 0.23, uz); g.add(st);
+    for (const [ox, rz2, c] of [[0.02, 0.12, 0x101012], [-0.03, -0.1, 0x2A1A14]]) {
+      const ub = new THREE.Group(); ub.add(ofAt(new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.62, 10), ofMat(c, 0.25, 0.1)), 0, 0.31, 0));
+      ub.add(ofAt(cyl(0.005, 0.005, 0.3, black, 6), 0, 0.7, 0));
+      const hd = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 6, 14, Math.PI), wood); hd.position.set(0.035, 0.85, 0); ub.add(hd);
+      ub.position.set(ux + ox, 0.08, uz); ub.rotation.z = rz2; g.add(ub);
+    }
+    const pud = new THREE.Mesh(new THREE.CircleGeometry(0.34, 24), new THREE.MeshStandardMaterial({ color: 0x0A0A0C, roughness: 0.04, metalness: 0.6, transparent: true, opacity: 0.7, envMap: M.envIn || null }));
+    pud.material.userData.noBatch = true; pud.rotation.x = -Math.PI / 2; pud.scale.set(1, 0.7, 1); pud.position.set(ux + 0.05, 0.004, uz + 0.08); g.add(pud);
+    ofHit(g, ux, 0.5, uz, 0.4, 0.9, 0.4, 'umbrella');
+  }
+
+  // ── 달력(동쪽 벽 · 창 북쪽) — 아무 일도 없던 날에 동그라미 ──
+  {
+    const now = new Date(), Y = now.getFullYear(), Mo = now.getMonth(), first = new Date(Y, Mo, 1).getDay(), days = new Date(Y, Mo + 1, 0).getDate();
+    const circ = 1 + ((Y * 7 + Mo * 13) % Math.max(1, days - 2));
+    const tex = ofCanvasTex(300, 420, (c, w, h) => {
+      c.fillStyle = '#EAE4D2'; c.fillRect(0, 0, w, h); c.fillStyle = '#1A140E'; c.textAlign = 'center';
+      c.font = 'bold 44px "Noto Serif KR", serif'; c.fillText((Mo + 1) + '월', w / 2, 70); c.font = '14px serif'; c.fillText(String(Y), w / 2, 94);
+      const cw2 = (w - 30) / 7; c.font = '18px "Courier New", serif';
+      for (let d = 1; d <= days; d++) { const k = first + d - 1, col = k % 7, row = Math.floor(k / 7), X = 15 + cw2 * (col + 0.5), Yy = 140 + row * 46;
+        c.fillStyle = col === 0 ? '#8A2A1E' : '#1A140E'; c.fillText(String(d), X, Yy);
+        if (d === circ) { c.strokeStyle = '#B01818'; c.lineWidth = 3; c.beginPath(); c.ellipse(X, Yy - 6, 20, 17, 0.2, 0, 6.28); c.stroke(); } }
+    });
+    const cal = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.59), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 })); cal.material.userData.noBatch = true;
+    cal.position.set(x1 - 0.135, 1.55, z0 + 1.95); cal.rotation.y = -Math.PI / 2; g.add(cal);
+    ofHit(g, x1 - 0.3, 1.55, z0 + 1.95, 0.3, 0.65, 0.5, 'calendar');
+  }
+
+  // 창 — 바라보기
+  ofHit(g, x1 - 0.45, 1.95, wz, 0.3, 1.9, 5.0, 'window');
+
+  // ── 은은한 빛 · 천장의 흐린 등 하나 ──
+  const amb = new THREE.PointLight(0x8090A8, 2.2, 14, 1.4); amb.position.set(cx, (r.h - 60) / CM, (z0 + z1) / 2); g.add(amb);
+  // 서랍이 열리면 편지를 읽는다
+  OFFICE.letterInfo = ofHit(g, dx - 0.5, 0.62, dz + 0.8, 0.3, 0.3, 0.6, 'letter');
+  OFFICE.built = true;
+  officePaint();
+}
+
+/* ── 읽기 — 한 줄 → 메모(타자기) → 질문 ── */
+function officeRead(id) {
+  if (id === 'letter' && OFFICE_ORDER.some((k) => !OFFICE.read.has(k))) {
+    toast('잠겨 있다. 열쇠 구멍에 먼지가 없다 — 누가 자주 열어 본 것 같다. (' + OFFICE_ORDER.filter((k) => OFFICE.read.has(k)).length + ' / 7)', 2600);
+    if (typeof torchClick === 'function') torchClick();
+    return;
+  }
+  const E = officeEntry(id); if (!E) return;
+  const T = E.T;
+  if (M.locked) { OFFICE.relock = true; document.exitPointerLock(); }
+  M.openId = 'office';
+  let el = OFFICE.el;
+  if (!el) {
+    el = OFFICE.el = document.createElement('div'); el.className = 'office-read'; el.id = 'officeRead';
+    el.innerHTML = '<div class="or-card"><p class="or-k"></p><h2 class="or-line"></h2><p class="or-memo"></p><p class="or-ask"></p><button type="button" class="or-x">닫기 · Esc</button></div>';
+    document.body.appendChild(el);
+    // 타자가 아직 치는 중이면 첫 번째 누름은 '끝까지 보기', 그다음이 닫기
+    el.addEventListener('click', (ev) => { if (ev.target === el || ev.target.classList.contains('or-x')) officeClose(); else if (OFFICE.finish) OFFICE.finish(); });
+    document.addEventListener('keydown', (ev) => {
+      if (!OFFICE.open) return;
+      if (ev.key === 'Escape' || ev.key.toLowerCase() === 'e' || ev.key === ' ' || ev.key === 'Enter') {
+        ev.preventDefault(); ev.stopPropagation();
+        if (ev.key !== 'Escape' && OFFICE.finish) OFFICE.finish(); else officeClose();
+      }
+    }, true);
+  }
+  el.querySelector('.or-k').textContent = T.axis + ' · ' + T.obj;
+  const lineEl = el.querySelector('.or-line'); lineEl.textContent = T.line; lineEl.classList.toggle('strike', !!T.strike);
+  const memo = el.querySelector('.or-memo'), ask = el.querySelector('.or-ask');
+  memo.textContent = ''; ask.textContent = ''; ask.classList.remove('on'); ask.style.display = T.ask ? '' : 'none';
+  el.classList.add('on'); OFFICE.open = true;
+  officeStopTyping();
+  let i = 0; const txt = T.memo;
+  const done = () => { officeStopTyping(); memo.textContent = txt; ask.textContent = T.ask; ask.classList.add('on'); };
+  OFFICE.finish = done;
+  OFFICE.delay = setTimeout(() => {
+    OFFICE.typer = setInterval(() => {
+      i++; memo.textContent = txt.slice(0, i);
+      if (i % 3 === 0 && typeof officeKey === 'function') officeKey(0.35);
+      if (i >= txt.length) done();
+    }, 34);
+  }, 900);
+  if (id !== 'letter' && !OFFICE.read.has(id)) {
+    OFFICE.read.add(id);
+    try { localStorage.setItem('museum-office-read', JSON.stringify([...OFFICE.read])); } catch (e) { /* */ }
+    officePaint();
+    if (OFFICE_ORDER.every((k) => OFFICE.read.has(k))) setTimeout(() => { toast('어디선가 딸깍 — 책상 서랍의 잠금이 풀렸다', 3200); if (typeof torchClick === 'function') torchClick(); }, 1500);
+  }
+  if (id === 'letter' && typeof hauntRec === 'function') hauntRec('keeper');
+  if (E.key && !OFFICE.more.has(E.key)) {
+    OFFICE.more.add(E.key);
+    try { localStorage.setItem('museum-office-more', JSON.stringify([...OFFICE.more])); } catch (e) { /* */ }
+    officePaint();
+    if (OFFICE.more.size >= OFFICE_MORE_N) setTimeout(() => { toast('이 방의 문장을 모두 읽었다 — 이제 당신의 문장을 쓸 차례다', 3600); OFFICE.paperText = ''; OFFICE.paperMsg = '당신의 차례. '; }, 1500);
+  }
+  if (id === 'gramo') officeGramo();
+}
+/** 무엇을 펼칠지 — 핵심 일곱 · 곁가지 · 책장(안 읽은 책부터) · 휴지통 · 메모장(날마다) */
+function officeEntry(id) {
+  if (OFFICE_TEXT[id]) return { T: OFFICE_TEXT[id], key: null };
+  if (OFFICE_MORE[id]) return { T: OFFICE_MORE[id], key: id };
+  const next = (pre, n) => {
+    let j = OFFICE.cur[pre] == null ? -1 : OFFICE.cur[pre];
+    for (let k = 0; k < n; k++) { j = (j + 1) % n; if (!OFFICE.more.has(pre + j)) break; }
+    return (OFFICE.cur[pre] = j);
+  };
+  if (id === 'book') { const i = next('book', OFFICE_BOOKS.length), b = OFFICE_BOOKS[i]; return { T: { obj: '책장 — 『' + b.t + '』', axis: '여백에 적힌 메모 · ' + (i + 1) + ' / ' + OFFICE_BOOKS.length, line: b.line, memo: b.memo, ask: '' }, key: 'book' + i }; }
+  if (id === 'draft') { const i = next('draft', OFFICE_DRAFTS.length), d = OFFICE_DRAFTS[i]; return { T: { obj: '구겨진 종이', axis: '버린 문장들 · ' + (i + 1) + ' / ' + OFFICE_DRAFTS.length, line: d.s, strike: true, memo: d.why, ask: '' }, key: 'draft' + i }; }
+  if (id === 'daily') {
+    const d = new Date(), k = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % OFFICE_DAILY.length;
+    return { T: { obj: '오늘의 문장', axis: d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.', line: OFFICE_DAILY[k], memo: '책상 메모장의 맨 위 장. 날마다 한 장씩 넘어간다.\n내일 다시 오면, 다른 문장이 적혀 있을 것이다.', ask: '' }, key: null };
+  }
+  return null;
+}
+/** 축음기 — 판이 돌고, 낡은 왈츠 한 소절(지직거림 섞어) */
+function officeGramo() {
+  OFFICE.gramoT = 26;
+  const c = typeof SND !== 'undefined' && SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime + 0.3, beat = 0.62;
+  const mel = [[440, 2], [523.3, 1], [493.9, 2], [440, 1], [392, 2], [349.2, 1], [329.6, 3], [349.2, 2], [392, 1], [440, 2], [392, 1], [349.2, 2], [329.6, 1], [293.7, 3],
+    [329.6, 2], [349.2, 1], [392, 2], [440, 1], [523.3, 2], [493.9, 1], [440, 3], [392, 2], [349.2, 1], [329.6, 2], [293.7, 1], [261.6, 2], [293.7, 1], [220, 3]];
+  let t = t0;
+  for (const [f, n] of mel) {
+    const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 1400;
+    sndEnv(g, t, 0.02, 0.05, beat * n * 0.95); o.connect(lp); lp.connect(g); sndPanned(g, 0.5, 0.5); o.start(t); o.stop(t + beat * n + 0.1);
+    t += beat * n;
+  }
+  // 바늘 지직거림
+  const N = Math.floor(c.sampleRate * (t - t0 + 0.5)), b = c.createBuffer(1, N, c.sampleRate), ch = b.getChannelData(0);
+  for (let i = 0; i < N; i++) ch[i] = Math.random() < 0.0009 ? (Math.random() * 2 - 1) : (Math.random() * 2 - 1) * 0.04;
+  const s = c.createBufferSource(); s.buffer = b; const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+  const g2 = c.createGain(); g2.gain.value = 0.12; s.connect(hp); hp.connect(g2); sndPanned(g2, 0.5, 0.4); s.start(t0 - 0.2);
+}
+/** 타자를 멈춘다 — 닫거나 다른 물건을 열 때 이전 글이 섞이지 않게 */
+function officeStopTyping() { clearTimeout(OFFICE.delay); clearInterval(OFFICE.typer); OFFICE.finish = null; }
+function officeClose() {
+  if (!OFFICE.el) return;
+  officeStopTyping();
+  OFFICE.el.classList.remove('on'); OFFICE.open = false;
+  M.openId = null; M.keys = {};
+  if (OFFICE.relock && typeof tryLock === 'function') { OFFICE.relock = false; tryLock(document.getElementById('gal')); }
+}
+/** 진행 — 방에 있을 때만 화면 아래 작게 */
+function officePaint() {
+  let h = OFFICE.hud;
+  if (!h) { h = OFFICE.hud = document.createElement('div'); h.className = 'office-hud'; (document.getElementById('gal') || document.body).appendChild(h); }
+  const n = OFFICE_ORDER.filter((k) => OFFICE.read.has(k)).length;
+  h.textContent = (n < 7 ? '생각 ' + n + ' / 7' : '서랍이 열렸다') + '   ·   문장 ' + OFFICE.more.size + ' / ' + OFFICE_MORE_N;
+}
+/** 타자기 한 글자 소리 */
+function officeKey(vol = 1) {
+  const c = typeof SND !== 'undefined' && SND.ctx; if (!c || !SND.on) return;
+  const t0 = c.currentTime + 0.005, N = Math.floor(c.sampleRate * 0.03), b = c.createBuffer(1, N, c.sampleRate), ch = b.getChannelData(0);
+  for (let i = 0; i < N; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / N, 8);
+  const s = c.createBufferSource(); s.buffer = b; const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400 + Math.random() * 600; bp.Q.value = 2;
+  const g = c.createGain(); g.gain.value = 0.25 * vol; s.connect(bp); bp.connect(g); sndPanned(g, 0, 0.3); s.start(t0);
+}
+/** 비 · 피아노 한 음씩(방 안에서만) */
+function officeAmb(dt) {
+  const c = typeof SND !== 'undefined' && SND.ctx; if (!c || !SND.on) return;
+  if (!OFFICE.rainSrc) {
+    const N = c.sampleRate * 3, b = c.createBuffer(1, N, c.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < N; i++) ch[i] = (Math.random() * 2 - 1) * (0.6 + 0.4 * Math.random());
+    const s = c.createBufferSource(); s.buffer = b; s.loop = true; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
+    const g = c.createGain(); g.gain.value = 0; s.connect(lp); lp.connect(g); sndPanned(g, 0.3, 0.2); s.start();
+    OFFICE.rainSrc = s; OFFICE.rainG = g;
+  }
+  OFFICE.notes -= dt;
+  if (OFFICE.gramoT > 0) OFFICE.notes = Math.max(OFFICE.notes, 3);
+  if (OFFICE.notes <= 0) {
+    OFFICE.notes = 2.6 + Math.random() * 3.2;
+    const scale = [220, 246.9, 261.6, 293.7, 329.6, 349.2, 392], f = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.3 ? 0.5 : 1);
+    const t0 = c.currentTime + 0.02;
+    for (const [m, v] of [[1, 0.06], [2, 0.02], [3, 0.008]]) { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f * m; sndEnv(g, t0, 0.01, v, 3.2); o.connect(g); sndPanned(g, -0.2, 0.6); o.start(t0); o.stop(t0 + 3.4); }
+  }
+}
+/** 매 프레임 — 느와르 · 비 · 김 · 연기 · 모래 · 타자기 */
+function stepOffice(dt) {
+  if (!OFFICE.built) return;
+  const inR = !!(M.room && M.room.id === 'workshop');
+  OFFICE.noir += ((inR ? 1 : 0) - OFFICE.noir) * Math.min(1, dt * (inR ? 0.9 : 3));
+  if (M.post && M.post.uniforms && M.post.uniforms.uNoir) M.post.uniforms.uNoir.value = OFFICE.noir;
+  if (OFFICE.hud) OFFICE.hud.classList.toggle('on', inR && !OFFICE.open);
+  if (OFFICE.rainG && SND.ctx) OFFICE.rainG.gain.setTargetAtTime(inR ? 0.07 : 0, SND.ctx.currentTime, 0.4);
+  if (!inR) return;
+  officeAmb(dt);
+  OFFICE.t = (OFFICE.t || 0) + dt;
+  if (OFFICE.gramoT > 0) { OFFICE.gramoT -= dt; if (OFFICE.disk) OFFICE.disk.rotation.y -= dt * 3.5; }
+  if (OFFICE.rain) OFFICE.rain.offset.y = (OFFICE.rain.offset.y + dt * 0.35) % 1;
+  // 모래 — 위는 줄고 아래는 쌓인다(천천히 · 끝나면 다시)
+  if (OFFICE.sand) { const k = (OFFICE.t % 180) / 180; OFFICE.sand.sTop.scale.setScalar(Math.max(0.05, 1 - k)); OFFICE.sand.sBot.scale.setScalar(0.3 + k * 0.7); }
+  // 서랍 — 일곱을 다 읽으면 열린다
+  const D = OFFICE.drawer, all = OFFICE_ORDER.every((k) => OFFICE.read.has(k));
+  if (D) { D.open += ((all ? 1 : 0) - D.open) * Math.min(1, dt * 2); D.mesh.position.x = D.x - 0.46 - D.open * 0.25; D.lock.position.x = D.x - 0.475 - D.open * 0.25; }
+  // 김(두 번째 잔에서만) · 재떨이 연기
+  if (!OFFICE.puffs) {
+    const cv = makeCanvas(64, 64), c = cv.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(230,230,235,.5)'); gr.addColorStop(1, 'rgba(230,230,235,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(cv), g = M.roomGroups.workshop; OFFICE.puffs = [];
+    for (let i = 0; i < 18; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 })); g.add(sp); OFFICE.puffs.push({ sp, t: i / 18 * 3, src: i % 2 }); }
+  }
+  for (const p of OFFICE.puffs) {
+    p.t += dt; const L = 3, u = (p.t % L) / L, at = p.src ? OFFICE.steamAt : OFFICE.smokeAt;
+    p.sp.position.set(at.x + Math.sin(p.t * 1.7 + p.src) * 0.04 * u, at.y + u * (p.src ? 0.35 : 0.6), at.z + Math.cos(p.t * 1.3) * 0.04 * u);
+    p.sp.scale.setScalar(0.06 + u * 0.18); p.sp.material.opacity = 0.32 * Math.sin(u * Math.PI);
+  }
+  // 은은하게 — 눈을 돌린 사이 타자기가 한 글자 찍는다(종이에 글자가 는다)
+  OFFICE.typeT -= dt;
+  if (OFFICE.typeT <= 0 && OFFICE.paper && !OFFICE.open) {
+    const dx = OFFICE.drawer.x, dz = OFFICE.drawer.z - 0.95;
+    if (typeof hauntView !== 'function' || !hauntView(dx, (M.roomById.workshop.y0) / CM + 1.0, dz).on) {
+      OFFICE.typeT = 9 + Math.random() * 12;
+      const msg = OFFICE.paperMsg || '기억해 줘서 고마워. ';
+      OFFICE.paperText = msg.slice(0, (OFFICE.paperText.length % msg.length) + 1);
+      const cv = OFFICE.paper.userData.cv, c = cv.getContext('2d');
+      c.fillStyle = '#EEE8DA'; c.fillRect(0, 0, cv.width, cv.height); c.fillStyle = '#1A1612'; c.font = '20px "Courier New", monospace';
+      c.fillText(OFFICE.paperText, 18, 60); OFFICE.paper.needsUpdate = true;
+      officeKey(0.7);
+    } else OFFICE.typeT = 2;
+  }
+}
