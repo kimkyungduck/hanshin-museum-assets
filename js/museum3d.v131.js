@@ -135,34 +135,43 @@ async function screenTitle() {
     ['2F', '회랑 · 사진 갤러리 · 우승자의 방 · 전망 데크'],
     ['18', '18번 홀 — 코스별 기록 표석'],
   ];
+  /* v131 — '진짜 PC 게임처럼' — 메인 메뉴. PRESS ANY KEY → 로고가 왼쪽으로 물러나고 메뉴가 차례로 들어온다.
+     ↑↓ · W/S 로 고르고 Enter/Space 로 정한다(마우스를 올리면 그 줄이 골라진다). 버튼 id 는 예전 그대로 둔다(enter() 등이 쓴다) */
+  const night = typeof NIGHT !== 'undefined' && NIGHT.on;
+  const item = (id, kr, en, extra, cls) => `<button class="gm-item${cls ? ' ' + cls : ''}" id="${id}" type="button"><i class="gm-mk"></i><span class="gm-kr">${kr}</span>${extra || ''}<span class="gm-en">${en}</span></button>`;
+  const menu = [
+    `<button class="gm-item gm-primary" id="btnEnter" type="button"><i class="gm-mk"></i><span class="gm-kr" id="tsEnterTx">불러오는 중</span><span class="gm-en">ENTER THE MUSEUM</span><i class="gm-bar" id="tsBar"></i></button>`,
+    night && typeof escapeStart === 'function' ? item('btnEscape', '방탈출', 'ESCAPE · 15 MINUTES') : '',
+    night && typeof recCount === 'function' ? item('btnRec', '밤의 기록', 'NIGHT RECORDS', `<b class="gm-ct">${recCount()} / ${RECORDS.length}</b>`) : '',
+    typeof NIGHT !== 'undefined' ? item('btnMode', night ? '낮에 보기' : '밤으로', night ? 'SWITCH TO DAY' : 'SWITCH TO NIGHT') : '',
+    M.canManage ? item('btnAdmin', '전시 설정', 'CURATOR SETTINGS') : '',
+  ].filter(Boolean).join('');
+  const titleL = esc(SITE.kr[0] || 'HANSHIN'), titleR = esc(SITE.kr[1] || 'MUSEUM');
   $('app').innerHTML = galMarkup() + `
-    <div class="ts" id="ts">
-      <div class="ts-shade"></div>
-      <header class="ts-top">
-        <div class="ts-brand">
-          <img src="${esc(SITE.logo)}" alt="" aria-hidden="true">
-          <span>${esc(SITE.title)}</span>
-        </div>
-        <div class="ts-open"><b>OPEN</b> 상설 전시 · 무료 관람</div>
+    <div class="ts gm${night ? ' night' : ' day'}" id="ts">
+      <div class="gm-shade"></div><div class="gm-grain"></div><div class="gm-scan"></div>
+      <header class="gm-top">
+        <div class="gm-brand"><img src="${esc(SITE.logo)}" alt="" aria-hidden="true"><span>${esc(SITE.title)}</span></div>
+        <div class="gm-edition">${night ? '<i>☾</i> NIGHT EDITION' : '<i>☀</i> DAY EDITION'}</div>
       </header>
-      <main class="ts-main">
-        ${SITE.mark ? `<p class="ts-kicker">${esc(SITE.mark)}</p>` : ''}
-        <h1 class="ts-title${SITE.latin ? ' lat' : ''}">${SITE.kr[0] ? '<span>' + esc(SITE.kr[0]) + '</span>' : ''}<span class="em">${esc(SITE.kr[1] || '')}</span></h1>
-        <p class="ts-desc">본관의 전시물은 큐레이터가 고르지 않습니다.<br>라운드가 등록되면 전시물이 한 점 늘어납니다.</p>
-        <div class="ts-actions">
-          <button class="ts-enter" id="btnEnter"><span id="tsEnterTx">전시관을 여는 중</span><i id="tsBar"></i></button>
-          ${M.canManage ? '<button class="ts-sub" id="btnAdmin">⚙ 전시 설정</button>' : ''}
-          ${typeof NIGHT !== 'undefined' ? '<button class="ts-sub ts-mode" id="btnMode">' + (NIGHT.on ? '☀ 낮에 보기' : '☾ 밤으로') + '</button>' : ''}
-          ${typeof NIGHT !== 'undefined' && NIGHT.on && typeof escapeStart === 'function' ? '<button class="ts-sub ts-esc" id="btnEscape">🔐 방탈출</button>' : ''}
-          ${typeof NIGHT !== 'undefined' && NIGHT.on && typeof recCount === 'function' ? '<button class="ts-sub ts-rec" id="btnRec">밤의 기록 ' + recCount() + '/' + RECORDS.length + '</button>' : ''}
-        </div>
-        <p class="ts-note">${typeof NIGHT !== 'undefined' && NIGHT.on ? '밤의 전시관 — 공포 연출이 있습니다 · 이어폰 권장 · 소리 끄기 <b>M</b>' : '배경음악이 함께 재생됩니다 · 끄기 <b>M</b>'}</p>
-      </main>
-      <aside class="ts-side">
-        <div class="ts-count"><b>${M.total}</b><span>소장품</span></div>
-        <ul class="ts-floors">${floors.map(([k, v]) => `<li><b>${k}</b><span>${esc(v)}</span></li>`).join('')}</ul>
-        <p class="ts-src">${M.live ? '● 실기록 연결됨' : '○ 샘플 아카이브'} <span class="build">${esc(BUILD)}</span></p>
+      <section class="gm-logo">
+        <p class="gm-kicker"><span>${esc(SITE.mark || 'ESTABLISHED COLLECTION')}</span></p>
+        <h1 class="gm-title"><span class="gm-t1">${titleL}</span><span class="gm-t2"><em>${titleR}</em></span></h1>
+        <p class="gm-tag">${night ? '밤의 전시관 — 기록은 잠들지 않는다' : '라운드가 등록되면, 전시물이 한 점 늘어난다'}</p>
+      </section>
+      <nav class="gm-menu" id="gmMenu" aria-label="메인 메뉴">${menu}</nav>
+      <aside class="gm-info">
+        <p class="gm-ih">COLLECTION</p>
+        <div class="gm-count"><b>${M.total}</b><span>소장품</span></div>
+        <ul>${floors.map(([k, v]) => `<li><b>${k}</b><span>${esc(v)}</span></li>`).join('')}</ul>
       </aside>
+      <footer class="gm-foot">
+        <p class="gm-warn">${night ? '<b>!</b> 공포 연출이 포함되어 있습니다 · 헤드폰을 권장합니다' : '배경음악이 함께 재생됩니다'}</p>
+        <p class="gm-keys"><kbd>↑</kbd><kbd>↓</kbd><span>선택</span><kbd>ENTER</kbd><span>결정</span><kbd>M</kbd><span>소리</span></p>
+        <p class="gm-ver">${M.live ? '<i class="on"></i>실기록 연결됨' : '<i></i>샘플 아카이브'}<span>${esc(BUILD)}</span></p>
+      </footer>
+      <div class="gm-press" id="gmPress"><span class="gm-pk">${matchMedia('(pointer: coarse)').matches ? 'TAP TO START' : 'PRESS ANY KEY'}</span><small>${matchMedia('(pointer: coarse)').matches ? '화면을 눌러 시작' : '아무 키나 누르세요'}</small>
+        <div class="gm-load"><i id="gmLoad"></i></div><p class="gm-lt" id="gmLoadTx">LOADING</p></div>
     </div>
     <div class="ts-veil" id="tsVeil"></div>`;
   $('gal').classList.add('attract');
@@ -171,6 +180,7 @@ async function screenTitle() {
   if ($('btnMode')) $('btnMode').onclick = () => museumSetMode(!NIGHT.on);      // v110 — 낮 / 밤
   if ($('btnRec')) $('btnRec').onclick = () => recPanel();                       // v111 — 밤의 기록
   if ($('btnEscape')) $('btnEscape').onclick = () => escapeStart();               // v114 — 방탈출
+  gmMenu();
 
   try {
     initGL();
@@ -194,15 +204,65 @@ async function screenTitle() {
     if (M.ready) {
       $('ts').classList.add('ready');
       $('tsEnterTx').textContent = '입장하기';
+      if ($('gmLoad')) $('gmLoad').style.transform = 'scaleX(1)';
+      if ($('gmLoadTx')) $('gmLoadTx').textContent = 'READY';
       return;
     }
     const jobs = [...TEX_JOBS.values()].length || 1;
     const k = Math.min(0.92, (M.exhibitsBuilt || 0) / Math.max(1, M.exhibits.length) * 0.8 + 0.1);
     if (bar) bar.style.transform = 'scaleX(' + k.toFixed(3) + ')';
+    if ($('gmLoad')) $('gmLoad').style.transform = 'scaleX(' + k.toFixed(3) + ')';
+    if ($('gmLoadTx')) $('gmLoadTx').textContent = 'LOADING  ' + Math.round(k * 100) + '%';
+    $('tsEnterTx').textContent = '준비 중 ' + Math.round(k * 100) + '%';
     void jobs;
     setTimeout(tick, 120);
   };
   tick();
+}
+
+/** 메인 메뉴 — PRESS ANY KEY · 고르기(↑↓ W S · 마우스) · 정하기(Enter Space) · 작은 소리 */
+function gmMenu() {
+  const ts = $('ts'), menu = $('gmMenu');
+  if (!ts || !menu) return;
+  const items = [...menu.querySelectorAll('.gm-item')];
+  let sel = 0, ac = null;
+  const blip = (f, v, d) => {
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.6, t + d);
+      lp.type = 'lowpass'; lp.frequency.value = 2400;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(lp); lp.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
+    } catch (e) { /* 소리 없이 */ }
+  };
+  const pick = (k, quiet) => {
+    sel = (k + items.length) % items.length;
+    items.forEach((b, n) => b.classList.toggle('on', n === sel));
+    if (!quiet) blip(880, 0.035, 0.07);
+  };
+  const open = () => {
+    if (ts.classList.contains('menu')) return;
+    ts.classList.add('menu');
+    blip(220, 0.06, 0.6); setTimeout(() => blip(330, 0.04, 0.5), 90);
+    pick(0, true);
+  };
+  items.forEach((b, n) => {
+    b.style.setProperty('--d', (0.18 + n * 0.07) + 's');
+    b.addEventListener('mouseenter', () => { if (ts.classList.contains('menu') && sel !== n) pick(n); });
+    b.addEventListener('click', () => blip(520, 0.05, 0.25), true);
+  });
+  const key = (e) => {
+    if (!document.getElementById('ts')) { removeEventListener('keydown', key, true); return; }
+    if (document.querySelector('.admin, #recPanel')) return;          // 설정 · 기록 창이 열려 있으면 그쪽이 먼저
+    if (!ts.classList.contains('menu')) { if (!e.repeat) { e.preventDefault(); open(); } return; }
+    const k = e.key;
+    if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); pick(sel + 1); }
+    else if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); pick(sel - 1); }
+    else if (k === 'Enter' || k === ' ') { e.preventDefault(); items[sel].click(); }
+  };
+  addEventListener('keydown', key, true);
+  ts.addEventListener('pointerdown', (e) => { if (!ts.classList.contains('menu')) { e.preventDefault(); open(); } });
 }
 
 /** 표지 카메라 — 18번 홀 쪽에서 북측 외관 앞을 천천히 오간다(46초 왕복) */
