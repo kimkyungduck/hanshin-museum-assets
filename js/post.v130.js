@@ -235,7 +235,7 @@ function createPost(renderer, scene, camera, opt = {}) {
 
         // 채도 −12% + 따뜻한 리프트
         float l = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(l), col, 0.88 * (1.0 - uNoir * 0.9));
+        col = mix(vec3(l), col, 0.88 * (1.0 - uNoir * 0.72));   // v130 — 느와르여도 신호등 · 미등 색은 조금 남긴다
         col = mix(col, smoothstep(vec3(0.03), vec3(0.92), col), uNoir * 0.55);
         col *= vec3(1.035, 1.0, 0.952);
         col += vec3(0.015, 0.010, 0.005) * uLift * (1.0 - l);
