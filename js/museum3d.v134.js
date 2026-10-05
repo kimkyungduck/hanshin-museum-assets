@@ -951,6 +951,7 @@ async function enter() {
   $('gal').classList.remove('attract');
 
   bindInput();
+  if (typeof hudInit === 'function') hudInit();   // v132 — 구역 배너 · 일시 정지
   initBgm();
   // 기본을 FPS 조작으로 — 입장 클릭이 사용자 제스처이므로 락 요청이 허용된다.
   // (Esc 로 풀리고, 풀리면 드래그 조작으로 자동 전환된다)
@@ -2766,7 +2767,7 @@ function bindInput() {
   // 포인터 락 — 진짜 FPS
   const chip = $('lockChip');
   chip.addEventListener('click', () => {
-    if (M.locked) document.exitPointerLock();
+    if (M.locked) { M.noPauseOnce = true; document.exitPointerLock(); }   // 칩으로 푼 건 일시 정지가 아니다
     else tryLock(gal);
   });
   document.addEventListener('pointerlockchange', () => {
@@ -3192,6 +3193,7 @@ function paintHud(room) {
     $('rtDesc').textContent = room.desc;
     const tag = $('rtKr').parentElement;
     tag.classList.remove('flash'); void tag.offsetWidth; tag.classList.add('flash');
+    if (typeof hudArea === 'function') hudArea(room);   // v132 — 층 표시 · 구역 배너
     drawMinimap();
   }
   // 매 프레임 DOM 을 쓰면 그 자체로 레이아웃 비용이 든다 — 값이 바뀔 때만
