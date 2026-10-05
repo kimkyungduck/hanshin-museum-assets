@@ -2462,3 +2462,60 @@ body.is-touch #gal .progress::before { display: none; }
 body.is-touch #gal .gauge { margin-top: 7px; }
 body.is-touch #gal .rt-kr { font-size: 18px; }
 
+
+/* ══════════════════════════════════════════════════════════
+   전시물 팝업(v135) — 흰 도록 → 게임의 '조사 화면'
+   ══════════════════════════════════════════════════════════
+   어두운 판 · 1px 테두리에 모서리 금색 꺾쇠 · 소장품 사진을 흐리게 깐 바탕 · 고운바탕 제목 · Barlow 숫자.
+   스코어카드 표만은 실제 종이 카드처럼 종이색으로 둔다 */
+#gal .overlay { background: radial-gradient(120% 100% at 50% 40%, rgba(3, 3, 4, .72), rgba(3, 3, 4, .94)); backdrop-filter: blur(6px) saturate(.9); -webkit-backdrop-filter: blur(6px) saturate(.9); }
+#gal .overlay:not(.hidden) .ov-card { animation: ovCardIn .42s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes ovCardIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+#gal .ov-card.plate { clip-path: none;
+  background:
+    linear-gradient(#E3C567, #E3C567) left top / 22px 1px no-repeat, linear-gradient(#E3C567, #E3C567) left top / 1px 22px no-repeat,
+    linear-gradient(#E3C567, #E3C567) right top / 22px 1px no-repeat, linear-gradient(#E3C567, #E3C567) right top / 1px 22px no-repeat,
+    linear-gradient(#E3C567, #E3C567) left bottom / 22px 1px no-repeat, linear-gradient(#E3C567, #E3C567) left bottom / 1px 22px no-repeat,
+    linear-gradient(#E3C567, #E3C567) right bottom / 22px 1px no-repeat, linear-gradient(#E3C567, #E3C567) right bottom / 1px 22px no-repeat,
+    rgba(241, 236, 223, .12);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, .7); }
+#gal .ov-card.plate::before { clip-path: none; background: #0A0A0B; }
+#gal .ov-card::after { opacity: .5 !important; clip-path: none; filter: blur(34px) saturate(.5) brightness(.42); }
+#gal .ov-body { color: #F1ECDF; padding: 34px 38px 28px; background: linear-gradient(180deg, rgba(8, 8, 9, .55), rgba(8, 8, 9, .86) 42%, rgba(8, 8, 9, .95)) !important; }
+#gal .ov-body::-webkit-scrollbar-thumb { background: rgba(227, 197, 103, .3); }
+#gal .ov-no { display: flex; align-items: center; gap: 12px; font: 500 11px/1 'Barlow Condensed', sans-serif; letter-spacing: .42em; color: #E3C567; }
+#gal .ov-no::after { width: 34px; height: 1px; margin: 0; background: #E3C567; box-shadow: 0 0 8px rgba(227, 197, 103, .6); }
+#gal .ov-title { margin: 16px 0 8px; font: 700 31px/1.25 'Gowun Batang', 'Noto Serif KR', serif; letter-spacing: .03em; color: #F1ECDF; text-shadow: 0 2px 24px rgba(0, 0, 0, .6); }
+#gal .ov-sub { margin-bottom: 24px; font: 500 12.5px/1.5 'Barlow Condensed', 'Noto Sans KR', sans-serif; letter-spacing: .16em; color: rgba(241, 236, 223, .55); }
+#gal .ov-frame { padding: 10px; background: #0E0E10; box-shadow: inset 0 0 0 1px rgba(241, 236, 223, .12), 0 24px 60px rgba(0, 0, 0, .55); }
+#gal .ov-frame.paper { background: #EDE6D2; }
+#gal .ov-text p { font: 400 15px/2 'Gowun Batang', 'Noto Serif KR', serif; color: rgba(241, 236, 223, .8); }
+#gal .ov-stats { gap: 0; margin-top: 24px; background: transparent; border-top: 1px solid rgba(227, 197, 103, .35); }
+#gal .ov-stat { padding: 14px 6px; border-bottom: 1px solid rgba(241, 236, 223, .08); }
+#gal .ov-stat span { font: 500 10px/1 'Barlow Condensed', sans-serif; letter-spacing: .3em; color: rgba(241, 236, 223, .5); }
+#gal .ov-stat b { margin-top: 8px; font: 500 22px/1 'Barlow Condensed', sans-serif; letter-spacing: .04em; color: #F6E3A8; }
+#gal .ov-foot { margin-top: 26px; padding-top: 14px; border-top: 1px solid rgba(241, 236, 223, .08); font: 500 10px/1 'Barlow Condensed', sans-serif; letter-spacing: .36em; color: rgba(241, 236, 223, .38); }
+#gal .ov-guest .gb { background: rgba(241, 236, 223, .035) !important; box-shadow: inset 2px 0 0 rgba(227, 197, 103, .4); }
+#gal .gb-who { font: 600 12px/1.4 'Barlow Condensed', sans-serif; letter-spacing: .08em; color: #E3C567; }
+#gal .gb-body { color: rgba(241, 236, 223, .82) !important; font-family: 'Gowun Batang', serif; }
+#gal .gb-date, #gal .ov-empty { color: rgba(241, 236, 223, .42) !important; font-family: 'Barlow Condensed', sans-serif; letter-spacing: .1em; }
+#gal .ov-say { font-family: 'Gowun Batang', serif; font-style: normal; color: #F6E3A8 !important; }
+#gal .ov-video { box-shadow: inset 0 0 0 1px rgba(241, 236, 223, .12), 0 24px 60px rgba(0, 0, 0, .55); }
+#gal .ov-vmsg { color: rgba(241, 236, 223, .6); }
+#gal .sh-nav { border-radius: 0; background: rgba(0, 0, 0, .45); color: #F1ECDF; box-shadow: inset 0 0 0 1px rgba(241, 236, 223, .3); }
+#gal .sh-nav:hover { box-shadow: inset 0 0 0 1px rgba(227, 197, 103, .7); color: #F6E3A8; }
+#gal .sh-count, #gal .sh-hint, #gal .sc-hint, #gal .sc-cap { color: rgba(241, 236, 223, .55); font-family: 'Barlow Condensed', 'Noto Sans KR', sans-serif; letter-spacing: .12em; }
+#gal .sc-scroll { box-shadow: 0 0 0 1px rgba(227, 197, 103, .35), 0 20px 50px rgba(0, 0, 0, .55); }
+#gal .sc-key .k-eg { box-shadow: 0 0 0 1.5px #D2705F, 0 0 0 3px #0A0A0B, 0 0 0 4.5px #D2705F; }
+#gal .sc-key .k-db { box-shadow: inset 0 0 0 1.5px #0A0A0B, inset 0 0 0 3px #8FAAC8; }
+/* 닫기 — 키캡(✕ · 아래 ESC) */
+#gal .ov-close { top: 26px; right: 28px; width: 38px; height: 38px; font-size: 15px; border-radius: 0; clip-path: none; color: #F1ECDF;
+  background: rgba(0, 0, 0, .45); box-shadow: inset 0 0 0 1px rgba(241, 236, 223, .32); transition: color .2s, box-shadow .2s; }
+#gal .ov-close:hover { background: rgba(227, 197, 103, .12); color: #F6E3A8; box-shadow: inset 0 0 0 1px rgba(227, 197, 103, .75); }
+body:not(.is-touch) #gal .ov-close::after { content: 'ESC'; position: absolute; left: 50%; top: calc(100% + 7px); transform: translateX(-50%); font: 600 9px/1 'Barlow Condensed', sans-serif; letter-spacing: .24em; color: rgba(241, 236, 223, .45); }
+@media (max-width: 620px) {
+  #gal .ov-body { padding: 26px 22px 22px; }
+  #gal .ov-title { font-size: 25px; }
+  #gal .ov-close { top: 14px; right: 16px; }
+}
+#gal .ov-body { scrollbar-color: rgba(227, 197, 103, .35) transparent; scrollbar-width: thin; }
